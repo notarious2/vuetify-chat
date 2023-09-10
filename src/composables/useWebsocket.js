@@ -2,7 +2,6 @@ import { ref, onMounted } from "vue";
 
 export function useWebSocket(url) {
   const socket = ref(null);
-  const newMessages = ref([]); // Store received messages
 
   const connectWebSocket = () => {
     socket.value = new WebSocket(url);

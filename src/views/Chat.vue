@@ -4,7 +4,7 @@
 
     <v-divider></v-divider>
 
-    <v-virtual-scroll :items="messages" height="500" item-height="48" id="container">
+    <v-virtual-scroll :items="messages" height="560" item-height="48" id="container" ref="chatWindow">
       <template v-slot="{ item }">
         <v-list-item
           v-if="item.user === 'Bekzod'"
@@ -52,25 +52,34 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from "vue";
+import { ref, computed, watch, onMounted, nextTick, onUpdated, watchEffect, reactive } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import { useMessageHistory } from "@/composables/useMessageHistory";
-const { messages } = useMessageHistory();
+
+const { socket } = useWebSocket("ws://127.0.0.1:8000/ws"); // Replace with your WebSocket server URL
+
+
+const {messages} = useMessageHistory()
+
 
 const messageToSend = ref(""); // Create a ref for the message input
+const chatWindow = ref(null)
+
+
 
 const sendMessage = () => {
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
-    socket.value.send(messageToSend.value); // Send the message
+    socket.value.send(messageToSend.value);
     messageToSend.value = ""; // Clear the input field
   }
-  toBottom()
 };
-const { socket } = useWebSocket("ws://127.0.0.1:8000/ws"); // Replace with your WebSocket server URL
-const myDiv = ref(null);
-const bottomEl = ref(null)
+
+
+
 onMounted(() => {
+
+
   socket.value.addEventListener("message", (event) => {
     const receivedMessage = JSON.parse(event.data);
 
@@ -78,19 +87,22 @@ onMounted(() => {
     messages.value.push(receivedMessage);
 
   });
+  console.log("on mounted", chatWindow.value.$el, chatWindow.value.$el.scrollHeight);
 
+});
 
+onUpdated(() => {
+  console.log("Updated")
 });
 
 
 
 
-watch(messages.value, (newVal, oldVal) => {
-  // Perform some action when new messages are received
-  console.log("New messages:", newVal);
-});
+watch(messages, (newVal) => {
+    // chatWindow.value.$el.scrollTop = chatWindow.value.$el.scrollHeight
+    chatWindow.value.$el.scrollTo(0, chatWindow.value.$el.scrollHeight)
 
-
+}, { deep: true });
 
 
 </script>
