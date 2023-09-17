@@ -23,8 +23,10 @@
     <v-card class="mx-auto" max-width="600">
       <v-container class="mx-3 px-5  rounded-lg mt-3">
         <v-row align="center" justify="center" no-gutters>
-          <v-text-field label="Type your text" variant="solo" rounded v-model="messageToSend" bg-color="teal-lighten-4"
-            @keyup.enter="sendMessage"></v-text-field>
+          <v-textarea label="Type your text" rows="1"  v-model="messageToSend" auto-grow variant="solo"
+          @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"></v-textarea>
+          <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
+            <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
           <v-btn @click="sendMessage" variant="outlined" size="x-large" class="ml-2 mb-5"> Send </v-btn>
         </v-row>
       </v-container>
@@ -41,7 +43,6 @@ const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your
 
 
 const { messages } = useMessageHistory()
-import SvgIcon from '@jamescoyle/vue-icon';
 // import { mdiCheckAll } from '@mdi/js';
 // path = ref(mdiCheckAll)
 
