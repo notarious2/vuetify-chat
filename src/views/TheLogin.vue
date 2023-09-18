@@ -2,40 +2,18 @@
   <v-card
     class="mx-auto mt-10 py-5 px-5"
     color="teal-lighten-4"
-    width="450px"
+    width="350px"
     rounded="lg"
   >
     <form @submit.prevent="submit">
       <v-text-field
-        v-model="firstName.value.value"
-        :counter="150"
-        :error-messages="firstName.errorMessage.value"
-        label="First Name"
-        bg-color="teal-lighten-5"
-      ></v-text-field>
-
-      <v-text-field
-        v-model="lastName.value.value"
-        :counter="10"
-        :error-messages="lastName.errorMessage.value"
-        label="Last Name"
-        bg-color="teal-lighten-5"
-      ></v-text-field>
-
-      <v-text-field
         v-model="username.value.value"
-        :counter="10"
+        :counter="150"
         :error-messages="username.errorMessage.value"
-        label="Username"
+        label="Username or Email"
         bg-color="teal-lighten-5"
       ></v-text-field>
 
-      <v-text-field
-        v-model="email.value.value"
-        :error-messages="email.errorMessage.value"
-        label="E-mail"
-        bg-color="teal-lighten-5"
-      ></v-text-field>
       <v-text-field
         v-model="password.value.value"
         label="Password"
@@ -43,22 +21,25 @@
         bg-color="teal-lighten-5"
         type="password"
       ></v-text-field>
-      <v-btn class="me-4 my-2" type="submit"> Register </v-btn>
+      <div class="text-center">Don't have an account yet? <a href="/register/" class="text-teal-lighten-2 text-decoration-none">Register</a> </div>
+      <v-row justify="center" align="center">
+      <v-col cols="auto">
+        <v-btn class="my-3" type="submit"> Login </v-btn>
+      </v-col>
+    </v-row>
 
-      <v-btn @click="handleReset" class="my-2"> clear </v-btn>
-      <div class="text-center mt-3">Already have an account? <a href="/login/" class="text-teal-lighten-2 text-decoration-none">Login</a> </div>
 
     </form>
-    <div v-if="registrationError" class="text-red">{{ registrationError }}</div>
+    <div v-if="loginError" class="text-red text-center">{{ loginError }}</div>
   </v-card>
 </template>
 <script setup>
 import { ref } from "vue";
 import { useField, useForm } from "vee-validate";
-import useRegistration from "@/composables/useRegister";
+import useLogin from "@/composables/useLogin";
 import { useRouter } from 'vue-router';
 const router = useRouter();
-const registrationError = ref(null);
+const loginError = ref(null);
 
 // Shared validation function for firstName, lastName, and username
 function validateName(value) {
@@ -72,21 +53,12 @@ function validateName(value) {
         return "Field cannot be longer than 150 characters.";
       }
     }
+
+
 const { handleSubmit, handleReset } = useForm({
   validationSchema: {
-    firstName(value) {
-      return validateName(value);
-    },
-    lastName(value) {
-      return validateName(value);
-    },
     username(value) {
       return validateName(value);
-    },
-    email(value) {
-      if (/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value)) return true;
-
-      return "Must be a valid e-mail.";
     },
     password(value) {
       if (value?.length >= 6) return true;
@@ -95,13 +67,10 @@ const { handleSubmit, handleReset } = useForm({
     },
   },
 });
-const firstName = useField("firstName");
-const lastName = useField("lastName");
 const username = useField("username");
-const email = useField("email");
 const password = useField("password");
 
-const { register } = useRegistration();
+const { login } = useLogin();
 
 const submit = handleSubmit(async (values) => {
   console.log(values);
@@ -112,20 +81,19 @@ const submit = handleSubmit(async (values) => {
   delete values.lastName;
 
   try {
-    const response = await register(values);
+    const response = await login(values);
     console.log("Response", response);
      // Redirect to the success page upon successful registration
      router.push('/chat3/');
   } catch (error) {
     console.error("Error", error);
     if (error.response?.data?.detail) {
-      registrationError.value = error.response.data.detail;
+      loginError.value = error.response.data.detail;
     } else {
-      registrationError.value = "An error occurred during registration.";
+      loginError.value = "An error occurred during login.";
     }
   }
 
-  // alert(JSON.stringify(values, null, 2))
-  // handleReset()
+  handleReset()
 });
 </script>
