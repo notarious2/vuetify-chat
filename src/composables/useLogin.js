@@ -6,9 +6,12 @@ export default function useLogin() {
       const formData = new FormData();
       formData.append('username', payload.username);
       formData.append('password', payload.password);
-
+      const headers = {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+      };
       console.log(payload);
-      const response = await axios.post('http://localhost:8001/login/', formData);
+      const response = await axios.post('http://localhost:8001/login/', formData, {headers: headers, withCredentials: true},);
       return response.data;
     } catch (error) {
 

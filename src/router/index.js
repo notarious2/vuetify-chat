@@ -16,9 +16,7 @@ const routes = [
       },
     ],
   },
-  {path: '/chat/', component:  () => import("@/views/Chat.vue")},
-  {path: '/chat2/', component:  () => import("@/views/Chat2.vue")},
-  {path: '/chat3/', component:  () => import("@/views/Chat3.vue")},
+  {path: '/chat/', component:  () => import("@/views/TheChat.vue")},
   {path: '/register/', component:  () => import("@/views/TheRegister.vue")},
   {path: '/login/', component:  () => import("@/views/TheLogin.vue")}
 ]

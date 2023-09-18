@@ -4,16 +4,16 @@
 
     <v-divider></v-divider>
     <div id="container" ref="chatWindow">
-      <div v-for="item in messages">
+      <div v-for="message in allMessages">
         <v-list-item
-          :class="item.user === userName ? 'bg-teal-lighten-5 ml-10 mr-2 text-right' : 'bg-blue-lighten-4 ml-2 mr-10'"
+          :class="message.user.username === userName ? 'bg-teal-lighten-5 ml-10 mr-2 text-right' : 'bg-blue-lighten-4 ml-2 mr-10'"
           class="rounded-xl py-2 my-5">
           <v-list-item-title class="pb-3 text-center">Today</v-list-item-title>
-          <v-list-item-content>{{ item.message }}</v-list-item-content>
+          <v-list-item-content>{{ message.content }}</v-list-item-content>
 
           <v-list-item-subtitle class="mt-2">
-            {{ item.user }}
-            <v-icon v-if="item.user === userName" class="text-blue ml-2">mdi-check-all</v-icon>
+            {{ message.user.first_name }}
+            <v-icon v-if="message.user.username === userName" class="text-blue ml-2">mdi-check-all</v-icon>
           </v-list-item-subtitle>
         </v-list-item>
 
@@ -31,6 +31,7 @@
         </v-row>
       </v-container>
     </v-card>
+    <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'success' ? 'indigo-lighten-2' : 'pink-accent-2'"  theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
   </v-card>
 </template>
 
@@ -38,36 +39,76 @@
 import { ref, computed, watch, onMounted, nextTick, onUpdated, watchEffect, reactive } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import { useMessageHistory } from "@/composables/useMessageHistory";
+import useGetMessages from "@/composables/useGetMessages";
+
 
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your WebSocket server URL
 
+const { getMessages } = useGetMessages()
 
 const { messages } = useMessageHistory()
-// import { mdiCheckAll } from '@mdi/js';
-// path = ref(mdiCheckAll)
+
 
 const messageToSend = ref(""); // Create a ref for the message input
 const chatWindow = ref(null)
 
-const userName = "Bekzod"
+const userName = "bekzod"
 
-const sendMessage = () => {
+const sendMessage = () => { 
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
-    socket.value.send(JSON.stringify({ message: messageToSend.value }));
+    socket.value.send(JSON.stringify({ chat_guid: chatGUID, content: messageToSend.value }));
+    messageToSend.value = ""; // Clear the input field
+  }
+};
+
+const openChat = (chatGUID) => { 
+  if (socket.value !== "") {
+    // Check if the WebSocket connection exists and the message is not empty
+    socket.value.send(JSON.stringify({ chatGUID: chatGUID}));
     messageToSend.value = ""; // Clear the input field
   }
 };
 
 
+const chatGUID = "e5378d07-5b14-45e3-8bcd-15b504851d78"
 
-onMounted(() => {
+const allMessages = ref([])
+
+const displaySystemMessage = ref(false)
+const systemMessage = ref({})
+
+
+onMounted(async () => {
+
+  try {
+    const response = await getMessages(chatGUID)
+    allMessages.value = response.items
+    
+    console.log("ALL MESSAGES", allMessages);
+  } catch (error) {
+    console.log("ERROR HERE", erro);
+  }
+
+  // OPEN CHAT
+
+  openChat(chatGUID)
+
+  systemMessage.value = {type: "success", content:"You are connected"};
+  displaySystemMessage.value = true;
+
 
   socket.value.addEventListener("message", (event) => {
     const receivedMessage = JSON.parse(event.data);
-
     // Append the received message to the messages ref (inside the composable)
-    messages.value.unshift(receivedMessage);
+    allMessages.value.unshift(receivedMessage);
+
+  });
+
+  socket.value.addEventListener("close", (event) => {
+    systemMessage.value = {type: "error", content:"You are disconnected"};
+    displaySystemMessage.value = true;
+    console.log("System Message", displaySystemMessage.value);
 
   });
 
@@ -83,7 +124,16 @@ watch(messages, (newVal) => {
   // chatWindow.value.$el.scrollTo(0, chatWindow.value.$el.scrollHeight)
 }, { deep: true });
 
-
+// Watch for changes in displaySystemMessage and set it to false after 3 seconds.
+watch(displaySystemMessage, (newValue) => {
+  if (newValue) {
+    if (systemMessage.value.type === "success") {
+      setTimeout(() => {
+      displaySystemMessage.value = false;
+    }, 3000); // 3 seconds
+  }
+    } 
+});
 
 </script>
 
