@@ -5,8 +5,9 @@
       <v-avatar class="ml-auto">
         <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
       </v-avatar>
-      <!-- mdi-checkbox-blank-circle-outline -->
-      <v-icon size="xs" class="mt-5 ml-n1 mb-n2" color="success">mdi-checkbox-blank-circle</v-icon>
+      <v-icon v-if="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2" color="success">mdi-checkbox-blank-circle</v-icon>
+      <v-icon v-else="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2" color="success">mdi-checkbox-blank-circle-outline</v-icon>
+
       <span>John</span>
     </div>
     <span>Direct Chat</span>
@@ -80,7 +81,7 @@ const sendMessage = () => {
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
     socket.value.send(
-      JSON.stringify({ chat_guid: chatGUID, content: messageToSend.value })
+      JSON.stringify({ type: "new_message", chat_guid: chatGUID, content: messageToSend.value })
     );
     messageToSend.value = ""; // Clear the input field
     chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
@@ -89,7 +90,7 @@ const sendMessage = () => {
 
 const openChat = (chatGUID) => {
   if (socket.value !== "") {
-    socket.value.send(JSON.stringify({ chatGUID: chatGUID }));
+    socket.value.send(JSON.stringify({ type: "connect_chat", chat_guid: chatGUID }));
   }
 };
 
@@ -138,6 +139,8 @@ const hasMoreMessages = (page, pageSize, total) => {
   // Check if there are more messages to load based on the total
   return totalLoaded < total;
 };
+
+const isFriendOnline = ref(false)
 
 
 
@@ -189,8 +192,11 @@ onMounted(async () => {
       displaySystemMessage.value = true;
     } else if (receivedMessage.type === "new") {
       allMessages.value.unshift(receivedMessage);
+    } else if (receivedMessage.type === "status" && receivedMessage.username !== userName) {
+        isFriendOnline.value = receivedMessage.online
+        console.log("Friend's status", receivedMessage.online);
+      }
 
-    }
   });
 
   socket.value.addEventListener("close", (event) => {
