@@ -102,16 +102,39 @@ import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
 import useGetChats from "@/composables/useGetChats";
 import Cookies from "js-cookie";
+import { formatTimestamp, formatDate, formatTimeFromDateString } from "@/utils/dateUtils";
 
+
+// Websocket setup
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your WebSocket server URL
+
+// Chat box setup, Messages and Chat Functions
+const messageToSend = ref("");
+const chatWindow = ref(null);
+const currentChatGUID = ref("")
+const allMessages = ref([]);
+const displaySystemMessage = ref(false);
+const systemMessage = ref({});
+const moreMessagesToLoad = ref(false)
+
+// User Information
+const userName = Cookies.get("username");
+
+// Chat List Management
+const directChats = ref([]);
+const groupChats = ref([])
+const friendName = ref("")
+
+// Status and Message Handling
+const isFriendOnline = ref(false)
+
 
 const { getMessages } = useGetMessages();
 const { getOldMessages } = useGetOldMessages();
 const { getChats } = useGetChats();
 
 
-const messageToSend = ref(""); // Create a ref for the message input
-const chatWindow = ref(null);
+// Functions for Message Handling
 
 const sendMessage = () => {
   if (socket.value && messageToSend.value.trim() !== "") {
@@ -124,26 +147,7 @@ const sendMessage = () => {
   }
 };
 
-const openChat = (chatGUID) => {
-  if (socket.value !== "") {
-    socket.value.send(JSON.stringify({ type: "connect_chat", chat_guid: chatGUID }));
-  }
-};
 
-// Function to format the timestamp
-const formatTimestamp = (timestampString) => {
-  const date = new Date(timestampString);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-};
-
-// Function to format the date as "day of the week, day, and month"
-const formatDate = (timestampString) => {
-  const date = new Date(timestampString);
-  const options = { weekday: 'long', day: 'numeric', month: 'long' };
-  return date.toLocaleDateString(undefined, options);
-};
-
-// Function to determine whether to show a date break
 const showDateBreak = (index) => {
   const messages = allMessages.value
   if (index === messages.length - 1) {
@@ -157,21 +161,6 @@ const showDateBreak = (index) => {
   return currentDate !== nextDate;
 };
 
-const userName = Cookies.get("username");
-
-// const chatGUID = "e5378d07-5b14-45e3-8bcd-15b504851d78"
-// const chatGUID = "98542279-059e-4a29-b5b5-2b31cbcf2fcc";
-
-const currentChatGUID = ref("")
-
-
-const allMessages = ref([]);
-
-const displaySystemMessage = ref(false);
-const systemMessage = ref({});
-
-const moreMessagesToLoad = ref(false)
-
 const hasMoreMessages = (page, pageSize, total) => {
   // Calculate the total number of messages loaded so far
   const totalLoaded = page * pageSize;
@@ -179,10 +168,7 @@ const hasMoreMessages = (page, pageSize, total) => {
   return totalLoaded < total;
 };
 
-const isFriendOnline = ref(false)
-
-
-
+// Functions for Loading More Messages
 const loadMoreMessages = async () => {
   try {
     const oldestMessageGUID = allMessages.value[allMessages.value.length - 1]["guid"]
@@ -197,94 +183,35 @@ const loadMoreMessages = async () => {
     } else {
       moreMessagesToLoad.value = false;
     }
-    console.log("Loaded older messages", response);
   } catch (error) {
     console.error("Error fetching chat history:", error);
     throw error;
   }
 };
 
-// GET CHATS RELATED FUNCTIONALITY
-const directChats = ref([]);
-const groupChats = ref([])
-const friendName = ref("")
-
+// Functions for Chat Loading
 const loadChat = async (directChat) => {
   const chatGUID = directChat.chat_guid
   friendName.value = directChat.friend.username
-  console.log("CHAT CREATED AT", directChat.created_at);
-  console.log("CHAT UPDATED AT", directChat.updated_at);
-  console.log("FORMATTED", formatTimeFromDateString(directChat.created_at));
-  console.log("CHAT GUID", chatGUID);
-  openChat(chatGUID);
+  // send WS message to create a get/create a chat
+  if (socket.value !== "") {
+    socket.value.send(JSON.stringify({ type: "connect_chat", chat_guid: chatGUID }));
+  }
 
   try {
     const response = await getMessages(chatGUID);
     moreMessagesToLoad.value = hasMoreMessages(response.page, response.size, response.total);
     allMessages.value = response.items;
     currentChatGUID.value = chatGUID
-    console.log("ALL MESSAGES", allMessages);
-    console.log("OLDEST MESSAGE", allMessages.value[allMessages.value.length - 1]["guid"])
   } catch (error) {
-    console.log("ERROR HERE", error);
+    console.log("Error in loadChat", error);
   }
 }
 
-const formatTimeFromDateString = (dateString) => {
-  const date = new Date(dateString);
-  const currentDate = new Date();
-  console.log("PROVIDED", getWeekNumber(date));
-  console.log("CURRENT", getWeekNumber(currentDate));
-
-  // Check if the date is in the same day as today
-  if (
-    date.getDate() === currentDate.getDate() &&
-    date.getMonth() === currentDate.getMonth() &&
-    date.getFullYear() === currentDate.getFullYear()
-  ) {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  }
-
-  if (date.getFullYear() === currentDate.getFullYear() && getWeekNumber(currentDate) === getWeekNumber(date)) {
-    return date.toLocaleDateString('en-US', { weekday: 'long' });
-  }
-
-  // Format as day/month like 5/08
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-based
-  return `${day}/${month}`;
-};
-
-
-
-function getWeekNumber(d) {
-  d = new Date(+d) // Copy date so don't modify original.
-  d.setHours(0, 0, 0, 0) // Reset hours.
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7)) // Set to nearest Thursday: current date + 4 - current day number and make Sunday's day number 7
-  var yearStart = new Date(d.getFullYear(), 0, 1) // Get first day of year
-  var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7) // Calculate full weeks to nearest Thursday
-  return weekNo // Return week number
-}
 
 onMounted(async () => {
-  // try {
-  //   const response = await getMessages(chatGUID);
-  //   moreMessagesToLoad.value = hasMoreMessages(response.page, response.size, response.total);
-  //   allMessages.value = response.items;
-
-  //   console.log("ALL MESSAGES", allMessages);
-  //   console.log("OLDEST MESSAGE", allMessages.value[allMessages.value.length - 1]["guid"])
-  // } catch (error) {
-  //   console.log("ERROR HERE", error);
-  // }
 
   [directChats.value, groupChats.value] = await getChats(userName);
-  console.log("DIRECT CHATS", directChats.value);
-  console.log("GROUP CHATS", groupChats.value);
-
-
 
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
@@ -292,14 +219,12 @@ onMounted(async () => {
   socket.value.addEventListener("message", (event) => {
     const receivedMessage = JSON.parse(event.data);
     if (receivedMessage.type === "system" && receivedMessage.username !== userName) {
-      console.log("System Message", receivedMessage);
       systemMessage.value = receivedMessage;
       displaySystemMessage.value = true;
     } else if (receivedMessage.type === "new") {
       allMessages.value.unshift(receivedMessage);
     } else if (receivedMessage.type === "status" && receivedMessage.username !== userName) {
       isFriendOnline.value = receivedMessage.online
-      console.log("Friend's status", receivedMessage.online);
     }
 
   });

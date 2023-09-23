@@ -4,7 +4,6 @@ export default function useGetChats() {
   const getChats = async (userName) => {
     try {
       const response = await axios.get(`/chats/`);
-      console.log("get chats response", response.data);
 
       const allChats = response.data;
       const directChats = [];
@@ -21,7 +20,6 @@ export default function useGetChats() {
             friend: friendInfo
           })
         }
-        console.log("CHATTTT", directChats);
       });
       return [directChats, groupChats];
 
