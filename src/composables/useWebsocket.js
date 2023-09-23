@@ -12,7 +12,6 @@ export function useWebSocket(url) {
     });
 
     socket.value.addEventListener("message", (event) => {
-      console.log("Received message:", event.data);
     });
 
     socket.value.addEventListener("close", () => {
