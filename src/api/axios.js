@@ -6,23 +6,34 @@ const axiosInstance = axios.create({
   // Other default configurations if needed
 });
 
-const getAccessTokenFromCookies = () => {
-  return Cookies.get('access_token');
-};
 
-var getCookies = function(){
-    var pairs = document.cookie.split(";");
-    var cookies = {};
-    for (var i=0; i<pairs.length; i++){
-      var pair = pairs[i].split("=");
-      cookies[(pair[0]+'').trim()] = unescape(pair.slice(1).join('='));
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // If the response is successful, just return it
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response && error.response.status === 401) {
+      try {
+        // try to get ne refresh token
+        await axiosInstance.post('/refresh/', { withCredentials: true });
+        return axios.request(originalRequest);
+
+      } catch (refreshError) {
+        // Handle errors that occur during token refresh
+        // Need to redirect to the login page or handle this differently
+        throw refreshError;
+      }
     }
-    return cookies;
+    // For other error cases, re-throw the error
+    throw error;
   }
+);
 
 
 axiosInstance.interceptors.request.use((config) => {
-config.withCredentials = true; 
+config.withCredentials = true;
   return config;
 });
 
