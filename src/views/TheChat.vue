@@ -21,7 +21,6 @@
         </v-list>
       </v-col>
 
-
       <v-col>
         <v-card class="mx-auto mt-5" max-width="600">
           <v-card-title class="bg-grey-lighten-4"
@@ -35,7 +34,7 @@
               <v-icon v-else="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2"
                 color="success">mdi-checkbox-blank-circle-outline</v-icon>
 
-              <span>{{friendName}}</span>
+              <span>{{ friendName }}</span>
             </div>
             <span>Direct Chat</span>
 
@@ -49,19 +48,24 @@
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2"></v-divider>
               </div>
-              <v-list-item :class="message.user.username === userName
-                ? 'bg-teal-lighten-5 ml-10 mr-2 text-right'
-                : 'bg-blue-lighten-4 ml-2 mr-10'
-                " class="rounded-xl py-2 my-5">
-                <v-list-item-content>{{ message.content }}</v-list-item-content>
-                <v-list-item-subtitle class="mt-2">
-                  {{ formatTimestamp(message.created_at) }}
-                  <v-icon v-if="message.user.username === userName" class="text-blue">mdi-check-all</v-icon>
+                <speaker-bubble v-if="message.user.username === userName" class="ml-auto mr-2">
+                  <v-list-item class="py-2 my-5 text-right">
+                    <v-list-item-content>{{ message.content }}</v-list-item-content>
+                    <v-list-item-subtitle class="mt-2">
+                      {{ formatTimestamp(message.created_at) }}
+                      <v-icon v-if="message.user.username === userName" class="text-blue">mdi-check-all</v-icon>
+                    </v-list-item-subtitle>
+                  </v-list-item>
+                </speaker-bubble>
+                <partner-bubble v-else class="ml-2">
+                  <v-list-item class="py-2 my-5 ml-2 text-left">
+                    <v-list-item-content>{{ message.content }}</v-list-item-content>
+                    <v-list-item-subtitle class="mt-2">
+                      {{ formatTimestamp(message.created_at) }}
+                    </v-list-item-subtitle>
+                  </v-list-item>
+                </partner-bubble>
 
-
-                </v-list-item-subtitle>
-
-              </v-list-item>
 
             </div>
             <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
@@ -104,6 +108,8 @@ import useGetChats from "@/composables/useGetChats";
 import Cookies from "js-cookie";
 import { formatTimestamp, formatDate, formatTimeFromDateString } from "@/utils/dateUtils";
 
+import PartnerBubble from '@/components/PartnerBubble.vue';
+import SpeakerBubble from '@/components/SpeakerBubble.vue';
 
 // Websocket setup
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your WebSocket server URL
