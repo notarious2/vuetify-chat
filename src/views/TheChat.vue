@@ -117,7 +117,7 @@ const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");
 const chatWindow = ref(null);
-const currentChatGUID = ref("")
+const currentChatGUID = ref("");
 const allMessages = ref([]);
 const displaySystemMessage = ref(false);
 const systemMessage = ref({});
@@ -128,11 +128,11 @@ const userName = Cookies.get("username");
 
 // Chat List Management
 const directChats = ref([]);
-const groupChats = ref([])
-const friendName = ref("")
+const groupChats = ref([]);
+const friendName = ref("");
 
 // Status and Message Handling
-const isFriendOnline = ref(false)
+const isFriendOnline = ref(false);
 
 
 const { getMessages } = useGetMessages();
@@ -167,13 +167,6 @@ const showDateBreak = (index) => {
   return currentDate !== nextDate;
 };
 
-const hasMoreMessages = (page, pageSize, total) => {
-  // Calculate the total number of messages loaded so far
-  const totalLoaded = page * pageSize;
-  // Check if there are more messages to load based on the total
-  return totalLoaded < total;
-};
-
 // Functions for Loading More Messages
 const loadMoreMessages = async () => {
   try {
@@ -184,11 +177,8 @@ const loadMoreMessages = async () => {
     oldMessages.forEach(oldMessage => {
       allMessages.value.push(oldMessage)
     });
-    if (response["has_more_messages"]) {
-      console.log("Yes");
-    } else {
-      moreMessagesToLoad.value = false;
-    }
+    moreMessagesToLoad.value = response["has_more_messages"]
+   
   } catch (error) {
     console.error("Error fetching chat history:", error);
     throw error;
@@ -206,8 +196,9 @@ const loadChat = async (directChat) => {
 
   try {
     const response = await getMessages(chatGUID);
-    moreMessagesToLoad.value = hasMoreMessages(response.page, response.size, response.total);
-    allMessages.value = response.items;
+    // moreMessagesToLoad.value = hasMoreMessages(response.page, response.size, response.total);
+    allMessages.value = response["messages"];
+    moreMessagesToLoad.value = response["has_more_messages"]
     currentChatGUID.value = chatGUID
   } catch (error) {
     console.log("Error in loadChat", error);
