@@ -15,6 +15,7 @@ export default function useLogin() {
       console.log(payload);
       const response = await axios.post('http://localhost:8001/login/', formData, {headers: headers, withCredentials: true},);
       Cookies.set('username', response.data.username, { expires: 1 });
+      Cookies.set('user_guid', response.data.user_guid, { expires: 1 });
       return response.data;
     } catch (error) {
 

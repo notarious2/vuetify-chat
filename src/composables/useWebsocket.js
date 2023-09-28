@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 export function useWebSocket(url) {
   const socket = ref(null);
 
-  const connectWebSocket = () => {
+  const connectWebSocket = async () => {
     socket.value = new WebSocket(url);
 
     socket.value.addEventListener("open", () => {
@@ -20,8 +20,8 @@ export function useWebSocket(url) {
     });
   };
 
-  onMounted(() => {
-    connectWebSocket();
+  onMounted(async () => {
+    await connectWebSocket();
   });
 
   return { socket};

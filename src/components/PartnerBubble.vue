@@ -16,7 +16,7 @@
   line-height: 24px;
   width: 300px;
   background: #F5F5F5;
-  border-radius: 40px;
+  border-radius: 25px;
   text-align: center;
   color: #000;
 }
@@ -30,9 +30,9 @@
   border-right: 12px solid transparent;  /* Controls the right side of the triangle (transparent) */
   border-top: 12px solid #F5F5F5;         /* Controls the top side of the triangle */
   border-bottom: 20px solid transparent; /* Controls the bottom side of the triangle (transparent) */
-  left: 20px;                          /* Position from the left edge of the bubble */
+  left: 10px;                          /* Position from the left edge of the bubble */
   bottom: -10px;                       /* Position from the bottom edge of the bubble */
-  transform: rotate(20deg);
+  transform: rotate(10deg);
 }
 
   </style>

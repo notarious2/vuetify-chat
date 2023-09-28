@@ -1,16 +1,15 @@
 import axios from '@/api/axios';
 
-export default function useGetMessages() {
-  const getMessages = async (chatGUID) => {
+const useGetMessages = () => ({
+  getMessages: async (chatGUID) => {
     try {
-      const response = await axios.get(`/chat/${chatGUID}/messages/`, {withCredentials: true});
+      const response = await axios.get(`/chat/${chatGUID}/messages/`, { withCredentials: true });
       return response.data;
     } catch (error) {
       console.error("Error fetching chat history:", error);
       throw error;
     }
-  };
+  },
+});
 
-
-  return { getMessages };
-}
+export default useGetMessages;
