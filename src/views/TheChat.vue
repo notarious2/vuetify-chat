@@ -12,10 +12,7 @@
           <v-list-item class="my-2" @click="loadChat(directChat)">
             <v-list-item-content class="ml-2 d-flex align-center">
               <v-avatar class="mr-5">
-                <v-img
-                  src="https://cdn.vuetifyjs.com/images/john.jpg"
-                  alt="John"
-                ></v-img>
+                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
               <p>{{ directChat.friend.username }}</p>
               <p class="ml-auto">
@@ -28,35 +25,19 @@
 
       <v-col>
         <v-card class="mx-auto mt-5" max-width="600">
-          <v-card-title
-            class="bg-grey-lighten-4"
-            style="
+          <v-card-title class="bg-grey-lighten-4" style="
               display: flex;
               justify-content: space-between;
               align-items: center;
-            "
-          >
+            ">
             <div>
               <v-avatar class="ml-auto">
-                <v-img
-                  src="https://cdn.vuetifyjs.com/images/john.jpg"
-                  alt="John"
-                ></v-img>
+                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
-              <v-icon
-                v-if="isFriendOnline"
-                size="xs"
-                class="mt-5 ml-n1 mb-n2"
-                color="success"
-                >mdi-checkbox-blank-circle</v-icon
-              >
-              <v-icon
-                v-else="isFriendOnline"
-                size="xs"
-                class="mt-5 ml-n1 mb-n2"
-                color="success"
-                >mdi-checkbox-blank-circle-outline</v-icon
-              >
+              <v-icon v-if="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2"
+                color="success">mdi-checkbox-blank-circle</v-icon>
+              <v-icon v-else="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2"
+                color="success">mdi-checkbox-blank-circle-outline</v-icon>
 
               <span>{{ friendName }}</span>
             </div>
@@ -66,28 +47,19 @@
           <v-divider></v-divider>
           <div id="container" ref="chatWindow">
             <div v-for="(message, index) in allMessages">
-              <div
-                v-if="showDateBreak(index)"
-                class="text-center my-2 font-weight-medium"
-              >
+              <div v-if="showDateBreak(index)" class="text-center my-2 font-weight-medium">
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2"></v-divider>
               </div>
-              <speaker-bubble
-                v-if="message.user.username === userName"
-                class="ml-auto mr-2"
-              >
+              <speaker-bubble v-if="message.user.username === userName" class="ml-auto mr-2">
                 <v-list-item class="py-2 my-5 text-right">
                   <v-list-item-content>{{
                     message.content
                   }}</v-list-item-content>
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon
-                      v-if="message.user.username === userName"
-                      :class="message.is_read ? 'text-blue' : 'text-gray'"
-                      >mdi-check-all</v-icon
-                    >
+                    <v-icon v-if="message.user.username === userName"
+                      :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
                   </v-list-item-subtitle>
                 </v-list-item>
               </speaker-bubble>
@@ -102,56 +74,30 @@
                 </v-list-item>
               </partner-bubble>
             </div>
-            <v-btn
-              v-if="moreMessagesToLoad"
-              @click="loadMoreMessages"
-              class="mt-3 mx-auto"
-              style="text-transform: none"
-              >Load More</v-btn
-            >
+            <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
+              style="text-transform: none">Load More</v-btn>
           </div>
 
           <!-- <v-divider></v-divider> -->
           <v-card class="mx-auto" max-width="600">
             <v-container class="mx-3 px-5 rounded-lg mt-3">
               <v-row align="center" justify="center" no-gutters>
-                <v-textarea
-                  label="Type your text"
-                  rows="1"
-                  v-model="messageToSend"
-                  auto-grow
-                  variant="solo"
-                  @keydown.enter.exact.prevent
-                  @keyup.enter.exact.prevent="sendMessage"
-                ></v-textarea>
+                <v-textarea label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
+                  @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"></v-textarea>
                 <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
                 <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-                <v-btn
-                  @click="sendMessage"
-                  icon="mdi-send"
-                  variant="plain"
-                  color="blue"
-                  size="x-large"
-                  class="ml-2 mb-5"
-                  style="font-size: 30px"
-                >
+                <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="blue" size="x-large"
+                  class="ml-2 mb-5" style="font-size: 30px">
                 </v-btn>
               </v-row>
             </v-container>
           </v-card>
-          <v-alert
-            v-if="displaySystemMessage"
-            :color="
-              systemMessage.type === 'error'
-                ? 'pink-accent-2'
-                : systemMessage.type === 'system'
+          <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
+              ? 'pink-accent-2'
+              : systemMessage.type === 'system'
                 ? 'blue-grey-lighten-2'
                 : 'indigo-lighten-2'
-            "
-            theme="dark"
-            class="text-center text-h6 font-weight-bold"
-            >{{ systemMessage.content }}</v-alert
-          >
+            " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
         </v-card>
       </v-col>
     </v-row>
@@ -191,7 +137,7 @@ const lastReadMessage = ref({});
 
 // User Information
 const userName = Cookies.get("username");
-const userGUID = Cookies.get("user_guid")
+const userGUID = Cookies.get("user_guid");
 
 // Chat List Management
 const directChats = ref([]);
@@ -207,7 +153,7 @@ const { getChats } = useGetChats();
 
 // Functions for Message Handling
 
-const sendMessage = async () => {
+const wsSendMessage = async () => {
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
     await socket.value.send(
@@ -261,33 +207,30 @@ const loadMoreMessages = async () => {
 };
 
 // Function to mark a message as "seen"
-const markMessageAsRead = async (message) => {
+const wsMarkMessageAsRead = async (message) => {
   await socket.value.send(
-      JSON.stringify({
-        type: "message_read",
-        chat_guid: message.chat.guid,
-        message_guid: message.guid,
-      })
-    );
-  };
-
+    JSON.stringify({
+      type: "message_read",
+      chat_guid: message.chat.guid,
+      message_guid: message.guid,
+    })
+  );
+};
 
 const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
   for (let i = 0; i < messages.value.length; i++) {
     const message = messages.value[i];
-    console.log("USER GUIDS", message.user.guid !== userGUID);
-    console.log("WTF", message.content, message.user.guid, userGUID);
-    if (new Date(message.created_at) <= new Date (lastReadMessageDate) & message.user.guid !== userGUID) {
-      message.is_read = true;
-
-    } else {
-      break
+    if (
+      (new Date(message.created_at) <= new Date(lastReadMessageDate)) &
+      (message.user.guid === userGUID)
+    ) {
+      if (message.is_read) {
+        break;
+      }
+      messages.value[i].is_read = true;
     }
-
-    }
-
-}
-
+  }
+};
 
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
@@ -307,12 +250,31 @@ const loadChat = async (directChat) => {
     moreMessagesToLoad.value = response.has_more_messages;
     if (response.last_read_message) {
       lastReadMessage.value.guid = response.last_read_message.guid;
-      lastReadMessage.value.created_at = new Date(response.last_read_message.created_at);}
+      lastReadMessage.value.created_at = new Date(
+        response.last_read_message.created_at
+      );
+    }
     currentChatGUID.value = chatGUID;
   } catch (error) {
     console.log("Error in loadChat", error);
   }
 };
+
+const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
+  const isUnread =
+    message.user.username !== userName && message.is_read === false;
+  if (!isUnread) return false;
+
+  const messageElement = document.getElementById(`${message.guid}`);
+  if (!messageElement) return false;
+
+  // Get the top and bottom boundaries of the message element
+  const messageTop = messageElement.offsetTop;
+  const messageBottom = messageTop + messageElement.offsetHeight;
+
+  return messageTop < viewportBottom && messageBottom > viewportTop;
+};
+
 
 const handleScroll = async () => {
   // Get the viewport's top and bottom boundaries
@@ -322,35 +284,55 @@ const handleScroll = async () => {
   // Iterate through messages and check their visibility
   for (let i = 0; i < allMessages.value.length; i++) {
     const message = allMessages.value[i];
+    // ignore if own message
+    if (message.user.guid === userGUID) continue;
+    // break the loop if message was already read
+    if (lastReadMessage.value.guid === message.guid) break;
+    // break the loop if message is read
+    if (message.is_read) break;
 
-    // Check if the message should be marked as seen
-    if (message.user.username !== userName && message.is_read === false) {
-      // console.log(message.user.username, userName, message.content);
-      const messageElement = document.getElementById(`${message.guid}`);
-      if (messageElement) {
-        // Get the top and bottom boundaries of the message element
-        const messageTop = messageElement.offsetTop;
-        const messageBottom = messageTop + messageElement.offsetHeight;
-        // Check if the message is at least partially visible in the viewport
-        if (messageTop < viewportBottom && messageBottom > viewportTop) {
-          // Mark the message as "seen"
-          if (JSON.stringify(lastReadMessage.value) === "{}") {
-            lastReadMessage.value.guid = message.guid;
-            lastReadMessage.value.created_at = new Date(message.created_at);
-          } else {
-            if (new Date(message.created_at) > lastReadMessage.value.created_at) {
-            lastReadMessage.value.guid = message.guid;
-            lastReadMessage.value.created_at = new Date(message.created_at);
-            await markMessageAsRead(message)
-            }
-          }
-
-          // Exit the loop once a message is seen
-          break;
-        }
-      }
+    if (shouldMarkMessageAsRead(message, viewportTop, viewportBottom)) {
+      lastReadMessage.value.guid = message.guid;
+      lastReadMessage.value.created_at = new Date(message.created_at);
+      console.log("MARKING THIS MESSAGES AS READ", message.content);
+      // mark message as read for current user
+      allMessages.value[i].is_read = true;
+      // send read_status ws message
+      await wsMarkMessageAsRead(message);
     }
   }
+};
+
+
+const handleSystemMessage = (receivedMessage) => {
+  if (receivedMessage.type === 'system' && receivedMessage.username !== userName) {
+    systemMessage.value = receivedMessage;
+    displaySystemMessage.value = true;
+  }
+};
+
+const handleNewMessage = (receivedMessage) => {
+  if (receivedMessage.type === 'new') {
+    allMessages.value.unshift(receivedMessage);
+  }
+};
+
+const handleMessageRead = (receivedMessage) => {
+  if (receivedMessage.type === 'message_read' && receivedMessage.user_guid !== userGUID) {
+    updateMessagesReadStatus(allMessages, receivedMessage.last_read_message_created_at);
+  }
+};
+
+const handleStatusMessage = (receivedMessage) => {
+  if (receivedMessage.type === 'status' && receivedMessage.username !== userName) {
+    isFriendOnline.value = receivedMessage.online;
+  }
+};
+
+const handleSocketClose = () => {
+  systemMessage.value = { type: 'error', content: 'You are disconnected' };
+  displaySystemMessage.value = true;
+  console.log('System Message', displaySystemMessage.value);
 };
 
 onMounted(async () => {
@@ -361,23 +343,11 @@ onMounted(async () => {
 
   socket.value.addEventListener("message", (event) => {
     const receivedMessage = JSON.parse(event.data);
-    if (
-      receivedMessage.type === "system" &&
-      receivedMessage.username !== userName
-    ) {
-      systemMessage.value = receivedMessage;
-      displaySystemMessage.value = true;
-    } else if (receivedMessage.type === "new") {
-      allMessages.value.unshift(receivedMessage);
-    } else if (receivedMessage.type === "message_read") {
-      updateMessagesReadStatus(allMessages, receivedMessage.last_read_message_created_at)
-    }
-    else if (
-      receivedMessage.type === "status" &&
-      receivedMessage.username !== userName
-    ) {
-      isFriendOnline.value = receivedMessage.online;
-    }
+    handleSystemMessage(receivedMessage);
+    handleNewMessage(receivedMessage);
+    handleMessageRead(receivedMessage);
+    handleStatusMessage(receivedMessage);
+
   });
 
   socket.value.addEventListener("close", (event) => {
@@ -385,6 +355,8 @@ onMounted(async () => {
     displaySystemMessage.value = true;
     console.log("System Message", displaySystemMessage.value);
   });
+
+  socket.value.addEventListener('close', handleSocketClose);
 
   chatWindow.value.addEventListener("scroll", handleScroll);
 });
