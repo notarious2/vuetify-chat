@@ -15,6 +15,14 @@
                 <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
               <p>{{ directChat.friend.username }}</p>
+              <p v-if="directChat.chat_guid === currentChatGUID && newMessagesCount !== 0"
+                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2">
+                {{ newMessagesCount }}
+              </p>
+              <p v-else-if="directChat.has_new_messages"
+                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2">
+                {{ directChat.new_messages_count }}
+              </p>
               <p class="ml-auto">
                 {{ formatTimeFromDateString(directChat.updated_at) }}
               </p>
@@ -51,19 +59,20 @@
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2"></v-divider>
               </div>
-              <speaker-bubble v-if="message.user.username === userName" class="ml-auto mr-2">
+              <speaker-bubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
                 <v-list-item class="py-2 my-5 text-right">
                   <v-list-item-content>{{
                     message.content
                   }}</v-list-item-content>
+
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon v-if="message.user.username === userName"
+                    <v-icon v-if="message.user_guid === userGUID"
                       :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
                   </v-list-item-subtitle>
                 </v-list-item>
               </speaker-bubble>
-              <partner-bubble v-else class="ml-2" :id="message.guid">
+              <partner-bubble v-else class="ml-2" :id="message.message_guid">
                 <v-list-item class="py-2 my-5 ml-2 text-left">
                   <v-list-item-content>{{
                     message.content
@@ -131,6 +140,7 @@ const allMessages = ref([]);
 const displaySystemMessage = ref(false);
 const systemMessage = ref({});
 const moreMessagesToLoad = ref(false);
+const newMessagesCount = ref(0);
 
 // Reference to the last message element
 const lastReadMessage = ref({});
@@ -159,6 +169,7 @@ const wsSendMessage = async () => {
     await socket.value.send(
       JSON.stringify({
         type: "new_message",
+        user_guid: userGUID,
         chat_guid: currentChatGUID.value,
         content: messageToSend.value,
       })
@@ -189,7 +200,8 @@ const showDateBreak = (index) => {
 const loadMoreMessages = async () => {
   try {
     const oldestMessageGUID =
-      allMessages.value[allMessages.value.length - 1]["guid"];
+      allMessages.value[allMessages.value.length - 1]["message_guid"];
+      console.log("CURRENT CHAT GUID", currentChatGUID.value);
     const response = await getOldMessages(
       currentChatGUID.value,
       oldestMessageGUID
@@ -211,8 +223,8 @@ const wsMarkMessageAsRead = async (message) => {
   await socket.value.send(
     JSON.stringify({
       type: "message_read",
-      chat_guid: message.chat.guid,
-      message_guid: message.guid,
+      chat_guid: message.chat_guid,
+      message_guid: message.message_guid,
     })
   );
 };
@@ -222,7 +234,7 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
     const message = messages.value[i];
     if (
       (new Date(message.created_at) <= new Date(lastReadMessageDate)) &
-      (message.user.guid === userGUID)
+      (message.user_guid === userGUID)
     ) {
       if (message.is_read) {
         break;
@@ -230,6 +242,11 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
       messages.value[i].is_read = true;
     }
   }
+};
+
+// assign UnreadMessagesCount after getting Messages
+const setnewMessagesCountforChat = (chat) => {
+  newMessagesCount.value = chat.unread_messages_count;
 };
 
 // Functions for Chat Loading
@@ -242,10 +259,11 @@ const loadChat = async (directChat) => {
       JSON.stringify({ type: "connect_chat", chat_guid: chatGUID })
     );
   }
-
+  setnewMessagesCountforChat(directChat);
   try {
     const response = await getMessages(chatGUID);
-    console.log("GET MESSAGES", response);
+    console.log("Get Messages", response);
+
     allMessages.value = response.messages;
     moreMessagesToLoad.value = response.has_more_messages;
     if (response.last_read_message) {
@@ -261,11 +279,9 @@ const loadChat = async (directChat) => {
 };
 
 const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
-  const isUnread =
-    message.user.username !== userName && message.is_read === false;
+  const isUnread = message.user_guid !== userGUID && message.is_new === true;
   if (!isUnread) return false;
-
-  const messageElement = document.getElementById(`${message.guid}`);
+  const messageElement = document.getElementById(`${message.message_guid}`);
   if (!messageElement) return false;
 
   // Get the top and bottom boundaries of the message element
@@ -275,6 +291,19 @@ const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
   return messageTop < viewportBottom && messageBottom > viewportTop;
 };
 
+const calculateNewMessagesCount = (messages, userGUID) => {
+  // Use reduce to count unread messages for the specified user
+  // ignore read status of own messages
+  console.log("New messages,", messages);
+  newMessagesCount.value = messages.reduce((count, message) => {
+    if (message.user_guid !== userGUID && message.is_new) {
+      return count + 1;
+    } else {
+      return count;
+    }
+  }, 0);
+  console.log("NEW messages count", newMessagesCount.value);
+};
 
 const handleScroll = async () => {
   // Get the viewport's top and bottom boundaries
@@ -285,54 +314,72 @@ const handleScroll = async () => {
   for (let i = 0; i < allMessages.value.length; i++) {
     const message = allMessages.value[i];
     // ignore if own message
-    if (message.user.guid === userGUID) continue;
+    if (message.user_guid === userGUID) continue;
     // break the loop if message was already read
     if (lastReadMessage.value.guid === message.guid) break;
-    // break the loop if message is read
-    if (message.is_read) break;
-
+    // break the loop if message is not new
+    if (!message.is_new) break;
     if (shouldMarkMessageAsRead(message, viewportTop, viewportBottom)) {
-      lastReadMessage.value.guid = message.guid;
+      lastReadMessage.value.guid = message.message_guid;
       lastReadMessage.value.created_at = new Date(message.created_at);
-      console.log("MARKING THIS MESSAGES AS READ", message.content);
       // mark message as read for current user
       allMessages.value[i].is_read = true;
+      allMessages.value[i].is_new = false;
       // send read_status ws message
       await wsMarkMessageAsRead(message);
     }
   }
 };
 
-
 const handleSystemMessage = (receivedMessage) => {
-  if (receivedMessage.type === 'system' && receivedMessage.username !== userName) {
+  if (
+    receivedMessage.type === "system" &&
+    receivedMessage.username !== userName
+  ) {
     systemMessage.value = receivedMessage;
     displaySystemMessage.value = true;
   }
 };
 
 const handleNewMessage = (receivedMessage) => {
-  if (receivedMessage.type === 'new') {
-    allMessages.value.unshift(receivedMessage);
+  if (receivedMessage.type === "new") {
+    const is_new = receivedMessage.user_guid !== userGUID;
+    allMessages.value.unshift({
+      message_guid: receivedMessage.message_guid,
+      chat_guid: receivedMessage.chat_guid,
+      content: receivedMessage.content,
+      user_guid: receivedMessage.user_guid,
+      created_at: receivedMessage.created_at,
+      is_new: is_new,
+    });
   }
 };
 
 const handleMessageRead = (receivedMessage) => {
-  if (receivedMessage.type === 'message_read' && receivedMessage.user_guid !== userGUID) {
-    updateMessagesReadStatus(allMessages, receivedMessage.last_read_message_created_at);
+  if (
+    receivedMessage.type === "message_read" &&
+    receivedMessage.user_guid !== userGUID
+  ) {
+    updateMessagesReadStatus(
+      allMessages,
+      receivedMessage.last_read_message_created_at
+    );
   }
 };
 
 const handleStatusMessage = (receivedMessage) => {
-  if (receivedMessage.type === 'status' && receivedMessage.username !== userName) {
+  if (
+    receivedMessage.type === "status" &&
+    receivedMessage.username !== userName
+  ) {
     isFriendOnline.value = receivedMessage.online;
   }
 };
 
 const handleSocketClose = () => {
-  systemMessage.value = { type: 'error', content: 'You are disconnected' };
+  systemMessage.value = { type: "error", content: "You are disconnected" };
   displaySystemMessage.value = true;
-  console.log('System Message', displaySystemMessage.value);
+  console.log("System Message", displaySystemMessage.value);
 };
 
 onMounted(async () => {
@@ -347,7 +394,6 @@ onMounted(async () => {
     handleNewMessage(receivedMessage);
     handleMessageRead(receivedMessage);
     handleStatusMessage(receivedMessage);
-
   });
 
   socket.value.addEventListener("close", (event) => {
@@ -356,7 +402,7 @@ onMounted(async () => {
     console.log("System Message", displaySystemMessage.value);
   });
 
-  socket.value.addEventListener('close', handleSocketClose);
+  socket.value.addEventListener("close", handleSocketClose);
 
   chatWindow.value.addEventListener("scroll", handleScroll);
 });
@@ -375,6 +421,15 @@ watch(displaySystemMessage, (newValue) => {
     }
   }
 });
+
+// watche messages to recalculate unread messages count
+watch(
+  allMessages,
+  (newVal) => {
+    calculateNewMessagesCount(allMessages.value, userGUID);
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>

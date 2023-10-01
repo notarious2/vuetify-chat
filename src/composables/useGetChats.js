@@ -4,7 +4,6 @@ export default function useGetChats() {
   const getChats = async (userName) => {
     try {
       const response = await axios.get(`/chats/`);
-
       const allChats = response.data;
       const directChats = [];
       const groupChats = [];
@@ -14,10 +13,12 @@ export default function useGetChats() {
           const friendInfo = chat.users.find(user => user.username !== userName);
 
           directChats.push({
-            chat_guid: chat["guid"],
+            chat_guid: chat["chat_guid"],
             created_at: chat["created_at"],
             updated_at: chat["updated_at"],
-            friend: friendInfo
+            friend: friendInfo,
+            has_new_messages: chat["has_new_messages"],
+            new_messages_count: chat["new_messages_count"]
           })
         }
       });
