@@ -42,9 +42,11 @@
               <v-avatar class="ml-auto">
                 <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
-              <v-icon v-if="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-if="friendStatus === 'online'" size="xs" class="mt-5 ml-n1 mb-n2"
                 color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else="isFriendOnline" size="xs" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-else-if="friendStatus === 'inactive'" size="xs" class="mt-5 ml-n1 mb-n2"
+                color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
+              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2"
                 color="success">mdi-checkbox-blank-circle-outline</v-icon>
 
               <span>{{ friendName }}</span>
@@ -91,15 +93,17 @@
           <v-card class="mx-auto" max-width="600">
             <v-container class="mx-3 px-5 rounded-lg mt-3">
               <v-row align="center" justify="center" no-gutters>
-                <v-textarea label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
-                  @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"></v-textarea>
+                <v-textarea hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
+                  @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage" @input="handleOwnTyping"></v-textarea>
                 <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
                 <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
                 <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="blue" size="x-large"
                   class="ml-2 mb-5" style="font-size: 30px">
                 </v-btn>
               </v-row>
-            </v-container>
+              <v-row v-show="friendIsTyping" class="mb-auto mt-0 ml-2 text-blue-darken-3">typing ...</v-row>
+              <v-row v-show="!friendIsTyping" class="mb-auto mt-0 ml-2" >&nbsp;</v-row>
+          </v-container>
           </v-card>
           <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
               ? 'pink-accent-2'
@@ -155,7 +159,7 @@ const groupChats = ref([]);
 const friendName = ref("");
 
 // Status and Message Handling
-const isFriendOnline = ref(false);
+const friendStatus = ref(false);
 
 const { getMessages } = useGetMessages();
 const { getOldMessages } = useGetOldMessages();
@@ -176,6 +180,60 @@ const wsSendMessage = async () => {
     );
     messageToSend.value = ""; // Clear the input field
     chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+  }
+};
+
+const isTyping = ref(false)
+const typingTimer = ref(null)
+const friendIsTyping = ref(false)
+let friendTypingTimeout = null;
+
+const wsSendTyping = async () => {
+    // Check if the WebSocket connection exists and the message is not empty
+    await socket.value.send(
+      JSON.stringify({
+        type: "user_typing",
+        user_guid: userGUID,
+        chat_guid: currentChatGUID.value,
+      })
+    );
+};
+
+
+
+
+const handleOwnTyping = async () => {
+  // Clear the existing timer
+  clearTimeout(typingTimer.value);
+
+  // Set isTyping to true when the textarea has content
+  isTyping.value = messageToSend.value.trim() !== "";
+
+  // Start a new timer to set isTyping to false after 3 seconds
+  typingTimer.value = setTimeout(async () => {
+    isTyping.value = false;
+    // Call the wsSendTyping function when the user stops typing (after 3 seconds)
+    await wsSendTyping();
+  }, 1000); // Set the timeout to 3000 milliseconds (3 seconds)
+}
+
+
+const handleUserTyping = (receivedMessage) => {
+  if (
+    receivedMessage.type === 'user_typing' &&
+    receivedMessage.user_guid !== userGUID
+  ) {
+    friendIsTyping.value = true;
+
+    // Clear any existing timeout
+    if (friendTypingTimeout) {
+      clearTimeout(friendTypingTimeout);
+    }
+
+    // Set a timeout to reset friendIsTyping to false after 3 seconds
+    friendTypingTimeout = setTimeout(() => {
+      friendIsTyping.value = false;
+    }, 3000); // 3000 milliseconds (3 seconds)
   }
 };
 
@@ -245,7 +303,7 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
 };
 
 // assign UnreadMessagesCount after getting Messages
-const setnewMessagesCountforChat = (chat) => {
+const setNewMessagesCountforChat = (chat) => {
   newMessagesCount.value = chat.unread_messages_count;
 };
 
@@ -259,7 +317,8 @@ const loadChat = async (directChat) => {
       JSON.stringify({ type: "connect_chat", chat_guid: chatGUID })
     );
   }
-  setnewMessagesCountforChat(directChat);
+  setNewMessagesCountforChat(directChat);
+
   try {
     const response = await getMessages(chatGUID);
     console.log("Get Messages", response);
@@ -352,6 +411,8 @@ const handleNewMessage = (receivedMessage) => {
       created_at: receivedMessage.created_at,
       is_new: is_new,
     });
+    // set friend typing to false once new message is received
+    friendIsTyping.value = false;
   }
 };
 
@@ -372,7 +433,7 @@ const handleStatusMessage = (receivedMessage) => {
     receivedMessage.type === "status" &&
     receivedMessage.username !== userName
   ) {
-    isFriendOnline.value = receivedMessage.online;
+    friendStatus.value = receivedMessage.status;
   }
 };
 
@@ -394,6 +455,7 @@ onMounted(async () => {
     handleNewMessage(receivedMessage);
     handleMessageRead(receivedMessage);
     handleStatusMessage(receivedMessage);
+    handleUserTyping(receivedMessage);
   });
 
   socket.value.addEventListener("close", (event) => {
