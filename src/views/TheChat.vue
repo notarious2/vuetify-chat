@@ -12,15 +12,25 @@
           <v-list-item class="my-2" @click="loadChat(directChat)">
             <v-list-item-content class="ml-2 d-flex align-center">
               <v-avatar class="mr-5">
-                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
+                <v-img
+                  src="https://cdn.vuetifyjs.com/images/john.jpg"
+                  alt="John"
+                ></v-img>
               </v-avatar>
               <p>{{ directChat.friend.username }}</p>
-              <p v-if="directChat.chat_guid === currentChatGUID && newMessagesCount !== 0"
-                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2">
+              <p
+                v-if="
+                  directChat.chat_guid === currentChatGUID &&
+                  newMessagesCount !== 0
+                "
+                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2"
+              >
                 {{ newMessagesCount }}
               </p>
-              <p v-else-if="directChat.has_new_messages"
-                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2">
+              <p
+                v-else-if="directChat.has_new_messages"
+                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2"
+              >
                 {{ directChat.new_messages_count }}
               </p>
               <p class="ml-auto">
@@ -33,23 +43,40 @@
 
       <v-col>
         <v-card class="mx-auto mt-5" max-width="600">
-          <v-card-title class="bg-grey-lighten-4" style="
+          <v-card-title
+            class="bg-grey-lighten-4"
+            style="
               display: flex;
               justify-content: space-between;
               align-items: center;
-            ">
+            "
+          >
             <div>
               <v-avatar class="ml-auto">
-                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
+                <v-img
+                  src="https://cdn.vuetifyjs.com/images/john.jpg"
+                  alt="John"
+                ></v-img>
               </v-avatar>
-              <v-icon v-if="friendStatus === 'online'" size="xs" class="mt-5 ml-n1 mb-n2"
-                color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else-if="friendStatus === 'inactive'" size="xs" class="mt-5 ml-n1 mb-n2"
-                color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2"
-                color="success">mdi-checkbox-blank-circle-outline</v-icon>
+              <v-icon
+                v-if="friendStatus === 'online'"
+                size="xs"
+                class="mt-5 ml-n1 mb-n2"
+                color="success"
+                >mdi-checkbox-blank-circle</v-icon
+              >
+              <v-icon
+                v-else-if="friendStatus === 'inactive'"
+                size="xs"
+                class="mt-5 ml-n1 mb-n2"
+                color="orange-lighten-2"
+                >mdi-checkbox-blank-circle</v-icon
+              >
+              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="success"
+                >mdi-checkbox-blank-circle-outline</v-icon
+              >
 
-              <span>{{ friendName }}</span>
+              <span>{{ friendUserName }}</span>
             </div>
             <span>Direct Chat</span>
           </v-card-title>
@@ -57,11 +84,17 @@
           <v-divider></v-divider>
           <div id="container" ref="chatWindow">
             <div v-for="(message, index) in allMessages">
-              <div v-if="showDateBreak(index)" class="text-center my-2 font-weight-medium">
+              <div
+                v-if="showDateBreak(index)"
+                class="text-center my-2 font-weight-medium"
+              >
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2"></v-divider>
               </div>
-              <speaker-bubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
+              <speaker-bubble
+                v-if="message.user_guid === userGUID"
+                class="ml-auto mr-2"
+              >
                 <v-list-item class="py-2 my-5 text-right">
                   <v-list-item-content>{{
                     message.content
@@ -69,48 +102,89 @@
 
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon v-if="message.user_guid === userGUID"
-                      :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
+                    <v-icon
+                      v-if="message.user_guid === userGUID"
+                      :class="message.is_read ? 'text-blue' : 'text-gray'"
+                      >mdi-check-all</v-icon
+                    >
                   </v-list-item-subtitle>
                 </v-list-item>
               </speaker-bubble>
-              <partner-bubble v-else class="ml-2" :id="message.message_guid">
+              <partner-bubble
+                v-else
+                class="ml-2"
+                :id="message.message_guid"
+              >
                 <v-list-item class="py-2 my-5 ml-2 text-left">
-                  <v-list-item-content>{{
-                    message.content
-                  }}</v-list-item-content>
+                  <v-list-item-content
+                    >{{ message.content }}
+                  </v-list-item-content>
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
                   </v-list-item-subtitle>
                 </v-list-item>
               </partner-bubble>
             </div>
-            <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
-              style="text-transform: none">Load More</v-btn>
+            <v-btn
+              v-if="moreMessagesToLoad"
+              @click="loadMoreMessages"
+              class="mt-3 mx-auto"
+              style="text-transform: none"
+              >Load More</v-btn
+            >
           </div>
 
           <!-- <v-divider></v-divider> -->
           <v-card class="mx-auto" max-width="600">
             <v-container class="mx-3 px-5 rounded-lg mt-3">
               <v-row align="center" justify="center" no-gutters>
-                <v-textarea hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
-                  @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage" @input="handleOwnTyping"></v-textarea>
+                <v-textarea
+                  hide-details
+                  label="Type your text"
+                  rows="1"
+                  v-model="messageToSend"
+                  auto-grow
+                  variant="solo"
+                  @keydown.enter.exact.prevent
+                  @keyup.enter.exact.prevent="wsSendMessage"
+                  @input="handleOwnTyping"
+                ></v-textarea>
                 <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
                 <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-                <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="blue" size="x-large"
-                  class="ml-2 mb-5" style="font-size: 30px">
+                <v-btn
+                  @click="wsSendMessage"
+                  icon="mdi-send"
+                  variant="plain"
+                  color="blue"
+                  size="x-large"
+                  class="ml-2 mb-5"
+                  style="font-size: 30px"
+                >
                 </v-btn>
               </v-row>
-              <v-row v-show="friendIsTyping" class="mb-auto mt-0 ml-2 text-blue-darken-3">typing ...</v-row>
-              <v-row v-show="!friendIsTyping" class="mb-auto mt-0 ml-2" >&nbsp;</v-row>
-          </v-container>
+              <v-row
+                v-show="friendIsTyping"
+                class="mb-auto mt-0 ml-2 text-blue-darken-3"
+                >typing ...</v-row
+              >
+              <v-row v-show="!friendIsTyping" class="mb-auto mt-0 ml-2"
+                >&nbsp;</v-row
+              >
+            </v-container>
           </v-card>
-          <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
-              ? 'pink-accent-2'
-              : systemMessage.type === 'system'
+          <v-alert
+            v-if="displaySystemMessage"
+            :color="
+              systemMessage.type === 'error'
+                ? 'pink-accent-2'
+                : systemMessage.type === 'system'
                 ? 'blue-grey-lighten-2'
                 : 'indigo-lighten-2'
-            " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
+            "
+            theme="dark"
+            class="text-center text-h6 font-weight-bold"
+            >{{ systemMessage.content }}</v-alert
+          >
         </v-card>
       </v-col>
     </v-row>
@@ -118,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUpdated } from "vue";
+import { ref, watch, onMounted, onUpdated, onBeforeMount } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
@@ -156,7 +230,7 @@ const userGUID = Cookies.get("user_guid");
 // Chat List Management
 const directChats = ref([]);
 const groupChats = ref([]);
-const friendName = ref("");
+const friendUserName = ref("");
 
 // Status and Message Handling
 const friendStatus = ref(false);
@@ -183,24 +257,21 @@ const wsSendMessage = async () => {
   }
 };
 
-const isTyping = ref(false)
-const typingTimer = ref(null)
-const friendIsTyping = ref(false)
+const isTyping = ref(false);
+const typingTimer = ref(null);
+const friendIsTyping = ref(false);
 let friendTypingTimeout = null;
 
 const wsSendTyping = async () => {
-    // Check if the WebSocket connection exists and the message is not empty
-    await socket.value.send(
-      JSON.stringify({
-        type: "user_typing",
-        user_guid: userGUID,
-        chat_guid: currentChatGUID.value,
-      })
-    );
+  // Check if the WebSocket connection exists and the message is not empty
+  await socket.value.send(
+    JSON.stringify({
+      type: "user_typing",
+      user_guid: userGUID,
+      chat_guid: currentChatGUID.value,
+    })
+  );
 };
-
-
-
 
 const handleOwnTyping = async () => {
   // Clear the existing timer
@@ -215,12 +286,11 @@ const handleOwnTyping = async () => {
     // Call the wsSendTyping function when the user stops typing (after 3 seconds)
     await wsSendTyping();
   }, 1000); // Set the timeout to 3000 milliseconds (3 seconds)
-}
-
+};
 
 const handleUserTyping = (receivedMessage) => {
   if (
-    receivedMessage.type === 'user_typing' &&
+    receivedMessage.type === "user_typing" &&
     receivedMessage.user_guid !== userGUID
   ) {
     friendIsTyping.value = true;
@@ -259,7 +329,7 @@ const loadMoreMessages = async () => {
   try {
     const oldestMessageGUID =
       allMessages.value[allMessages.value.length - 1]["message_guid"];
-      console.log("CURRENT CHAT GUID", currentChatGUID.value);
+    console.log("CURRENT CHAT GUID", currentChatGUID.value);
     const response = await getOldMessages(
       currentChatGUID.value,
       oldestMessageGUID
@@ -310,7 +380,7 @@ const setNewMessagesCountforChat = (chat) => {
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
   const chatGUID = directChat.chat_guid;
-  friendName.value = directChat.friend.username;
+  friendUserName.value = directChat.friend.username;
   // send WS message to create a get/create a chat
   if (socket.value !== "") {
     socket.value.send(
@@ -330,11 +400,16 @@ const loadChat = async (directChat) => {
       lastReadMessage.value.created_at = new Date(
         response.last_read_message.created_at
       );
+    } else {
+      // clear from previously loaded
+      lastReadMessage.value = "";
     }
     currentChatGUID.value = chatGUID;
   } catch (error) {
     console.log("Error in loadChat", error);
   }
+  // clear friend's status
+  friendStatus.value = false;
 };
 
 const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
@@ -428,10 +503,10 @@ const handleMessageRead = (receivedMessage) => {
   }
 };
 
-const handleStatusMessage = (receivedMessage) => {
+const handleFriendStatusMessage = (receivedMessage) => {
   if (
     receivedMessage.type === "status" &&
-    receivedMessage.username !== userName
+    receivedMessage.username == friendUserName.value
   ) {
     friendStatus.value = receivedMessage.status;
   }
@@ -443,9 +518,9 @@ const handleSocketClose = () => {
   console.log("System Message", displaySystemMessage.value);
 };
 
+
 onMounted(async () => {
   [directChats.value, groupChats.value] = await getChats(userName);
-
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
 
@@ -454,7 +529,7 @@ onMounted(async () => {
     handleSystemMessage(receivedMessage);
     handleNewMessage(receivedMessage);
     handleMessageRead(receivedMessage);
-    handleStatusMessage(receivedMessage);
+    handleFriendStatusMessage(receivedMessage);
     handleUserTyping(receivedMessage);
   });
 
@@ -484,7 +559,7 @@ watch(displaySystemMessage, (newValue) => {
   }
 });
 
-// watche messages to recalculate unread messages count
+// track messages to recalculate unread messages count
 watch(
   allMessages,
   (newVal) => {
