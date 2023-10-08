@@ -83,7 +83,10 @@
 
           <v-divider></v-divider>
           <div id="container" ref="chatWindow">
-            <div v-for="(message, index) in allMessages">
+            <div
+              v-for="(message, index) in allMessages"
+              :key="message.message_guid"
+            >
               <div
                 v-if="showDateBreak(index)"
                 class="text-center my-2 font-weight-medium"
@@ -112,8 +115,9 @@
               </speaker-bubble>
               <partner-bubble
                 v-else
-                class="ml-2"
+                class="ml-2 partner-msg"
                 :id="message.message_guid"
+                :index="index"
               >
                 <v-list-item class="py-2 my-5 ml-2 text-left">
                   <v-list-item-content
@@ -410,7 +414,35 @@ const loadChat = async (directChat) => {
   }
   // clear friend's status
   friendStatus.value = false;
+
+  if (observer.value) {
+    observer.value.disconnect();
+  }
+
+  observer.value = new IntersectionObserver(onElementObserved, {
+    root: chatWindow.value,
+    threshold: 1.0,
+  });
+
+  // Select all elements with the class "partner-msg" that you want to observe
+  setTimeout(() => {
+    const bubbles = document.querySelectorAll(".partner-msg");
+    console.log("Loading chat..");
+    bubbles.forEach((bubble) => {
+      observer.value.observe(bubble);
+    });
+  }, 500);
 };
+
+const activeTab = ref(true);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    activeTab.value = false;
+  } else {
+    activeTab.value = true;
+  }
+});
 
 const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
   const isUnread = message.user_guid !== userGUID && message.is_new === true;
@@ -425,6 +457,16 @@ const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
   return messageTop < viewportBottom && messageBottom > viewportTop;
 };
 
+const markMessageasRead = async (message) => {
+  // assuming another user's messages are passed
+  if (message.is_new) {
+    console.log("Marking this message as read", message.content);
+    // await wsMarkMessageAsRead(message);
+  } else {
+    console.log("Skipping", message.content);
+  }
+};
+
 const calculateNewMessagesCount = (messages, userGUID) => {
   // Use reduce to count unread messages for the specified user
   // ignore read status of own messages
@@ -437,6 +479,18 @@ const calculateNewMessagesCount = (messages, userGUID) => {
     }
   }, 0);
   console.log("NEW messages count", newMessagesCount.value);
+};
+
+const onElementObserved = async (entries) => {
+  entries.forEach((entry) => {
+    if (!entry.isIntersecting) {
+      return;
+    }
+    observer.value.unobserve(entry.target);
+    const msgIndex = entry.target.getAttribute("index");
+    const msg = allMessages.value[msgIndex];
+    markMessageasRead(msg);
+  });
 };
 
 const handleScroll = async () => {
@@ -477,17 +531,22 @@ const handleSystemMessage = (receivedMessage) => {
 
 const handleNewMessage = (receivedMessage) => {
   if (receivedMessage.type === "new") {
-    const is_new = receivedMessage.user_guid !== userGUID;
-    allMessages.value.unshift({
-      message_guid: receivedMessage.message_guid,
-      chat_guid: receivedMessage.chat_guid,
-      content: receivedMessage.content,
-      user_guid: receivedMessage.user_guid,
-      created_at: receivedMessage.created_at,
-      is_new: is_new,
-    });
-    // set friend typing to false once new message is received
-    friendIsTyping.value = false;
+    // set is_new to false if own message
+    if (receivedMessage.user_guid === userGUID) {
+      receivedMessage.is_new = false;
+    } else {
+      // set friend is typing to false
+      friendIsTyping.value = false;
+      // observe incomming message
+      setTimeout(() => {
+        // start observing
+        const newMessage = document.getElementById(
+          `${receivedMessage.message_guid}`
+        );
+        observer.value.observe(newMessage);
+      }, 500);
+    }
+    allMessages.value.unshift(receivedMessage);
   }
 };
 
@@ -518,7 +577,6 @@ const handleSocketClose = () => {
   console.log("System Message", displaySystemMessage.value);
 };
 
-
 onMounted(async () => {
   [directChats.value, groupChats.value] = await getChats(userName);
   systemMessage.value = { type: "success", content: "You are connected" };
@@ -544,6 +602,8 @@ onMounted(async () => {
   chatWindow.value.addEventListener("scroll", handleScroll);
 });
 
+const observer = ref(null);
+
 onUpdated(() => {
   console.log("Updated");
 });
@@ -564,6 +624,7 @@ watch(
   allMessages,
   (newVal) => {
     calculateNewMessagesCount(allMessages.value, userGUID);
+    // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
   },
   { deep: true }
 );
