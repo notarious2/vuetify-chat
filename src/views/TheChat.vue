@@ -169,12 +169,13 @@
           </v-card>
           <v-alert
             v-if="displaySystemMessage"
-            :color="systemMessage.type === 'error'
-              ? 'pink-accent-2'
-              : systemMessage.type === 'system'
+            :color="
+              systemMessage.type === 'error'
+                ? 'pink-accent-2'
+                : systemMessage.type === 'system'
                 ? 'blue-grey-lighten-2'
                 : 'indigo-lighten-2'
-              "
+            "
             theme="dark"
             class="text-center text-h6 font-weight-bold"
             >{{ systemMessage.content }}</v-alert
@@ -201,8 +202,8 @@ import {
 import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
 
-// Websocket setup
-const { socket } = useWebSocket("ws://localhost:8001/ws/"); // Replace with your WebSocket server URL
+// Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
+const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
 
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");
@@ -212,7 +213,6 @@ const allMessages = ref([]);
 const displaySystemMessage = ref(false);
 const systemMessage = ref({});
 const moreMessagesToLoad = ref(false);
-const newMessagesCount = ref(0);
 
 // Reference to the last message element
 const lastReadMessage = ref({});
@@ -234,22 +234,6 @@ const { getOldMessages } = useGetOldMessages();
 const { getChats } = useGetChats();
 
 // Functions for Message Handling
-
-const wsSendMessage = async () => {
-  if (socket.value && messageToSend.value.trim() !== "") {
-    // Check if the WebSocket connection exists and the message is not empty
-    await socket.value.send(
-      JSON.stringify({
-        type: "new_message",
-        user_guid: userGUID,
-        chat_guid: currentChatGUID.value,
-        content: messageToSend.value,
-      })
-    );
-    messageToSend.value = ""; // Clear the input field
-    chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
-  }
-};
 
 const isTyping = ref(false);
 const typingTimer = ref(null);
@@ -318,7 +302,7 @@ const showDateBreak = (index) => {
   return currentDate !== nextDate;
 };
 
-// Functions for Loading More Messages
+// Functions for Loading handles Messages
 const loadMoreMessages = async () => {
   try {
     const oldestMessageGUID =
@@ -340,8 +324,6 @@ const loadMoreMessages = async () => {
   }
 };
 
-
-
 const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
   for (let i = 0; i < messages.value.length; i++) {
     const message = messages.value[i];
@@ -357,14 +339,11 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
   }
 };
 
-// assign UnreadMessagesCount after getting Messages
-const setNewMessagesCountforChat = (chat) => {
-  newMessagesCount.value = chat.unread_messages_count;
-};
-
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
+  // declare variables
   const chatGUID = directChat.chat_guid;
+
   friendUserName.value = directChat.friend.username;
   // send WS message to create a get/create a chat
   if (socket.value !== "") {
@@ -372,49 +351,57 @@ const loadChat = async (directChat) => {
       JSON.stringify({ type: "connect_chat", chat_guid: chatGUID })
     );
   }
-  setNewMessagesCountforChat(directChat);
 
   try {
     const response = await getMessages(chatGUID);
     console.log("Get Messages", response);
-
-    allMessages.value = response.messages;
-    moreMessagesToLoad.value = response.has_more_messages;
-    console.log("ALL MESSAGES", allMessages.value);
-    // calculate # new messages from newly loaded received chat messages
-    const newMessagesCount = calculateNewMessagesCountForChat(response.messages, chatGUID)
-    // assign to chat's new_messages_count
-    directChat.new_messages_count = newMessagesCount
-
-    if (response.last_read_message) {
-      lastReadMessage.value.guid = response.last_read_message.guid;
-      lastReadMessage.value.created_at = new Date(
-        response.last_read_message.created_at
-      );
-    } else {
-      // clear from previously loaded
-      lastReadMessage.value = {};
-    }
-    // set active chat
-    currentChatGUID.value = chatGUID;
-    console.log("CURRENT CHAT", chatGUID);
-    // recalculate new messages count based on received messages
+    handleGetMessagesResponse(response, chatGUID, directChat);
   } catch (error) {
     console.log("Error in loadChat", error);
   }
-  // clear friend's status
-  friendStatus.value = false;
-  // disconnect observer
-  if (observer.value) {
-    observer.value.disconnect();
-  }
 
+  setChatAsActive(chatGUID);
+  clearFriendStatus();
+  initializeObserver();
+};
+
+const handleGetMessagesResponse = (response, chatGUID, directChat) => {
+  allMessages.value = response.messages;
+  moreMessagesToLoad.value = response.has_more_messages;
+
+  directChat.new_messages_count = calculateNewMessagesCountForChat(
+    response.messages,
+    userGUID
+  );
+
+  if (response.last_read_message) {
+    setLastReadMessage(response.last_read_message);
+  } else {
+    clearLastReadMessage();
+  }
+};
+const setLastReadMessage = (lastReadMessageData) => {
+  lastReadMessage.value.guid = lastReadMessageData.guid;
+  lastReadMessage.value.created_at = new Date(lastReadMessageData.created_at);
+};
+
+const clearLastReadMessage = () => {
+  lastReadMessage.value = {};
+};
+const setChatAsActive = (chatGUID) => {
+  currentChatGUID.value = chatGUID;
+};
+
+const clearFriendStatus = () => {
+  friendStatus.value = false;
+};
+
+const initializeObserver = () => {
   observer.value = new IntersectionObserver(onElementObserved, {
     root: chatWindow.value,
     threshold: 1.0,
   });
 
-  // Select all elements with the class "partner-msg" that you want to observe
   setTimeout(() => {
     const bubbles = document.querySelectorAll(".partner-msg");
     console.log("Loading chat..");
@@ -433,20 +420,6 @@ document.addEventListener("visibilitychange", () => {
     activeTab.value = true;
   }
 });
-
-const shouldMarkMessageAsRead = (message, viewportTop, viewportBottom) => {
-  const isUnread = message.user_guid !== userGUID && message.is_new === true;
-  if (!isUnread) return false;
-  const messageElement = document.getElementById(`${message.message_guid}`);
-  if (!messageElement) return false;
-
-  // Get the top and bottom boundaries of the message element
-  const messageTop = messageElement.offsetTop;
-  const messageBottom = messageTop + messageElement.offsetHeight;
-
-  return messageTop < viewportBottom && messageBottom > viewportTop;
-};
-
 
 // Function to mark a message as "seen"
 const wsMarkMessageAsRead = async (message) => {
@@ -467,8 +440,16 @@ const markMessageAsRead = async (message) => {
   // if 'unread' message is newer accept it, else mark it as already read
   // console.log("TRIGGERING", lastReadMessage, new Date(message.created_at), lastReadMessage.value.created_at);
   // console.log(!lastReadMessage.value, !lastReadMessage, new Date(message.created_at) >= lastReadMessage.value.created_at);
-  if (!lastReadMessage.value || new Date(message.created_at) >= lastReadMessage.value.created_at) {
-    console.log("TRIGGERING", lastReadMessage, new Date(message.created_at), lastReadMessage.value.created_at);
+  if (
+    !lastReadMessage.value ||
+    new Date(message.created_at) >= lastReadMessage.value.created_at
+  ) {
+    console.log(
+      "TRIGGERING",
+      lastReadMessage,
+      new Date(message.created_at),
+      lastReadMessage.value.created_at
+    );
     await wsMarkMessageAsRead(message);
     lastReadMessage.value.guid = message.message_guid;
     lastReadMessage.value.created_at = new Date(message.created_at);
@@ -476,7 +457,6 @@ const markMessageAsRead = async (message) => {
   } else {
     message.is_read = true;
   }
-
 };
 
 const calculateNewMessagesCountForChat = (messages, userGUID) => {
@@ -492,20 +472,6 @@ const calculateNewMessagesCountForChat = (messages, userGUID) => {
   }, 0);
 };
 
-// const calculateNewMessagesCount = (messages, userGUID) => {
-//   // Use reduce to count unread messages for the specified user
-//   // ignore read status of own messages
-//   console.log("New messages,", messages);
-//   newMessagesCount.value = messages.reduce((count, message) => {
-//     if (message.user_guid !== userGUID && !message.is_read) {
-//       return count + 1;
-//     } else {
-//       return count;
-//     }
-//   }, 0);
-//   console.log("NEW messages count", newMessagesCount.value);
-// };
-
 const onElementObserved = async (entries) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) {
@@ -518,20 +484,20 @@ const onElementObserved = async (entries) => {
       console.log("Already read message:", msg.content);
     } else {
       await markMessageAsRead(msg);
-      console.log("Marking message as read...")
+      console.log("Marking message as read...");
       // find chat and decrement read_messages count by 1
-      const foundChat = directChats.value.find(obj => obj.chat_guid === msg.chat_guid);
+      const foundChat = directChats.value.find(
+        (obj) => obj.chat_guid === msg.chat_guid
+      );
       if (foundChat) {
         console.log("FOUND CHAT", foundChat);
-        foundChat.new_messages_count--
+        foundChat.new_messages_count--;
       } else {
         console.log("Chat not found.");
       }
-
     }
   }
 };
-
 
 const handleSystemMessage = (receivedMessage) => {
   if (
@@ -543,41 +509,52 @@ const handleSystemMessage = (receivedMessage) => {
   }
 };
 
+const wsSendMessage = async () => {
+  if (socket.value && messageToSend.value.trim() !== "") {
+    // Check if the WebSocket connection exists and the message is not empty
+    await socket.value.send(
+      JSON.stringify({
+        type: "new_message",
+        user_guid: userGUID,
+        chat_guid: currentChatGUID.value,
+        content: messageToSend.value,
+      })
+    );
+    messageToSend.value = ""; // Clear the input field
+    chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+  }
+};
+
 const handleNewMessage = (receivedMessage) => {
   if (receivedMessage.type === "new") {
     // only append allMessages if message belongs to currently open Chat
-    if (receivedMessage.chat_guid===currentChatGUID.value) {
-      // console.log("NEW RECEIVED CHAT GUID", receivedMessage.chat_guid, currentChatGUID.value);
+    if (receivedMessage.chat_guid === currentChatGUID.value) {
       allMessages.value.unshift(receivedMessage);
-      // observe incomming message
+    }
+
+    if (receivedMessage.user_guid !== userGUID) {
+      console.log("OBSERVER RECEIVED MESSAGE", observer);
+      // observe incomming message of other user
       setTimeout(() => {
         const newMessage = document.getElementById(
           `${receivedMessage.message_guid}`
         );
+        console.log("FOUND MESSAGE", newMessage);
         observer.value.observe(newMessage);
-      }, 500);
+      }, 500); // need to wait before new message is inserted
 
-    }
-
-    // set is_read to true if own message
-    if (receivedMessage.user_guid === userGUID) {
-      receivedMessage.is_read = false;
-    } else {
-
-      
       // find chat and increment new_message_count for chat by +1
-      const foundChat = directChats.value.find(obj => obj.chat_guid === receivedMessage.chat_guid);
+      const foundChat = directChats.value.find(
+        (obj) => obj.chat_guid === receivedMessage.chat_guid
+      );
       if (foundChat) {
-        foundChat.new_messages_count++
+        foundChat.new_messages_count++;
       } else {
         console.log("Chat not found.");
       }
       // set friend is typing to false
       friendIsTyping.value = false;
-      
     }
-
-
   }
 };
 
@@ -659,7 +636,6 @@ watch(
   (newVal) => {
     // calculateNewMessagesCount(allMessages.value, userGUID);
     // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
-
     // setTimeout(() => {
     //   calculateNewMessagesCount(allMessages.value, userGUID);
     //   }, 1000); // 1 second
