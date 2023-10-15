@@ -191,7 +191,7 @@ import { ref, watch, onMounted, onUpdated, onBeforeMount } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
-import useGetChats from "@/composables/useGetChats";
+import useGetDirectChats from "@/composables/useGetDirectChats";
 import Cookies from "js-cookie";
 import {
   formatTimestamp,
@@ -231,7 +231,7 @@ const friendStatus = ref(false);
 
 const { getMessages } = useGetMessages();
 const { getOldMessages } = useGetOldMessages();
-const { getChats } = useGetChats();
+const { getDirectChats } = useGetDirectChats();
 
 // Functions for Message Handling
 
@@ -345,6 +345,14 @@ const loadChat = async (directChat) => {
   const chatGUID = directChat.chat_guid;
 
   friendUserName.value = directChat.friend.username;
+
+  // TODO: I need to subscribe user to all open direct chat's on mounted
+  // basically, once the backend accepts connections it should get all direct chats
+  // user is in and subscribe via redisPubSub channel
+  // this allows:
+  // - if user in directChat it send status message to all chats user is in
+  // - new messages count from other users will be shown in the sidebar (updated)
+
   // send WS message to create a get/create a chat
   if (socket.value !== "") {
     socket.value.send(
@@ -587,9 +595,8 @@ const handleSocketClose = () => {
 };
 
 onMounted(async () => {
-  [directChats.value, groupChats.value] = await getChats(userName);
+  directChats.value = await getDirectChats(userName); // username is used to get friend user info
   console.log("DIRECT CHATS", directChats.value);
-  console.log("GROUP CHATS", groupChats.value);
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
 
