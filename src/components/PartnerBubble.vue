@@ -1,12 +1,27 @@
 <template>
 
-<div class="bubble bubble-bottom-left">
+<div ref="root" class="bubble bubble-bottom-left">
 <slot></slot>
 
 </div>
   </template>
 
   <script setup>
+
+import { ref, onMounted, onBeforeUnmount, defineProps } from "vue";
+
+const root = ref(null);
+onMounted(() => {
+
+console.log("Observing", root.value.innerText);
+props.observer.observe(root.value)
+
+});
+
+const props = defineProps(["observer"]);
+
+
+
   </script>
 
   <style scoped>
