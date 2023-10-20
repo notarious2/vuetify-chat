@@ -84,7 +84,9 @@ const submit = handleSubmit(async (values) => {
     const response = await login(values);
     console.log("Response", response);
      // Redirect to the success page upon successful registration
-     router.push('/chat/');
+     setTimeout(() => {
+       router.push('/chat/'), 200
+     });
   } catch (error) {
     console.error("Error", error);
     if (error.response?.data?.detail) {

@@ -109,6 +109,7 @@
                 class="ml-2 partner-msg"
                 :id="message.message_guid"
                 :index="index"
+                :observer=observer
               >
                 <v-list-item class="py-2 my-5 ml-2 text-left">
                   <v-list-item-content
@@ -409,14 +410,6 @@ const initializeObserver = () => {
     root: chatWindow.value,
     threshold: 1.0,
   });
-
-  setTimeout(() => {
-    const bubbles = document.querySelectorAll(".partner-msg");
-    console.log("Loading chat..");
-    bubbles.forEach((bubble) => {
-      observer.value.observe(bubble);
-    });
-  }, 500);
 };
 
 const activeTab = ref(true);
