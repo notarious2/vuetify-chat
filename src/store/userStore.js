@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import axios from '@/api/axios';
+import axios from "@/api/axios";
 
 export const useUserStore = defineStore("user", {
   state: () => {
@@ -19,25 +19,32 @@ export const useUserStore = defineStore("user", {
           "Content-Type": "application/x-www-form-urlencoded",
         };
 
-        const response = await axios.post(
-          "/login/",
-          formData,
-          { headers: headers, withCredentials: true }
-        );
+        const response = await axios.post("/login/", formData, {
+          headers: headers,
+          withCredentials: true,
+        });
 
-        let userInfo = response.data
+        let userInfo = response.data;
 
         this.currentUser = {
-            userGUID: userInfo.user_guid,
-            email: userInfo.email,
-            username: userInfo.username,
-            firstName: userInfo.first_name,
-            lastName: userInfo.last_name,
-        }
-
+          userGUID: userInfo.user_guid,
+          email: userInfo.email,
+          username: userInfo.username,
+          firstName: userInfo.first_name,
+          lastName: userInfo.last_name,
+        };
       } catch (error) {
         console.log("Error during Login", error);
-        throw error
+        throw error;
+      }
+    },
+
+    async register(userData) {
+      try {
+        const response = await axios.post("/register/", userData);
+      } catch (error) {
+        console.log("Error during Registration", error);
+        throw error;
       }
     },
   },

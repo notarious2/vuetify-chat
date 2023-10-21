@@ -195,7 +195,7 @@ import useGetOldMessages from "@/composables/useGetOldMessages";
 import useGetDirectChats from "@/composables/useGetDirectChats";
 import { storeToRefs } from 'pinia';
 import { useUserStore } from "@/store/userStore";
-import Cookies from "js-cookie";
+
 import {
   formatTimestamp,
   formatDate,
@@ -226,8 +226,8 @@ const moreMessagesToLoad = ref(false);
 const lastReadMessage = ref({});
 
 // User Information
-const userName = Cookies.get("username");
-const userGUID = Cookies.get("user_guid");
+const userName = currentUser.value.userName
+const userGUID = currentUser.value.userGUID;
 
 // Chat List Management
 const directChats = ref([]);
