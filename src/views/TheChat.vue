@@ -10,7 +10,7 @@
         </v-card>
         <v-list v-for="directChat in directChats">
           <v-list-item class="my-2" @click="loadChat(directChat)">
-            <v-list-item-content class="ml-2 d-flex align-center">
+            <v-list-item-title class="ml-2 d-flex align-center">
               <v-avatar class="mr-5">
                 <v-img
                   src="https://cdn.vuetifyjs.com/images/john.jpg"
@@ -27,7 +27,7 @@
               <p class="ml-auto">
                 {{ formatTimeFromDateString(directChat.updated_at) }}
               </p>
-            </v-list-item-content>
+            </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-col>
@@ -90,9 +90,9 @@
                 class="ml-auto mr-2"
               >
                 <v-list-item class="py-2 my-5 text-right">
-                  <v-list-item-content>{{
+                  <v-list-item-title>{{
                     message.content
-                  }}</v-list-item-content>
+                  }}</v-list-item-title>
 
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
@@ -112,9 +112,9 @@
                 :observer=observer
               >
                 <v-list-item class="py-2 my-5 ml-2 text-left">
-                  <v-list-item-content
+                  <v-list-item-title
                     >{{ message.content }}
-                  </v-list-item-content>
+                  </v-list-item-title>
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
                   </v-list-item-subtitle>
@@ -193,6 +193,8 @@ import { useWebSocket } from "@/composables/useWebSocket";
 import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
 import useGetDirectChats from "@/composables/useGetDirectChats";
+import { storeToRefs } from 'pinia';
+import { useUserStore } from "@/store/userStore";
 import Cookies from "js-cookie";
 import {
   formatTimestamp,
@@ -203,6 +205,11 @@ import {
 import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
 
+const userStore = useUserStore();
+
+const { currentUser } = storeToRefs(userStore)
+
+console.log("Current User", currentUser.value);
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
 
@@ -371,6 +378,10 @@ const loadChat = async (directChat) => {
 
   setChatAsActive(chatGUID);
   clearFriendStatus();
+  // disconnect observer if there is any from the previous chat
+  if (observer.value) {
+    observer.value.disconnect()
+  }
   initializeObserver();
 };
 
