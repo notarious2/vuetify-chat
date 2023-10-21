@@ -204,12 +204,12 @@ import {
 
 import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
+import router from "@/router";
 
 const userStore = useUserStore();
 
 const { currentUser } = storeToRefs(userStore)
 
-console.log("Current User", currentUser.value);
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
 
@@ -597,6 +597,14 @@ const handleSocketClose = () => {
   displaySystemMessage.value = true;
   console.log("System Message", displaySystemMessage.value);
 };
+
+onBeforeMount(() => {
+  // Redirect to login page if not logged in
+  // TODO: Must move to router before each
+  if (!Object.keys(currentUser.value).length) {
+    router.push("/login/")
+  }
+})
 
 onMounted(async () => {
   directChats.value = await getDirectChats(userName); // username is used to get friend user info

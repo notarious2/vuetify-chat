@@ -36,13 +36,18 @@
 
 <script setup>
 
-import { ref } from "vue";
+import { ref, onBeforeMount } from "vue";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/userStore";
+import { storeToRefs } from 'pinia';
 
 const userStore = useUserStore();
+const { currentUser } = storeToRefs(userStore)
+
+
 const router = useRouter();
+
 
 const loginError = ref(null);
 
@@ -83,6 +88,13 @@ const submit = handleSubmit(async (userData) => {
 const username = useField("username");
 const password = useField("password");
 
+onBeforeMount(() => {
+  // redirect if already logged in
+  // TODO: Must move to router before each
+  if (Object.keys(currentUser.value).length) {
+    router.push("/chat/")
+  }
+})
 
 </script>
 
