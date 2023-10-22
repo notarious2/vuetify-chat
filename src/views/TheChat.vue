@@ -1,188 +1,129 @@
 <template>
-  <v-container class="bg-red">
+  <v-container>
     <v-row no-gutters>
-      <v-col class="mt-5 bg-white" cols="4">
-        <v-card>
-          <v-card-title>Conversations</v-card-title>
-          <v-btn variant="flat">Explore</v-btn>
-          <v-btn variant="flat" color="green-accent-1">Direct</v-btn>
-          <v-btn variant="flat">Group</v-btn>
+      <!-- LEFT PANEL START -->
+      <v-col cols="4" class="bg-teal-lighten-5 rounded-s-lg">
+        <!-- MENU PANEL START -->
+        <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
+          <div class="mt-5 mb-3 d-flex justify-space-around">
+            <v-icon class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
+              @click="toggleSearch">mdi-magnify</v-icon>
+            <v-icon class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
+              @click="toggleChat">mdi-chat</v-icon>
+            <v-icon class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
+              @click="toggleGroup">mdi-account-group</v-icon>
+          </div>
+          <v-divider />
         </v-card>
-        <v-list v-for="directChat in directChats">
+        <!-- MENU PANEL END -->
+
+        <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
           <v-list-item class="my-2" @click="loadChat(directChat)">
             <v-list-item-title class="ml-2 d-flex align-center">
               <v-avatar class="mr-5">
-                <v-img
-                  src="https://cdn.vuetifyjs.com/images/john.jpg"
-                  alt="John"
-                ></v-img>
+                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
               <p>{{ directChat.friend.username }}</p>
-              <p
-                class="ml-auto bg-cyan-lighten-4 font-weight-regular rounded-circle px-2"
-              >
+              <p v-if="directChat.new_messages_count"
+                class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2">
                 {{ directChat.new_messages_count }}
               </p>
-
               <p class="ml-auto">
                 {{ formatTimeFromDateString(directChat.updated_at) }}
               </p>
             </v-list-item-title>
           </v-list-item>
         </v-list>
-      </v-col>
 
+      </v-col>
+      <!-- LEFT PANEL END -->
+
+      <!-- RIGHT PANEL START -->
       <v-col>
-        <v-card class="mx-auto mt-5" max-width="600">
-          <v-card-title
-            class="bg-grey-lighten-4"
-            style="
+        <!-- MESSAGE BOX HEADING START -->
+        <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3">
+          <v-card-title style="
               display: flex;
               justify-content: space-between;
               align-items: center;
-            "
-          >
+            ">
             <div>
               <v-avatar class="ml-auto">
-                <v-img
-                  src="https://cdn.vuetifyjs.com/images/john.jpg"
-                  alt="John"
-                ></v-img>
+                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
-              <v-icon
-                v-if="friendStatus === 'online'"
-                size="xs"
-                class="mt-5 ml-n1 mb-n2"
-                color="success"
-                >mdi-checkbox-blank-circle</v-icon
-              >
-              <v-icon
-                v-else-if="friendStatus === 'inactive'"
-                size="xs"
-                class="mt-5 ml-n1 mb-n2"
-                color="orange-lighten-2"
-                >mdi-checkbox-blank-circle</v-icon
-              >
-              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="success"
-                >mdi-checkbox-blank-circle-outline</v-icon
-              >
+              <v-icon v-if="friendStatus === 'online'" size="xs" class="mt-5 ml-n1 mb-n2"
+                color="success">mdi-checkbox-blank-circle</v-icon>
+              <v-icon v-else-if="friendStatus === 'inactive'" size="xs" class="mt-5 ml-n1 mb-n2"
+                color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
+              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="gray">mdi-checkbox-blank-circle-outline</v-icon>
 
-              <span>{{ friendUserName }}</span>
+              <span class="ml-3">{{ friendUserName }}</span>
             </div>
-            <span>Direct Chat</span>
+            <v-icon color="teal">mdi-dots-vertical</v-icon>
           </v-card-title>
+        </v-card>
+        <!-- MESSAGE BOX HEADING END -->
 
-          <v-divider></v-divider>
+        <!-- MESSAGES CONTAINER START -->
+        <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
-            <div
-              v-for="(message, index) in allMessages"
-              :key="message.message_guid"
-            >
-              <div
-                v-if="showDateBreak(index)"
-                class="text-center my-2 font-weight-medium"
-              >
+            <div v-for="(message, index) in allMessages" :key="message.message_guid">
+              <div v-if="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
                 {{ formatDate(message.created_at) }}
-                <v-divider class="mt-2"></v-divider>
+                <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
               </div>
-              <speaker-bubble
-                v-if="message.user_guid === userGUID"
-                class="ml-auto mr-2"
-              >
+              <speaker-bubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
                 <v-list-item class="py-2 my-5 text-right">
-                  <v-list-item-title>{{
-                    message.content
-                  }}</v-list-item-title>
+                  <v-list-item-title>{{ message.content }}</v-list-item-title>
 
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon
-                      v-if="message.user_guid === userGUID"
-                      :class="message.is_read ? 'text-blue' : 'text-gray'"
-                      >mdi-check-all</v-icon
-                    >
+                    <v-icon v-if="message.user_guid === userGUID"
+                      :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
                   </v-list-item-subtitle>
                 </v-list-item>
               </speaker-bubble>
-              <partner-bubble
-                v-else
-                class="ml-2 partner-msg"
-                :id="message.message_guid"
-                :index="index"
-                :observer=observer
-              >
+              <partner-bubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index"
+                :observer="observer">
                 <v-list-item class="py-2 my-5 ml-2 text-left">
-                  <v-list-item-title
-                    >{{ message.content }}
-                  </v-list-item-title>
+                  <v-list-item-title>{{ message.content }} </v-list-item-title>
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
                   </v-list-item-subtitle>
                 </v-list-item>
               </partner-bubble>
             </div>
-            <v-btn
-              v-if="moreMessagesToLoad"
-              @click="loadMoreMessages"
-              class="mt-3 mx-auto"
-              style="text-transform: none"
-              >Load More</v-btn
-            >
+            <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
+              style="text-transform: none">Load More</v-btn>
           </div>
-
-          <!-- <v-divider></v-divider> -->
-          <v-card class="mx-auto" max-width="600">
-            <v-container class="mx-3 px-5 rounded-lg mt-3">
-              <v-row align="center" justify="center" no-gutters>
-                <v-textarea
-                  hide-details
-                  label="Type your text"
-                  rows="1"
-                  v-model="messageToSend"
-                  auto-grow
-                  variant="solo"
-                  @keydown.enter.exact.prevent
-                  @keyup.enter.exact.prevent="wsSendMessage"
-                  @input="handleOwnTyping"
-                ></v-textarea>
-                <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
-                <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-                <v-btn
-                  @click="wsSendMessage"
-                  icon="mdi-send"
-                  variant="plain"
-                  color="blue"
-                  size="x-large"
-                  class="ml-2 mb-5"
-                  style="font-size: 30px"
-                >
-                </v-btn>
-              </v-row>
-              <v-row
-                v-show="friendIsTyping"
-                class="mb-auto mt-0 ml-2 text-blue-darken-3"
-                >typing ...</v-row
-              >
-              <v-row v-show="!friendIsTyping" class="mb-auto mt-0 ml-2"
-                >&nbsp;</v-row
-              >
-            </v-container>
-          </v-card>
-          <v-alert
-            v-if="displaySystemMessage"
-            :color="
-              systemMessage.type === 'error'
-                ? 'pink-accent-2'
-                : systemMessage.type === 'system'
-                ? 'blue-grey-lighten-2'
-                : 'indigo-lighten-2'
-            "
-            theme="dark"
-            class="text-center text-h6 font-weight-bold"
-            >{{ systemMessage.content }}</v-alert
-          >
         </v-card>
+        <!-- MESSAGES CONTAINER END -->
+        <!-- <v-divider color="teal" thickness="10px"></v-divider> -->
+        <!-- SEND BUTTON COMPONENT START -->
+        <v-card class="rounded-0 rounded-be-lg">
+          <v-row align="center" justify="center" no-gutters>
+            <v-icon class="ml-2" size="x-large" color="teal" style="transform: rotate(10deg);">mdi-paperclip</v-icon>
+            <v-icon class="ml-2 mr-2" size="x-large" color="teal">mdi-emoticon-happy-outline</v-icon>
+            <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
+            <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
+            <v-textarea hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
+              @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"
+              @input="handleOwnTyping"></v-textarea>
+            <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="teal" size="x-large" class="ml-2 mb-5"
+              style="font-size: 30px; transform: rotate(-5deg);">
+            </v-btn>
+          </v-row>
+        </v-card>
+        <!-- SEND BUTTON COMPONENT END -->
+
+        <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
+          ? 'pink-accent-2'
+          : systemMessage.type === 'system'
+            ? 'blue-grey-lighten-2'
+            : 'indigo-lighten-2'
+          " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
       </v-col>
+      <!-- RIGHT PANEL END -->
     </v-row>
   </v-container>
 </template>
@@ -192,7 +133,7 @@ import { ref, watch, onMounted, onUpdated, onBeforeMount } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
 
@@ -206,10 +147,30 @@ import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
 import router from "@/router";
 
-const userStore = useUserStore();
-const chatStore = useChatStore()
+const isSearch = ref(false);
+const isChat = ref(true);
+const isGroup = ref(false);
 
-const { currentUser } = storeToRefs(userStore)
+const toggleSearch = () => {
+  isSearch.value = true;
+  isChat.value = false;
+  isGroup.value = false;
+};
+const toggleChat = () => {
+  isChat.value = true;
+  isSearch.value = false;
+  isGroup.value = false;
+};
+const toggleGroup = () => {
+  isGroup.value = true;
+  isChat.value = false;
+  isSearch.value = false;
+};
+
+const userStore = useUserStore();
+const chatStore = useChatStore();
+
+const { currentUser } = storeToRefs(userStore);
 
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
@@ -227,7 +188,7 @@ const moreMessagesToLoad = ref(false);
 const lastReadMessage = ref({});
 
 // User Information
-const userName = currentUser.value.userName
+const userName = currentUser.value.userName;
 const userGUID = currentUser.value.userGUID;
 
 // Chat List Management
@@ -379,7 +340,7 @@ const loadChat = async (directChat) => {
   clearFriendStatus();
   // disconnect observer if there is any from the previous chat
   if (observer.value) {
-    observer.value.disconnect()
+    observer.value.disconnect();
   }
   initializeObserver();
 };
@@ -601,12 +562,14 @@ onBeforeMount(() => {
   // Redirect to login page if not logged in
   // TODO: Must move to router before each
   if (!Object.keys(currentUser.value).length) {
-    router.push("/login/")
+    router.push("/login/");
   }
-})
+});
 
 onMounted(async () => {
-  directChats.value = await chatStore.getDirectChats(currentUser.value.userGUID)
+  directChats.value = await chatStore.getDirectChats(
+    currentUser.value.userGUID
+  );
 
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
@@ -669,4 +632,21 @@ watch(
   display: flex;
   flex-direction: column-reverse;
 }
+
+#icon-search:hover,
+#icon-chats:hover,
+#icon-groups:hover {
+  color: #009688 !important;
+}
+
+.searchTab,
+.chatsTab,
+.groupsTab {
+  color: #009688 !important;
+}
+
+/* #message-container {
+  background: url('/chat-background.jpg')center;
+  background-size: 600px;
+} */
 </style>

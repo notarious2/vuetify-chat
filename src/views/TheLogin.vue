@@ -25,7 +25,7 @@
     <div v-if="loginError" class="text-red text-center">{{ loginError }}</div>
 
     <p class="decorated mt-5" style="user-select: none;"><span>or</span></p>
-    <div class="bg-white rounded-lg py-2 my-3 d-flex space-around" id="google">
+    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google">
       <v-icon class="ml-5" color="teal-darken-3" size="x-large">mdi-google</v-icon>
       <p class="mx-auto my-auto" style="user-select: none;"> Continue with Google</p>
 
