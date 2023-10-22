@@ -192,9 +192,9 @@ import { ref, watch, onMounted, onUpdated, onBeforeMount } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
 import useGetMessages from "@/composables/useGetMessages";
 import useGetOldMessages from "@/composables/useGetOldMessages";
-import useGetDirectChats from "@/composables/useGetDirectChats";
 import { storeToRefs } from 'pinia';
 import { useUserStore } from "@/store/userStore";
+import { useChatStore } from "@/store/chatStore";
 
 import {
   formatTimestamp,
@@ -207,6 +207,7 @@ import SpeakerBubble from "@/components/SpeakerBubble.vue";
 import router from "@/router";
 
 const userStore = useUserStore();
+const chatStore = useChatStore()
 
 const { currentUser } = storeToRefs(userStore)
 
@@ -231,7 +232,6 @@ const userGUID = currentUser.value.userGUID;
 
 // Chat List Management
 const directChats = ref([]);
-const groupChats = ref([]);
 const friendUserName = ref("");
 
 // Status and Message Handling
@@ -239,7 +239,6 @@ const friendStatus = ref(false);
 
 const { getMessages } = useGetMessages();
 const { getOldMessages } = useGetOldMessages();
-const { getDirectChats } = useGetDirectChats();
 
 // Functions for Message Handling
 
@@ -607,8 +606,8 @@ onBeforeMount(() => {
 })
 
 onMounted(async () => {
-  directChats.value = await getDirectChats(userName); // username is used to get friend user info
-  console.log("DIRECT CHATS", directChats.value);
+  directChats.value = await chatStore.getDirectChats(currentUser.value.userGUID)
+
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
 
