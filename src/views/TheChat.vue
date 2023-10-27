@@ -6,35 +6,64 @@
         <!-- MENU PANEL START -->
         <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
           <div class="mt-5 mb-3 d-flex justify-space-around">
-            <v-icon class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
-              @click="toggleSearch">mdi-magnify</v-icon>
-            <v-icon class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
-              @click="toggleChat">mdi-chat</v-icon>
-            <v-icon class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
-              @click="toggleGroup">mdi-account-group</v-icon>
+            <v-icon
+              class="flex-grow-1"
+              id="icon-search"
+              color="teal-lighten-3"
+              :class="{ searchTab: isSearch }"
+              @click="toggleSearch"
+              >mdi-magnify</v-icon
+            >
+            <v-icon
+              class="flex-grow-1"
+              id="icon-chats"
+              color="teal-lighten-3"
+              :class="{ chatsTab: isChat }"
+              @click="toggleChat"
+              >mdi-chat</v-icon
+            >
+            <v-icon
+              class="flex-grow-1"
+              id="icon-groups"
+              color="teal-lighten-3"
+              :class="{ groupsTab: isGroup }"
+              @click="toggleGroup"
+              >mdi-account-group</v-icon
+            >
           </div>
           <v-divider />
         </v-card>
         <!-- MENU PANEL END -->
+        <!-- LEFT PANEL START -->
+        <div
+          style="height: 580px; overflow: auto"
+          class="bg-teal-lighten-5 rounded-0"
+        >
+          <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
+            <v-list-item class="px-2" @click="loadChat(directChat)">
+              <v-list-item-title class="d-flex align-center py-2 rounded-lg" :class="{'bg-teal-lighten-1': currentChatGUID === directChat.chat_guid}">
+                <v-avatar class="ml-2 mr-5">
+                  <v-img
+                    src="https://cdn.vuetifyjs.com/images/john.jpg"
+                    alt="John"
+                  ></v-img>
+                </v-avatar>
 
-        <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
-          <v-list-item class="my-2" @click="loadChat(directChat)">
-            <v-list-item-title class="ml-2 d-flex align-center">
-              <v-avatar class="mr-5">
-                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
-              </v-avatar>
-              <p>{{ directChat.friend.username }}</p>
-              <p v-if="directChat.new_messages_count"
-                class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2">
-                {{ directChat.new_messages_count }}
-              </p>
-              <p class="ml-auto">
-                {{ formatTimeFromDateString(directChat.updated_at) }}
-              </p>
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-
+                <p>{{ directChat.friend.username }}</p>
+                <p
+                  v-if="directChat.new_messages_count"
+                  class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2"
+                >
+                  {{ directChat.new_messages_count }}
+                </p>
+                <p class="ml-auto mr-2">
+                  {{ formatTimeFromDateString(directChat.updated_at) }}
+                </p>
+                
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </div>
       </v-col>
       <!-- LEFT PANEL END -->
 
@@ -42,20 +71,37 @@
       <v-col>
         <!-- MESSAGE BOX HEADING START -->
         <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3">
-          <v-card-title style="
+          <v-card-title
+            style="
               display: flex;
               justify-content: space-between;
               align-items: center;
-            ">
+            "
+          >
             <div>
               <v-avatar class="ml-auto">
-                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
+                <v-img
+                  src="https://cdn.vuetifyjs.com/images/john.jpg"
+                  alt="John"
+                ></v-img>
               </v-avatar>
-              <v-icon v-if="friendStatus === 'online'" size="xs" class="mt-5 ml-n1 mb-n2"
-                color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else-if="friendStatus === 'inactive'" size="xs" class="mt-5 ml-n1 mb-n2"
-                color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="gray">mdi-checkbox-blank-circle-outline</v-icon>
+              <v-icon
+                v-if="friendStatus === 'online'"
+                size="xs"
+                class="mt-5 ml-n1 mb-n2"
+                color="success"
+                >mdi-checkbox-blank-circle</v-icon
+              >
+              <v-icon
+                v-else-if="friendStatus === 'inactive'"
+                size="xs"
+                class="mt-5 ml-n1 mb-n2"
+                color="orange-lighten-2"
+                >mdi-checkbox-blank-circle</v-icon
+              >
+              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="gray"
+                >mdi-checkbox-blank-circle-outline</v-icon
+              >
 
               <span class="ml-3">{{ friendUserName }}</span>
             </div>
@@ -67,61 +113,127 @@
         <!-- MESSAGES CONTAINER START -->
         <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
-            <div v-for="(message, index) in allMessages" :key="message.message_guid">
-              <div v-if="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
+            <div
+              v-for="(message, index) in allMessages"
+              :key="message.message_guid"
+            >
+              <div
+                v-if="showDateBreak(index)"
+                class="text-center text-black my-2 font-weight-medium"
+              >
                 {{ formatDate(message.created_at) }}
-                <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
+                <v-divider
+                  class="mt-2 mx-auto border-opacity-75"
+                  width="200px"
+                  color="teal"
+                  thickness="2px"
+                ></v-divider>
               </div>
-              <speaker-bubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
+              <speaker-bubble
+                v-if="message.user_guid === userGUID"
+                class="ml-auto mr-2"
+              >
                 <v-list-item class="py-2 my-5 text-right">
-                  <v-list-item-title>{{ message.content }}</v-list-item-title>
+                  <v-list-item-title class="text-wrap">{{ message.content }}</v-list-item-title>
 
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon v-if="message.user_guid === userGUID"
-                      :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
+                    <v-icon
+                      v-if="message.user_guid === userGUID"
+                      :class="message.is_read ? 'text-blue' : 'text-gray'"
+                      >mdi-check-all</v-icon
+                    >
                   </v-list-item-subtitle>
                 </v-list-item>
               </speaker-bubble>
-              <partner-bubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index"
-                :observer="observer">
+              <partner-bubble
+                v-else
+                class="ml-2 partner-msg"
+                :id="message.message_guid"
+                :index="index"
+                :observer="observer"
+              >
                 <v-list-item class="py-2 my-5 ml-2 text-left">
-                  <v-list-item-title>{{ message.content }} </v-list-item-title>
+                  <v-list-item-title class="text-wrap">{{ message.content }} </v-list-item-title>
                   <v-list-item-subtitle class="mt-2">
                     {{ formatTimestamp(message.created_at) }}
                   </v-list-item-subtitle>
                 </v-list-item>
               </partner-bubble>
             </div>
-            <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
-              style="text-transform: none">Load More</v-btn>
+            <v-btn
+              v-if="moreMessagesToLoad"
+              @click="loadMoreMessages"
+              class="mt-3 mx-auto"
+              style="text-transform: none"
+              >Load More</v-btn
+            >
           </div>
         </v-card>
         <!-- MESSAGES CONTAINER END -->
-        <!-- <v-divider color="teal" thickness="10px"></v-divider> -->
+        <div style="position: relative;">
+          <EmojiPicker v-show="showEmoji" style="position: absolute; bottom: 80%;" @select="onSelectEmoji" />
+        </div>
+
         <!-- SEND BUTTON COMPONENT START -->
         <v-card class="rounded-0 rounded-be-lg">
+
           <v-row align="center" justify="center" no-gutters>
-            <v-icon class="ml-2" size="x-large" color="teal" style="transform: rotate(10deg);">mdi-paperclip</v-icon>
-            <v-icon class="ml-2 mr-2" size="x-large" color="teal">mdi-emoticon-happy-outline</v-icon>
+
+            <v-icon
+              class="ml-2"
+              size="x-large"
+              color="teal"
+              style="transform: rotate(10deg)"
+              >mdi-paperclip</v-icon
+            >
+            <v-icon class="ml-2 mr-2" size="x-large" color="teal-lighten-2" :class="{ activeEmoji: showEmoji }" @click="toggleEmoji">mdi-emoticon-happy-outline</v-icon>
             <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
             <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-            <v-textarea hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow variant="solo"
-              @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"
-              @input="handleOwnTyping"></v-textarea>
-            <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="teal" size="x-large" class="ml-2 mb-5"
-              style="font-size: 30px; transform: rotate(-5deg);">
+            <v-textarea
+              ref="textInput"
+              hide-details
+              label="Type your text"
+              rows="1"
+              v-model="messageToSend"
+              auto-grow
+              variant="solo"
+              @keydown.enter.exact.prevent
+              @keyup.enter.exact.prevent="wsSendMessage"
+              @input="handleOwnTyping"
+            ></v-textarea>
+            <v-btn
+              @click="wsSendMessage"
+              icon="mdi-send"
+              variant="plain"
+              color="teal"
+              size="x-large"
+              class="ml-2 mb-3"
+              style="font-size: 30px; transform: rotate(-5deg)"
+            >
             </v-btn>
           </v-row>
+          <v-row
+            v-show="friendIsTyping"
+            class="mb-3 mt-0 ml-5 text-teal-darken-3"
+            >typing <ThreeDots class="ml-n3"
+          /></v-row>
+          <v-row v-show="!friendIsTyping" class="mb-3 mt-0 ml-5">&nbsp;</v-row>
         </v-card>
         <!-- SEND BUTTON COMPONENT END -->
 
-        <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
-          ? 'pink-accent-2'
-          : systemMessage.type === 'system'
-            ? 'blue-grey-lighten-2'
-            : 'indigo-lighten-2'
-          " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
+        <v-alert
+          v-if="displaySystemMessage"
+          :color="systemMessage.type === 'error'
+            ? 'pink-accent-2'
+            : systemMessage.type === 'system'
+              ? 'blue-grey-lighten-2'
+              : 'indigo-lighten-2'
+            "
+          theme="dark"
+          class="text-center text-h6 font-weight-bold"
+          >{{ systemMessage.content }}</v-alert
+        >
       </v-col>
       <!-- RIGHT PANEL END -->
     </v-row>
@@ -129,13 +241,15 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUpdated, onBeforeMount } from "vue";
+import { ref, watch, onMounted, onUpdated, nextTick, computed } from "vue";
 import { useWebSocket } from "@/composables/useWebSocket";
-import useGetMessages from "@/composables/useGetMessages";
-import useGetOldMessages from "@/composables/useGetOldMessages";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
+import { useMessageStore } from "@/store/messageStore";
+
+import EmojiPicker from 'vue3-emoji-picker'
+import 'vue3-emoji-picker/css'
 
 import {
   formatTimestamp,
@@ -145,7 +259,8 @@ import {
 
 import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
-import router from "@/router";
+import ThreeDots from "@/components/ThreeDots.vue";
+
 
 const isSearch = ref(false);
 const isChat = ref(true);
@@ -167,8 +282,39 @@ const toggleGroup = () => {
   isSearch.value = false;
 };
 
+const showEmoji = ref(false);
+
+const toggleEmoji = () => {
+  if (!showEmoji.value) {
+    textInput.value.focus()
+  }
+  showEmoji.value = !showEmoji.value
+}
+
+const onSelectEmoji = (emoji) => {
+  const cursorPosition = textInput.value.selectionStart;
+  // Split the existing message into two parts
+  const start = messageToSend.value.slice(0, cursorPosition);
+  const end = messageToSend.value.slice(cursorPosition);
+
+  // Insert the selected emoji in between
+  messageToSend.value = start + emoji.i + end;
+
+  // must wait for DOM to be updated
+  nextTick(() => {
+    // Update the cursor position to be at the end of the inserted emoji
+    textInput.value.selectionStart = cursorPosition + emoji.i.length;
+    textInput.value.selectionEnd = cursorPosition + emoji.i.length;
+    // Place focus at the updated cursor position
+    textInput.value.focus();
+  })
+}
+
+
+
 const userStore = useUserStore();
 const chatStore = useChatStore();
+const messageStore = useMessageStore();
 
 const { currentUser } = storeToRefs(userStore);
 
@@ -177,6 +323,7 @@ const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it con
 
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");
+const textInput = ref(null);
 const chatWindow = ref(null);
 const currentChatGUID = ref("");
 const allMessages = ref([]);
@@ -198,15 +345,12 @@ const friendUserName = ref("");
 // Status and Message Handling
 const friendStatus = ref(false);
 
-const { getMessages } = useGetMessages();
-const { getOldMessages } = useGetOldMessages();
-
 // Functions for Message Handling
 
-const isTyping = ref(false);
-const typingTimer = ref(null);
+const meTyping = ref(false);
+const meTypingTimer = ref(null);
 const friendIsTyping = ref(false);
-let friendTypingTimeout = null;
+const friendTypingTimer = ref(false);
 
 const wsSendTyping = async () => {
   // Check if the WebSocket connection exists and the message is not empty
@@ -220,36 +364,33 @@ const wsSendTyping = async () => {
 };
 
 const handleOwnTyping = async () => {
-  // Clear the existing timer
-  clearTimeout(typingTimer.value);
-
-  // Set isTyping to true when the textarea has content
-  isTyping.value = messageToSend.value.trim() !== "";
-
-  // Start a new timer to set isTyping to false after 3 seconds
-  typingTimer.value = setTimeout(async () => {
-    isTyping.value = false;
-    // Call the wsSendTyping function when the user stops typing (after 3 seconds)
+  // if myTyping is still true - ignore
+  // else: send message and change meTyping to false after timeout  
+  if (!meTyping.value) {
+    meTyping.value = messageToSend.value.trim() !== "";
     await wsSendTyping();
-  }, 1000); // Set the timeout to 3000 milliseconds (3 seconds)
+
+    meTypingTimer.value = setTimeout(async () => {
+      meTyping.value = false;
+    }, 1000)
+  }
+
 };
 
-const handleUserTyping = (receivedMessage) => {
+const handleFriendTyping = (receivedMessage) => {
   if (
     receivedMessage.type === "user_typing" &&
-    receivedMessage.user_guid !== userGUID
+    receivedMessage.user_guid !== userGUID &&
+    receivedMessage.chat_guid === currentChatGUID.value
   ) {
+    // avoid setting friendIsTyping to false if new message was received
+    clearTimeout(friendTypingTimer.value);
     friendIsTyping.value = true;
-
-    // Clear any existing timeout
-    if (friendTypingTimeout) {
-      clearTimeout(friendTypingTimeout);
-    }
-
-    // Set a timeout to reset friendIsTyping to false after 3 seconds
-    friendTypingTimeout = setTimeout(() => {
+    // Set a timeout to reset friendIsTyping to false after 2 seconds
+    friendTypingTimer.value = setTimeout(() => {
       friendIsTyping.value = false;
-    }, 3000); // 3000 milliseconds (3 seconds)
+    }, 2000);
+
   }
 };
 
@@ -270,22 +411,23 @@ const showDateBreak = (index) => {
   return currentDate !== nextDate;
 };
 
-// Functions for Loading handles Messages
+// Function for Loading older messages
 const loadMoreMessages = async () => {
   try {
-    const oldestMessageGUID =
+    const lastMessageGUID =
       allMessages.value[allMessages.value.length - 1]["message_guid"];
-    console.log("CURRENT CHAT GUID", currentChatGUID.value);
-    const response = await getOldMessages(
-      currentChatGUID.value,
-      oldestMessageGUID
-    );
+
+    const getHistoricalMessagesResponse =
+      await messageStore.getHistoricalMessages(
+        currentChatGUID.value,
+        lastMessageGUID
+      );
     // append existing allMessages
-    const oldMessages = response["messages"];
+    const oldMessages = getHistoricalMessagesResponse.messages;
     oldMessages.forEach((oldMessage) => {
       allMessages.value.push(oldMessage);
     });
-    moreMessagesToLoad.value = response["has_more_messages"];
+    moreMessagesToLoad.value = getHistoricalMessagesResponse.has_more_messages;
   } catch (error) {
     console.error("Error fetching chat history:", error);
     throw error;
@@ -302,42 +444,50 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
       if (message.is_read) {
         break;
       }
+      // introduce 0.5 seconds delay for marking messages as read
+      setTimeout(() => {
       messages.value[i].is_read = true;
+    }, 500)
     }
   }
 };
 
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
-  // declare variables
   const chatGUID = directChat.chat_guid;
-
   friendUserName.value = directChat.friend.username;
 
-  // TODO: I need to subscribe user to all open direct chat's on mounted
-  // basically, once the backend accepts connections it should get all direct chats
-  // user is in and subscribe via redisPubSub channel
-  // this allows:
-  // - if user in directChat it send status message to all chats user is in
-  // - new messages count from other users will be shown in the sidebar (updated)
-
-  // send WS message to create a get/create a chat
-  if (socket.value !== "") {
-    socket.value.send(
-      JSON.stringify({ type: "connect_chat", chat_guid: chatGUID })
-    );
-  }
-
   try {
-    const response = await getMessages(chatGUID);
-    console.log("Get Messages", response);
-    handleGetMessagesResponse(response, chatGUID, directChat);
+    const getLastMessagesResponse = await messageStore.getLastMessages(
+      chatGUID
+    );
+    console.log("getMessages", getLastMessagesResponse);
+
+    allMessages.value = getLastMessagesResponse.messages;
+    moreMessagesToLoad.value = getLastMessagesResponse.has_more_messages;
+
+    // recalculate new messages count from newly loaded messages
+
+    directChat.new_messages_count = calculateNewMessagesCountForChat(
+      getLastMessagesResponse.messages,
+      userGUID
+    );
+
+    if (getLastMessagesResponse.last_read_message) {
+      setLastReadMessage(getLastMessagesResponse.last_read_message);
+    } else {
+      clearLastReadMessage();
+    }
   } catch (error) {
     console.log("Error in loadChat", error);
   }
 
   setChatAsActive(chatGUID);
+  console.log("SWITCHED TABS, GUID", currentChatGUID.value);
   clearFriendStatus();
+  // clear if friend was typing in previous chat
+  friendIsTyping.value = false;
+
   // disconnect observer if there is any from the previous chat
   if (observer.value) {
     observer.value.disconnect();
@@ -345,21 +495,6 @@ const loadChat = async (directChat) => {
   initializeObserver();
 };
 
-const handleGetMessagesResponse = (response, chatGUID, directChat) => {
-  allMessages.value = response.messages;
-  moreMessagesToLoad.value = response.has_more_messages;
-
-  directChat.new_messages_count = calculateNewMessagesCountForChat(
-    response.messages,
-    userGUID
-  );
-
-  if (response.last_read_message) {
-    setLastReadMessage(response.last_read_message);
-  } else {
-    clearLastReadMessage();
-  }
-};
 const setLastReadMessage = (lastReadMessageData) => {
   lastReadMessage.value.guid = lastReadMessageData.guid;
   lastReadMessage.value.created_at = new Date(lastReadMessageData.created_at);
@@ -453,6 +588,7 @@ const onElementObserved = async (entries) => {
     const msgIndex = entry.target.getAttribute("index");
     const msg = allMessages.value[msgIndex];
     if (msg.is_read) {
+      console.log("what message?", msg.is_read, msg);
       console.log("Already read message:", msg.content);
     } else {
       await markMessageAsRead(msg);
@@ -493,19 +629,23 @@ const wsSendMessage = async () => {
       })
     );
     messageToSend.value = ""; // Clear the input field
-    chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+    // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
   }
 };
 
 const handleNewMessage = (receivedMessage) => {
   if (receivedMessage.type === "new") {
-    // only append allMessages if message belongs to currently open Chat
+    console.log("CURRENT CHAT GUID", currentChatGUID.value);
+    console.log("RECEIVED NEW MESSAGE", receivedMessage, currentChatGUID.value)
+    // append messages to the open chat
     if (receivedMessage.chat_guid === currentChatGUID.value) {
       allMessages.value.unshift(receivedMessage);
     }
 
-    if (receivedMessage.user_guid !== userGUID) {
-      console.log("OBSERVER RECEIVED MESSAGE", observer);
+    // observe only if another user's message and belongs to latest selected chat
+    if (receivedMessage.user_guid !== userGUID && receivedMessage.chat_guid === currentChatGUID.value) {
+
+      console.log(currentChatGUID.value, receivedMessage);
       // observe incomming message of other user
       setTimeout(() => {
         const newMessage = document.getElementById(
@@ -514,6 +654,9 @@ const handleNewMessage = (receivedMessage) => {
         console.log("FOUND MESSAGE", newMessage);
         observer.value.observe(newMessage);
       }, 500); // need to wait before new message is inserted
+    }
+
+    if (receivedMessage.user_guid !== userGUID) {
 
       // find chat and increment new_message_count for chat by +1
       const foundChat = directChats.value.find(
@@ -522,9 +665,10 @@ const handleNewMessage = (receivedMessage) => {
       if (foundChat) {
         foundChat.new_messages_count++;
       } else {
-        console.log("Chat not found.");
+        console.log("Chat not found.", directChats.value, receivedMessage.chat_guid);
       }
       // set friend is typing to false
+      console.log("SETTING TYPING TO FALSE...");
       friendIsTyping.value = false;
     }
   }
@@ -558,14 +702,6 @@ const handleSocketClose = () => {
   console.log("System Message", displaySystemMessage.value);
 };
 
-onBeforeMount(() => {
-  // Redirect to login page if not logged in
-  // TODO: Must move to router before each
-  if (!Object.keys(currentUser.value).length) {
-    router.push("/login/");
-  }
-});
-
 onMounted(async () => {
   directChats.value = await chatStore.getDirectChats(
     currentUser.value.userGUID
@@ -580,7 +716,7 @@ onMounted(async () => {
     handleNewMessage(receivedMessage);
     handleMessageRead(receivedMessage);
     handleFriendStatusMessage(receivedMessage);
-    handleUserTyping(receivedMessage);
+    handleFriendTyping(receivedMessage);
   });
 
   socket.value.addEventListener("close", (event) => {
@@ -623,6 +759,7 @@ watch(
   },
   { deep: true }
 );
+
 </script>
 
 <style scoped>
@@ -642,6 +779,10 @@ watch(
 .searchTab,
 .chatsTab,
 .groupsTab {
+  color: #009688 !important;
+}
+
+.activeEmoji {
   color: #009688 !important;
 }
 
