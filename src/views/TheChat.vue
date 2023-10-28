@@ -59,7 +59,7 @@
                 <p class="ml-auto mr-2">
                   {{ formatTimeFromDateString(directChat.updated_at) }}
                 </p>
-                
+
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -169,6 +169,9 @@
               >Load More</v-btn
             >
           </div>
+          <v-btn v-if="!isBottom" icon class="rounded-circle" style="position: absolute; top: 88%; right: 5%; width: 35px; height: 35px;" @click="scrollBottom">
+            <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
+          </v-btn>
         </v-card>
         <!-- MESSAGES CONTAINER END -->
         <div style="position: relative;">
@@ -352,6 +355,10 @@ const meTypingTimer = ref(null);
 const friendIsTyping = ref(false);
 const friendTypingTimer = ref(false);
 
+// display scroll to bottom
+
+const isBottom = ref(true)
+
 const wsSendTyping = async () => {
   // Check if the WebSocket connection exists and the message is not empty
   await socket.value.send(
@@ -365,7 +372,7 @@ const wsSendTyping = async () => {
 
 const handleOwnTyping = async () => {
   // if myTyping is still true - ignore
-  // else: send message and change meTyping to false after timeout  
+  // else: send message and change meTyping to false after timeout
   if (!meTyping.value) {
     meTyping.value = messageToSend.value.trim() !== "";
     await wsSendTyping();
@@ -710,6 +717,9 @@ onMounted(async () => {
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
 
+  chatWindow.value.addEventListener('scroll', handleScroll);
+
+
   socket.value.addEventListener("message", (event) => {
     const receivedMessage = JSON.parse(event.data);
     handleSystemMessage(receivedMessage);
@@ -759,6 +769,20 @@ watch(
   },
   { deep: true }
 );
+
+
+const scrollBottom = () => {
+  chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+}
+
+const handleScroll = () => {
+  if (chatWindow.value.scrollTop >= -50) {
+    isBottom.value = true;
+  } else {
+    isBottom.value  = false;
+  }
+}
+
 
 </script>
 
