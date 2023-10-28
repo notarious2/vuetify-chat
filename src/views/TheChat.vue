@@ -642,8 +642,14 @@ const wsSendMessage = async () => {
 
 const handleNewMessage = (receivedMessage) => {
   if (receivedMessage.type === "new") {
-    console.log("CURRENT CHAT GUID", currentChatGUID.value);
-    console.log("RECEIVED NEW MESSAGE", receivedMessage, currentChatGUID.value)
+
+    // change date on left panel (users)
+    directChats.value.forEach((directChat) => {
+      if (directChat.chat_guid === receivedMessage.chat_guid) {
+        directChat.updated_at = receivedMessage.created_at
+      }
+    });
+
     // append messages to the open chat
     if (receivedMessage.chat_guid === currentChatGUID.value) {
       allMessages.value.unshift(receivedMessage);
