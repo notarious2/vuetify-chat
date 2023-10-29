@@ -16,8 +16,8 @@
           <v-divider />
         </v-card>
         <!-- MENU PANEL END -->
-        <!-- LEFT PANEL START -->
-        <div style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
+        <!-- LEFT PANEL CHATS START -->
+        <div v-if="isChat" style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
           <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
             <v-list-item class="px-2" @click="loadChat(directChat)">
               <v-list-item-title class="d-flex align-center py-2 rounded-lg"
@@ -39,8 +39,21 @@
             </v-list-item>
           </v-list>
         </div>
+        <div v-if="isSearch" style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
+          <v-text-field
+            variant="underlined"
+            class="mx-3 mt-2 mb-n3"
+            rounded
+            prepend-inner-icon="mdi-magnify"
+            clearable
+            v-model="searchContact"
+            ></v-text-field>
+          <v-list v-for="fruit in filteredList()" :key="fruit">
+            <p class="text-center" style="color: inherit;">{{ fruit }}</p>
+          </v-list>
+        </div>
       </v-col>
-      <!-- LEFT PANEL END -->
+      <!-- LEFT PANEL CHATS END -->
 
       <!-- RIGHT PANEL START -->
       <v-col v-if="chatSelected">
@@ -170,6 +183,15 @@ import SpeakerBubble from "@/components/SpeakerBubble.vue";
 import ThreeDots from "@/components/ThreeDots.vue";
 import EmptyWindow from "@/components/EmptyWindow.vue";
 
+const fruits = ref(["apple", "banana", "orange"]);
+
+const searchContact = ref("")
+
+const filteredList = () => {
+  return fruits.value.filter((fruit) =>
+    fruit.toLowerCase().includes(searchContact.value.toLowerCase())
+  );
+}
 
 const isSearch = ref(false);
 const isChat = ref(true);
