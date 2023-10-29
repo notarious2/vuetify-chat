@@ -1,5 +1,5 @@
 <template>
-    <v-col class="d-flex rounded-0 rounded-te-lg bg-teal-lighten-3" style="height: 700px">
+    <v-col class="d-flex rounded-0 rounded-e-lg bg-teal-lighten-3" style="height: 700px">
         <div class="my-auto mx-auto">
             <img :src="imageURL" style="height: 100px" class="mx-15" />
 
