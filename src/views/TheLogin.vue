@@ -72,6 +72,7 @@ const submit = handleSubmit(async (userData) => {
     await userStore.login(userData);
 
     setTimeout(() => {
+      userStore.isLoggedIn = true;
       router.push("/chat/"), 50;
     });
   } catch (error) {
@@ -88,13 +89,7 @@ const submit = handleSubmit(async (userData) => {
 const username = useField("username");
 const password = useField("password");
 
-onBeforeMount(() => {
-  // redirect if already logged in
-  // TODO: Must move to router before each
-  if (Object.keys(currentUser.value).length) {
-    router.push("/chat/")
-  }
-})
+
 
 </script>
 

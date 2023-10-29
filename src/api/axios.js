@@ -1,5 +1,10 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
+import { useUserStore } from "@/store/userStore";
+import pinia from "@/store";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8001',
@@ -25,6 +30,14 @@ axiosInstance.interceptors.response.use(
         // Need to redirect to the login page or handle this differently
         throw refreshError;
       }
+    }
+    // catch a case when there are no http-only cookies (access token)
+    // then mark user as logged out
+    if (error.response && error.response.status === 422 && error.response.data.detail[0].loc[1] === 'access_token') {
+      const userStore = useUserStore(pinia);
+      userStore.isLoggedIn = false;
+      router.push("/login/")
+      
     }
     // For other error cases, re-throw the error
     throw error;
