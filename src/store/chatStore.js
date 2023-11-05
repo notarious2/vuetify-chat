@@ -5,6 +5,8 @@ export const useChatStore = defineStore("chat", {
   state: () => {
     return {
       directChats: [],
+      chatSelected: false,
+      currentChatGUID: "",
     };
   },
 
@@ -15,7 +17,7 @@ export const useChatStore = defineStore("chat", {
         if (this.directChats.length) {
           this.directChats = []
         }
-        const response = await axios.get(`/chats/direct/`);
+        const response = await axios.get("/chats/direct/");
 
         response.data.forEach(chat => {
           // leave friend only from chat.users
@@ -38,6 +40,11 @@ export const useChatStore = defineStore("chat", {
         throw error;
       }
     },
+
+    setChatAsActive (chatGUID) {
+      this.currentChatGUID = chatGUID;
+      console.log("Nicely done");
+    },
   },
-  persist: true,
+  // persist: true,
 });

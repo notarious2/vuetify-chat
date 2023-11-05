@@ -2,6 +2,11 @@ import { defineStore } from "pinia";
 import axios from "@/api/axios";
 
 export const useMessageStore = defineStore("messages", {
+  state: () => {
+    return {
+      currentChatMessages: [],
+    };
+  },
   actions: {
     async getLastMessages(chatGUID) {
       try {

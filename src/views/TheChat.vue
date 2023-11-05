@@ -7,7 +7,7 @@
         <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
           <div class="mt-5 mb-3 d-flex justify-space-around">
             <v-icon class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
-              @click="toggleSearch">mdi-magnify</v-icon>
+              @click="toggleSearch">mdi-compass</v-icon>
             <v-icon class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
               @click="toggleChat">mdi-chat</v-icon>
             <v-icon class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
@@ -39,24 +39,14 @@
             </v-list-item>
           </v-list>
         </div>
-        <div v-if="isSearch" style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
-          <v-text-field
-            variant="underlined"
-            class="mx-3 mt-2 mb-n3"
-            rounded
-            prepend-inner-icon="mdi-magnify"
-            clearable
-            v-model="searchContact"
-            ></v-text-field>
-          <v-list v-for="fruit in filteredList()" :key="fruit">
-            <p class="text-center" style="color: inherit;">{{ fruit }}</p>
-          </v-list>
-        </div>
+        <!-- LEFT PANEL SEARCH START -->
+        <SearchBar v-if="isSearch"/>
+        <!-- LEFT PANEL SEARCH END -->
       </v-col>
       <!-- LEFT PANEL CHATS END -->
 
       <!-- RIGHT PANEL START -->
-      <v-col v-if="chatSelected">
+      <v-col v-if="isChat && chatSelected">
         <!-- MESSAGE BOX HEADING START -->
         <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3">
           <v-card-title style="
@@ -68,11 +58,11 @@
               <v-avatar class="ml-auto">
                 <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
-              <v-icon v-if="friendStatus === 'online'" size="xs" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-if="friendStatus === 'online'" size="x-small" class="mt-5 ml-n1 mb-n2"
                 color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else-if="friendStatus === 'inactive'" size="xs" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-else-if="friendStatus === 'inactive'" size="x-small" class="mt-5 ml-n1 mb-n2"
                 color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="xs" class="mt-5 ml-n1 mb-n2" color="gray">mdi-checkbox-blank-circle-outline</v-icon>
+              <v-icon v-else size="x-small" class="mt-5 ml-n1 mb-n2" color="gray">mdi-checkbox-blank-circle-outline</v-icon>
 
               <span class="ml-3">{{ friendUserName }}</span>
             </div>
@@ -84,7 +74,7 @@
         <!-- MESSAGES CONTAINER START -->
         <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
-            <div v-for="(message, index) in allMessages" :key="message.message_guid">
+            <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
               <div v-if="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
@@ -154,7 +144,9 @@
             : 'indigo-lighten-2'
           " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
       </v-col>
-      <EmptyWindow v-else />
+      <EmptyWindow v-if="isChat && !chatSelected" />
+      <EmptyWindow2 v-if="isSearch"/>
+
       <!-- RIGHT PANEL END -->
     </v-row>
   </v-container>
@@ -167,6 +159,7 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
+import { useMainStore } from "@/store/mainStore";
 
 
 import EmojiPicker from 'vue3-emoji-picker'
@@ -182,27 +175,24 @@ import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
 import ThreeDots from "@/components/ThreeDots.vue";
 import EmptyWindow from "@/components/EmptyWindow.vue";
+import EmptyWindow2 from "@/components/EmptyWindow2.vue";
+import SearchBar from "@/components/SearchBar.vue";
 
-const fruits = ref(["apple", "banana", "orange"]);
 
-const searchContact = ref("")
 
-const filteredList = () => {
-  return fruits.value.filter((fruit) =>
-    fruit.toLowerCase().includes(searchContact.value.toLowerCase())
-  );
-}
 
-const isSearch = ref(false);
-const isChat = ref(true);
-const isGroup = ref(false);
+// const isSearch = ref(false);
+// const isChat = ref(true);
+// const isGroup = ref(false);
 
-const chatSelected = ref(false);
+// const chatSelected = ref(false);
 
 const toggleSearch = () => {
   isSearch.value = true;
   isChat.value = false;
   isGroup.value = false;
+  chatSelected.value = false;
+  currentChatGUID.value = "";
 };
 const toggleChat = () => {
   isChat.value = true;
@@ -248,9 +238,14 @@ const onSelectEmoji = (emoji) => {
 const userStore = useUserStore();
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
+const mainStore = useMainStore();
 
 const { currentUser } = storeToRefs(userStore);
+const { chatSelected, currentChatGUID } = storeToRefs(chatStore);
+const { currentChatMessages } = storeToRefs(messageStore);
+const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 
+console.log("IS SEARCH", isSearch.value);
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
 
@@ -258,8 +253,8 @@ const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it con
 const messageToSend = ref("");
 const textInput = ref(null);
 const chatWindow = ref(null);
-const currentChatGUID = ref("");
-const allMessages = ref([]);
+// const currentChatGUID = ref("");
+// const allMessages = ref([]);
 const displaySystemMessage = ref(false);
 const systemMessage = ref({});
 const moreMessagesToLoad = ref(false);
@@ -291,6 +286,11 @@ const isBottom = ref(true)
 
 const wsSendTyping = async () => {
   // Check if the WebSocket connection exists and the message is not empty
+  // should not send for not yet created chat
+  console.log("CHAT GUID", currentChatGUID.value);
+  if (!currentChatGUID.value) {
+    return
+  }
   await socket.value.send(
     JSON.stringify({
       type: "user_typing",
@@ -332,17 +332,17 @@ const handleFriendTyping = (receivedMessage) => {
 };
 
 const showDateBreak = (index) => {
-  const messages = allMessages.value;
+  const messages = currentChatMessages.value;
   if (index === messages.length - 1) {
     // Always show a date break for the first message
     return true;
   }
   // Compare the date of the current message with the previous message
   const currentDate = new Date(
-    allMessages.value[index].created_at
+    currentChatMessages.value[index].created_at
   ).toDateString();
   const nextDate = new Date(
-    allMessages.value[index + 1].created_at
+    currentChatMessages.value[index + 1].created_at
   ).toDateString();
 
   return currentDate !== nextDate;
@@ -352,7 +352,7 @@ const showDateBreak = (index) => {
 const loadMoreMessages = async () => {
   try {
     const lastMessageGUID =
-      allMessages.value[allMessages.value.length - 1]["message_guid"];
+    currentChatMessages.value[currentChatMessages.value.length - 1]["message_guid"];
 
     const getHistoricalMessagesResponse =
       await messageStore.getHistoricalMessages(
@@ -362,7 +362,7 @@ const loadMoreMessages = async () => {
     // append existing allMessages
     const oldMessages = getHistoricalMessagesResponse.messages;
     oldMessages.forEach((oldMessage) => {
-      allMessages.value.push(oldMessage);
+      currentChatMessages.value.push(oldMessage);
     });
     moreMessagesToLoad.value = getHistoricalMessagesResponse.has_more_messages;
   } catch (error) {
@@ -391,9 +391,19 @@ const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
 
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
+
   const chatGUID = directChat.chat_guid;
   chatSelected.value = true;
   friendUserName.value = directChat.friend.username;
+  moreMessagesToLoad.value = false;
+
+  // Logic related to working with user without Chat
+  console.log("CHAT GUID", chatGUID);
+  if (!chatGUID) {
+    currentChatGUID.value = null;
+    currentChatMessages.value = [];
+    return
+  }
 
   try {
     const getLastMessagesResponse = await messageStore.getLastMessages(
@@ -401,7 +411,7 @@ const loadChat = async (directChat) => {
     );
     console.log("getMessages", getLastMessagesResponse);
 
-    allMessages.value = getLastMessagesResponse.messages;
+    currentChatMessages.value = getLastMessagesResponse.messages;
     moreMessagesToLoad.value = getLastMessagesResponse.has_more_messages;
 
     // recalculate new messages count from newly loaded messages
@@ -422,7 +432,7 @@ const loadChat = async (directChat) => {
   chatWindow.value.removeEventListener("scroll", handleScroll)
   chatWindow.value.addEventListener('scroll', handleScroll);
 
-  setChatAsActive(chatGUID);
+  chatStore.setChatAsActive(chatGUID);
   console.log("SWITCHED TABS, GUID", currentChatGUID.value);
   clearFriendStatus();
   // clear if friend was typing in previous chat
@@ -443,9 +453,9 @@ const setLastReadMessage = (lastReadMessageData) => {
 const clearLastReadMessage = () => {
   lastReadMessage.value = {};
 };
-const setChatAsActive = (chatGUID) => {
-  currentChatGUID.value = chatGUID;
-};
+// const setChatAsActive = (chatGUID) => {
+//   currentChatGUID.value = chatGUID;
+// };
 
 const clearFriendStatus = () => {
   friendStatus.value = false;
@@ -526,7 +536,7 @@ const onElementObserved = async (entries) => {
     }
     observer.value.unobserve(entry.target);
     const msgIndex = entry.target.getAttribute("index");
-    const msg = allMessages.value[msgIndex];
+    const msg = currentChatMessages.value[msgIndex];
     if (msg.is_read) {
       console.log("what message?", msg.is_read, msg);
       console.log("Already read message:", msg.content);
@@ -585,7 +595,7 @@ const handleNewMessage = (receivedMessage) => {
 
     // append messages to the open chat
     if (receivedMessage.chat_guid === currentChatGUID.value) {
-      allMessages.value.unshift(receivedMessage);
+      currentChatMessages.value.unshift(receivedMessage);
     }
 
     // observe only if another user's message and belongs to latest selected chat
@@ -627,7 +637,7 @@ const handleMessageRead = (receivedMessage) => {
     receivedMessage.user_guid !== userGUID
   ) {
     updateMessagesReadStatus(
-      allMessages,
+      currentChatMessages,
       receivedMessage.last_read_message_created_at
     );
   }
@@ -652,7 +662,6 @@ onMounted(async () => {
   directChats.value = await chatStore.getDirectChats(
     currentUser.value.userGUID
   );
-
   systemMessage.value = { type: "success", content: "You are connected" };
   displaySystemMessage.value = true;
 
@@ -695,17 +704,17 @@ watch(displaySystemMessage, (newValue) => {
 });
 
 // track messages to recalculate unread messages count
-watch(
-  allMessages,
-  (newVal) => {
-    // calculateNewMessagesCount(allMessages.value, userGUID);
-    // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
-    // setTimeout(() => {
-    //   calculateNewMessagesCount(allMessages.value, userGUID);
-    //   }, 1000); // 1 second
-  },
-  { deep: true }
-);
+// watch(
+//   allMessages,
+//   (newVal) => {
+//     // calculateNewMessagesCount(allMessages.value, userGUID);
+//     // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+//     // setTimeout(() => {
+//     //   calculateNewMessagesCount(allMessages.value, userGUID);
+//     //   }, 1000); // 1 second
+//   },
+//   { deep: true }
+// );
 
 
 const scrollBottom = () => {

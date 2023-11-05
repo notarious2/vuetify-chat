@@ -5,11 +5,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, defineProps } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const messageBubble = ref(null);
 onMounted(() => {
-  props.observer.observe(messageBubble.value);
+  console.log("Observer not initiated, must fix", props.observer);
+  if (props.observer) {
+    props.observer.observe(messageBubble.value);
+  }
 });
 
 const props = defineProps(["observer"]);

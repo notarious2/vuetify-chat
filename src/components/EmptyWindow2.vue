@@ -3,7 +3,7 @@
         <div class="my-auto mx-auto">
             <img :src="imageURL" style="height: 100px; margin-left: 30%;" />
 
-            <p style="user-select: none;">Select a chat to continue messaging</p>
+            <p style="user-select: none;">Select a contact to start conversation</p>
         </div>
     </v-col>
 </template>
