@@ -13,11 +13,11 @@ export const useChatStore = defineStore("chat", {
   actions: {
     async getDirectChats(userGUID) {
       try {
-        // clear previously fetched direct chat
-        if (this.directChats.length) {
-          this.directChats = []
-        }
+
         const response = await axios.get("/chats/direct/");
+
+        // override current direct chats array
+        this.directChats = []
 
         response.data.forEach(chat => {
           // leave friend only from chat.users
@@ -45,6 +45,18 @@ export const useChatStore = defineStore("chat", {
       this.currentChatGUID = chatGUID;
       console.log("Nicely done");
     },
+
+    async createDirectChat (friendGUID) {
+     try {
+      const response = await axios.post("/chat/direct/", {recipient_user_guid: friendGUID});
+      console.log("Chat created response", response);
+      return response.data
+     } catch (error) {
+      console.error("Error during creating Direct Chat:", error);
+
+     }
+    },
+
   },
   // persist: true,
 });

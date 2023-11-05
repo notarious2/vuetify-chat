@@ -40,7 +40,7 @@
           </v-list>
         </div>
         <!-- LEFT PANEL SEARCH START -->
-        <SearchBar v-if="isSearch"/>
+        <SearchBar v-if="isSearch" />
         <!-- LEFT PANEL SEARCH END -->
       </v-col>
       <!-- LEFT PANEL CHATS END -->
@@ -62,7 +62,8 @@
                 color="success">mdi-checkbox-blank-circle</v-icon>
               <v-icon v-else-if="friendStatus === 'inactive'" size="x-small" class="mt-5 ml-n1 mb-n2"
                 color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="x-small" class="mt-5 ml-n1 mb-n2" color="gray">mdi-checkbox-blank-circle-outline</v-icon>
+              <v-icon v-else size="x-small" class="mt-5 ml-n1 mb-n2"
+                color="gray">mdi-checkbox-blank-circle-outline</v-icon>
 
               <span class="ml-3">{{ friendUserName }}</span>
             </div>
@@ -74,6 +75,10 @@
         <!-- MESSAGES CONTAINER START -->
         <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
+            <div v-if="inputLocked" class="d-flex justify-end mr-10">
+              <v-progress-circular indeterminate color="teal"></v-progress-circular>
+            </div>
+
             <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
               <div v-if="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
                 {{ formatDate(message.created_at) }}
@@ -99,6 +104,7 @@
                   </v-list-item-subtitle>
                 </v-list-item>
               </partner-bubble>
+
             </div>
             <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
               style="text-transform: none">Load More</v-btn>
@@ -115,7 +121,6 @@
 
         <!-- SEND BUTTON COMPONENT START -->
         <v-card class="rounded-0 rounded-be-lg">
-
           <v-row align="center" justify="center" no-gutters>
 
             <v-icon class="ml-2" size="x-large" color="teal" style="transform: rotate(10deg)">mdi-paperclip</v-icon>
@@ -125,11 +130,13 @@
             <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
             <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
               variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"
-              @input="handleOwnTyping"></v-textarea>
+              @input="handleOwnTyping" :readonly="inputLocked"></v-textarea>
+
             <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="teal" size="x-large" class="ml-2 mb-3"
               style="font-size: 30px; transform: rotate(-5deg)">
             </v-btn>
           </v-row>
+
           <v-row v-show="friendIsTyping" class="mb-3 mt-0 ml-5 text-teal-darken-3">typing
             <ThreeDots class="ml-n3" />
           </v-row>
@@ -145,7 +152,7 @@
           " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
       </v-col>
       <EmptyWindow v-if="isChat && !chatSelected" />
-      <EmptyWindow2 v-if="isSearch"/>
+      <EmptyWindow2 v-if="isSearch" />
 
       <!-- RIGHT PANEL END -->
     </v-row>
@@ -191,8 +198,14 @@ const toggleSearch = () => {
   isSearch.value = true;
   isChat.value = false;
   isGroup.value = false;
-  chatSelected.value = false;
-  currentChatGUID.value = "";
+
+  // remove unassigned chat from directChats list
+  if (currentChatGUID.value === "unassigned") {
+    directChats.value.shift();
+    currentChatGUID.value = "";
+    chatSelected.value = false;
+    moreMessagesToLoad.value = false;
+  }
 };
 const toggleChat = () => {
   isChat.value = true;
@@ -280,6 +293,9 @@ const meTypingTimer = ref(null);
 const friendIsTyping = ref(false);
 const friendTypingTimer = ref(false);
 
+// input related logic/progress bar
+const inputLocked = ref(false)
+
 // display scroll to bottom
 
 const isBottom = ref(true)
@@ -288,7 +304,7 @@ const wsSendTyping = async () => {
   // Check if the WebSocket connection exists and the message is not empty
   // should not send for not yet created chat
   console.log("CHAT GUID", currentChatGUID.value);
-  if (!currentChatGUID.value) {
+  if (currentChatGUID.value === "unassigned") {
     return
   }
   await socket.value.send(
@@ -352,7 +368,7 @@ const showDateBreak = (index) => {
 const loadMoreMessages = async () => {
   try {
     const lastMessageGUID =
-    currentChatMessages.value[currentChatMessages.value.length - 1]["message_guid"];
+      currentChatMessages.value[currentChatMessages.value.length - 1]["message_guid"];
 
     const getHistoricalMessagesResponse =
       await messageStore.getHistoricalMessages(
@@ -397,11 +413,15 @@ const loadChat = async (directChat) => {
   friendUserName.value = directChat.friend.username;
   moreMessagesToLoad.value = false;
 
+  lastReadMessage.value = {};
+
   // Logic related to working with user without Chat
-  console.log("CHAT GUID", chatGUID);
-  if (!chatGUID) {
-    currentChatGUID.value = null;
+  console.log("CHAT GUID", directChat);
+  if (directChat.chat_guid === "unassigned") {
+    console.log("HERE");
+    currentChatGUID.value = "unassigned";
     currentChatMessages.value = [];
+    moreMessagesToLoad.value = false;
     return
   }
 
@@ -505,7 +525,6 @@ const markMessageAsRead = async (message) => {
       "TRIGGERING",
       lastReadMessage,
       new Date(message.created_at),
-      lastReadMessage.value.created_at
     );
     await wsMarkMessageAsRead(message);
     lastReadMessage.value.guid = message.message_guid;
@@ -568,8 +587,18 @@ const handleSystemMessage = (receivedMessage) => {
 };
 
 const wsSendMessage = async () => {
+  // Must first create a chat for new chat
+  if (currentChatGUID.value === "unassigned") {
+    console.log("Sending Message to:", currentChatGUID.value)
+    const friendGUID = directChats.value[0].friend.friend_guid;
+    const newChat = await chatStore.createDirectChat(friendGUID)
+    currentChatGUID.value = newChat.guid
+    console.log("CURRENT CHAT GUID", currentChatGUID.value);
+  }
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
+    console.log("Sending message via WS", messageToSend.value);
+
     await socket.value.send(
       JSON.stringify({
         type: "new_message",
@@ -580,11 +609,17 @@ const wsSendMessage = async () => {
     );
     messageToSend.value = ""; // Clear the input field
     // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
+
+    // make input not editable before receive own message via websocket
+    inputLocked.value = true;
   }
 };
 
 const handleNewMessage = (receivedMessage) => {
   if (receivedMessage.type === "new") {
+
+    // release input lock
+    inputLocked.value = false;
 
     // change date on left panel (users)
     directChats.value.forEach((directChat) => {

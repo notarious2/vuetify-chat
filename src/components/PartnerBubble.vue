@@ -9,9 +9,11 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const messageBubble = ref(null);
 onMounted(() => {
-  console.log("Observer not initiated, must fix", props.observer);
   if (props.observer) {
     props.observer.observe(messageBubble.value);
+    console.log("observing..")
+  } else {
+    console.log("Observer not initiated, must fix", props.observer);
   }
 });
 

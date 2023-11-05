@@ -66,7 +66,7 @@ const userSelected = async (userGUID) => {
   let chatFound = false;
 
   for (const chat of directChats.value) {
-
+    // open already existing chat
     if (chat.friend.guid === userGUID && currentChatGUID.value === chat.chat_guid) {
       console.log("You already have a chat with this user");
       chatSelected.value = true;
@@ -96,15 +96,16 @@ const userSelected = async (userGUID) => {
     console.log("USERS", selectedUser)
     // Create temporary window, which will initiate a chat if a message is sent
     directChats.value.unshift({
-      friend: { username: selectedUser.username },
-      chat_guid: null,
+      chat_guid: "unassigned",
+      friend: { username: selectedUser.username, friend_guid: selectedUser.guid },
       created_at: null,
       has_new_messages: false,
       new_messages_count: 0,
       updated_at: null,
     });
-    currentChatGUID.value = null;
+    currentChatGUID.value = "unassigned";
     chatSelected.value = true;
+    currentChatMessages.value = [] // clear messages history from previous chat
   }
 
 };
