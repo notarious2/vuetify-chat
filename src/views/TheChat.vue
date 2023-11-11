@@ -6,12 +6,16 @@
         <!-- MENU PANEL START -->
         <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
           <div class="mt-5 mb-3 d-flex justify-space-around">
-            <v-icon class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
-              @click="toggleSearch">mdi-compass</v-icon>
-            <v-icon class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
-              @click="toggleChat">mdi-chat</v-icon>
-            <v-icon class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
-              @click="toggleGroup">mdi-account-group</v-icon>
+            <v-icon size="large" class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
+              @click="toggleSearch">mdi-compass
+            </v-icon>
+            <v-icon size="large" class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
+              @click="toggleChat">mdi-chat
+            </v-icon>
+            <v-icon size="large" class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
+              @click="toggleGroup">mdi-account-group
+            </v-icon>
+           
           </div>
           <v-divider />
         </v-card>
@@ -55,16 +59,15 @@
               align-items: center;
             ">
             <div>
-              <v-avatar class="ml-auto">
+              <v-avatar class="ml-auto mb-1">
                 <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
               </v-avatar>
-              <v-icon v-if="friendStatus === 'online'" size="x-small" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-if="friendStatus === 'online'" size="x-small" class="mt-5 ml-n3 mb-n2"
                 color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else-if="friendStatus === 'inactive'" size="x-small" class="mt-5 ml-n1 mb-n2"
+              <v-icon v-else-if="friendStatus === 'inactive'" size="x-small" class="mt-5 ml-n3 mb-n2"
                 color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="x-small" class="mt-5 ml-n1 mb-n2"
-                color="gray">mdi-checkbox-blank-circle-outline</v-icon>
-
+              <v-icon v-else size="x-small" class="mt-5 ml-n3 mb-n2"
+                color="teal-darken-1">mdi-checkbox-blank-circle-outline</v-icon>
               <span class="ml-3">{{ friendUserName }}</span>
             </div>
             <v-icon color="teal">mdi-dots-vertical</v-icon>
@@ -151,8 +154,10 @@
             : 'indigo-lighten-2'
           " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
       </v-col>
-      <EmptyWindow v-if="isChat && !chatSelected" />
-      <EmptyWindow2 v-if="isSearch" />
+      <EmptyChatWindow v-else-if="isChat && !chatSelected" />
+      <SearchWindow v-else-if="isSearch" />
+      <EmptyGroupWindow v-else-if="isGroup"/>
+      
 
       <!-- RIGHT PANEL END -->
     </v-row>
@@ -181,8 +186,9 @@ import {
 import PartnerBubble from "@/components/PartnerBubble.vue";
 import SpeakerBubble from "@/components/SpeakerBubble.vue";
 import ThreeDots from "@/components/ThreeDots.vue";
-import EmptyWindow from "@/components/EmptyWindow.vue";
-import EmptyWindow2 from "@/components/EmptyWindow2.vue";
+import EmptyChatWindow from "@/components/EmptyChatWindow.vue";
+import EmptyGroupWindow from "@/components/EmptyGroupWindow.vue";
+import SearchWindow from "@/components/SearchWindow.vue";
 import SearchBar from "@/components/SearchBar.vue";
 
 
@@ -198,6 +204,8 @@ const toggleSearch = () => {
   isSearch.value = true;
   isChat.value = false;
   isGroup.value = false;
+  console.log("Current Messages Search", currentChatMessages.value);
+
 
   // remove unassigned chat from directChats list
   if (currentChatGUID.value === "unassigned") {
@@ -211,6 +219,8 @@ const toggleChat = () => {
   isChat.value = true;
   isSearch.value = false;
   isGroup.value = false;
+  console.log("Current Messages", currentChatMessages.value);
+  console.log("Current ChatGUID", currentChatGUID);
 };
 const toggleGroup = () => {
   isGroup.value = true;
@@ -254,9 +264,11 @@ const messageStore = useMessageStore();
 const mainStore = useMainStore();
 
 const { currentUser } = storeToRefs(userStore);
-const { chatSelected, currentChatGUID } = storeToRefs(chatStore);
+const { chatSelected, currentChatGUID, directChats, friendUserName, friendStatus } = storeToRefs(chatStore);
 const { currentChatMessages } = storeToRefs(messageStore);
 const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+
+console.log("IS CHAT", isChat.value);
 
 console.log("IS SEARCH", isSearch.value);
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
@@ -279,12 +291,6 @@ const lastReadMessage = ref({});
 const userName = currentUser.value.userName;
 const userGUID = currentUser.value.userGUID;
 
-// Chat List Management
-const directChats = ref([]);
-const friendUserName = ref("");
-
-// Status and Message Handling
-const friendStatus = ref(false);
 
 // Functions for Message Handling
 
@@ -452,11 +458,14 @@ const loadChat = async (directChat) => {
   chatWindow.value.removeEventListener("scroll", handleScroll)
   chatWindow.value.addEventListener('scroll', handleScroll);
 
-  chatStore.setChatAsActive(chatGUID);
-  console.log("SWITCHED TABS, GUID", currentChatGUID.value);
-  clearFriendStatus();
+  // do not clear status, friendIsTyping if clicked the same chat
   // clear if friend was typing in previous chat
-  friendIsTyping.value = false;
+  console.log("SWITCHED TABS, GUID", currentChatGUID.value === directChat.chat_guid);
+  if (currentChatGUID.value !== chatGUID) {
+    chatStore.clearFriendStatus();
+    friendIsTyping.value = false;
+  }
+  chatStore.setChatAsActive(chatGUID);
 
   // disconnect observer if there is any from the previous chat
   if (observer.value) {
@@ -477,9 +486,6 @@ const clearLastReadMessage = () => {
 //   currentChatGUID.value = chatGUID;
 // };
 
-const clearFriendStatus = () => {
-  friendStatus.value = false;
-};
 
 const initializeObserver = () => {
   observer.value = new IntersectionObserver(onElementObserved, {
@@ -517,8 +523,10 @@ const markMessageAsRead = async (message) => {
   // if 'unread' message is newer accept it, else mark it as already read
   // console.log("TRIGGERING", lastReadMessage, new Date(message.created_at), lastReadMessage.value.created_at);
   // console.log(!lastReadMessage.value, !lastReadMessage, new Date(message.created_at) >= lastReadMessage.value.created_at);
+  console.log("Mark Message as Read", lastReadMessage.value, new Date(message.created_at) >= lastReadMessage.value.created_at);
+
   if (
-    !lastReadMessage.value ||
+    (lastReadMessage.value.length !== 0) ||
     new Date(message.created_at) >= lastReadMessage.value.created_at
   ) {
     console.log(
@@ -587,13 +595,21 @@ const handleSystemMessage = (receivedMessage) => {
 };
 
 const wsSendMessage = async () => {
-  // Must first create a chat for new chat
+  // Must first create a chat for unassigned chat
   if (currentChatGUID.value === "unassigned") {
     console.log("Sending Message to:", currentChatGUID.value)
-    const friendGUID = directChats.value[0].friend.friend_guid;
+    const friendGUID = directChats.value[0].friend.guid;
     const newChat = await chatStore.createDirectChat(friendGUID)
+    // update unassigned chat based on new chat data
+    directChats.value[0].chat_guid = newChat.guid
+    directChats.value[0].created_at = newChat.created_at
+    directChats.value[0].updated_at = newChat.updated_at
+
+    console.log("NEW CHAT", newChat);
+    console.log("Direct chats value", directChats.value);
     currentChatGUID.value = newChat.guid
     console.log("CURRENT CHAT GUID", currentChatGUID.value);
+    // CLEAR CURRENT MESSAGES AND SAVE THEM TO NEW ARRAY ON NEW MESSAGES HANDLER
   }
   if (socket.value && messageToSend.value.trim() !== "") {
     // Check if the WebSocket connection exists and the message is not empty
@@ -781,11 +797,47 @@ const handleScroll = () => {
   color: #009688 !important;
 }
 
-.searchTab,
-.chatsTab,
-.groupsTab {
+.searchTab {
   color: #009688 !important;
+  animation: rotate 0.5s;
 }
+
+.chatsTab
+ {
+  color: #009688 !important;
+  animation: beat 0.5s;
+}
+
+.groupsTab
+ {
+  color: #009688 !important;
+  animation: swing 0.5s;
+}
+
+@keyframes beat {
+  15%,
+  85% {transform: scale(1.1);}
+  25%,
+  75% {transform: scale(1.2);}
+  50% {transform: scale(1.3);}
+}
+
+@keyframes swing {
+  20%  {transform: skew(-10deg);}
+  40%  {transform: skew(-15deg);}
+  60%  {transform: skew(10deg);}
+  80%  {transform: skew(15deg);}
+}
+
+
+@keyframes rotate {
+  15%,
+  85% {transform: rotate(-0.2turn);}
+  25%,
+  75% {transform: rotate(-0.4turn);}
+  50% {transform: rotate(-0.6turn);}
+}
+
 
 .activeEmoji {
   color: #009688 !important;
@@ -795,4 +847,9 @@ const handleScroll = () => {
   background: url('/chat-background.jpg')center;
   background-size: 600px;
 } */
+
+.custom-tooltip {
+  opacity: 0.7;
+}
+
 </style>

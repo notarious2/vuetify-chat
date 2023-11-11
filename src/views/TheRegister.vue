@@ -17,7 +17,7 @@
       <v-text-field v-model="email.value.value" :error-messages="email.errorMessage.value" label="E-mail"
         bg-color="teal-lighten-5"></v-text-field>
       <v-text-field v-model="password.value.value" label="Password" :error-messages="password.errorMessage.value"
-        bg-color="teal-lighten-5" type="password"></v-text-field>
+        bg-color="teal-lighten-5" type="password" name="current-password"></v-text-field>
 
       <v-btn size="large" width="400px" type="submit"> Register </v-btn>
 

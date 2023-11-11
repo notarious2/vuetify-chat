@@ -43,7 +43,6 @@ const routes = [
       if (userStore.isLoggedIn) {
         next({ name: "chat" });
       } else {
-        console.log("GOING", to);
         next();
       }
     },
