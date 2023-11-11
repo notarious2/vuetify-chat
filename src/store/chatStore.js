@@ -7,6 +7,9 @@ export const useChatStore = defineStore("chat", {
       directChats: [],
       chatSelected: false,
       currentChatGUID: "",
+      friendUserName: "",
+      friendStatus: "offline",
+
     };
   },
 
@@ -43,13 +46,14 @@ export const useChatStore = defineStore("chat", {
 
     setChatAsActive (chatGUID) {
       this.currentChatGUID = chatGUID;
-      console.log("Nicely done");
     },
-
+  
+    clearFriendStatus () {
+      this.friendStatus = "offline";
+    },
     async createDirectChat (friendGUID) {
      try {
       const response = await axios.post("/chat/direct/", {recipient_user_guid: friendGUID});
-      console.log("Chat created response", response);
       return response.data
      } catch (error) {
       console.error("Error during creating Direct Chat:", error);

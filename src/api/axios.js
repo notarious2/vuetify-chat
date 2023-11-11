@@ -1,10 +1,8 @@
 import axios from 'axios';
 import { useUserStore } from "@/store/userStore";
 import pinia from "@/store";
-import { useRouter } from "vue-router";
 
-const router = useRouter();
-
+import router from '@/router'
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8001',
@@ -19,15 +17,24 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response && error.response.status === 401) {
+    console.log("ORIGINAL REQUEST URL", originalRequest);
+    // if refresh token is invalid
+    if (error.response && error.response && originalRequest.url === "/refresh/") {
+      const userStore = useUserStore(pinia);
+      userStore.isLoggedIn = false;
+      router.push("/login/");
+    }
+    else if (error.response && error.response.status === 401) {
       try {
-        // try to get ne refresh token
-        await axiosInstance.post('/refresh/', { withCredentials: true });
-        return axios.request(originalRequest);
+        // try to get new refresh token
+        if (originalRequest.url !=="/refresh/") {
+          console.log("TRYING ORIGINAL REQUEST", originalRequest.url === "/refresh/");
+          await axiosInstance.post('/refresh/', { withCredentials: true });
+        }
+        // return axios.request(originalRequest);
 
       } catch (refreshError) {
-        // Handle errors that occur during token refresh
-        // Need to redirect to the login page or handle this differently
+
         throw refreshError;
       }
     }
@@ -36,8 +43,8 @@ axiosInstance.interceptors.response.use(
     if (error.response && error.response.status === 422 && error.response.data.detail[0].loc[1] === 'access_token') {
       const userStore = useUserStore(pinia);
       userStore.isLoggedIn = false;
-      router.push("/login/")
-      
+      router.push("/login/");
+
     }
     // For other error cases, re-throw the error
     throw error;

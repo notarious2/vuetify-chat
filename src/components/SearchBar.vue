@@ -28,7 +28,6 @@
           </v-avatar>
           <p class="ml-2">{{ user.username }}</p>
         </v-list-item-title>
-
       </v-list-item>
     </v-list>
   </div>
@@ -49,7 +48,8 @@ const { currentChatMessages } = storeToRefs(messageStore);
 
 const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID } = storeToRefs(chatStore);
+const { directChats, chatSelected, currentChatGUID, friendUserName, curren } =
+  storeToRefs(chatStore);
 
 const users = ref([]);
 
@@ -64,19 +64,37 @@ const userSelected = async (userGUID) => {
   console.log("CURRENT CHAT GUID", currentChatGUID.value);
 
   let chatFound = false;
-
+  console.log("DIRECT CHATS SEARCH", (directChats.value));
   for (const chat of directChats.value) {
+    console.log("CHAT...", chat);
     // open already existing chat
-    if (chat.friend.guid === userGUID && currentChatGUID.value === chat.chat_guid) {
+    if (chat.friend.guid === userGUID) {
       console.log("You already have a chat with this user");
       chatSelected.value = true;
       currentChatGUID.value = chat.chat_guid;
       console.log("Current chat guid", chat.chat_guid);
       chatFound = true;
+      // if that chat was unselected previously, must load that chat again
+      console.log("CURRENT CHAT MESSAGES IN SEARCH", currentChatMessages.value.length === 0);
+      if (currentChatMessages.value.length === 0) {
+        console.log("Re-loading chat again...");
+        try {
+          const getLastMessagesResponse = await messageStore.getLastMessages(
+            chat.chat_guid
+          );
+          currentChatMessages.value = getLastMessagesResponse.messages;
+        } catch (error) {
+          console.log("Error in loadChat", error);
+        }
+      }
+
       break;
-    } else if (chat.friend.guid === userGUID && currentChatGUID.value !== chat.chat_guid) {
+    } else if (
+      chat.friend.guid === userGUID &&
+      currentChatGUID.value !== chat.chat_guid
+    ) {
       // must load chat
-      let chatGUID = chat.chat_guid
+      let chatGUID = chat.chat_guid;
       chatSelected.value = true;
       chatStore.setChatAsActive(chatGUID);
       try {
@@ -92,12 +110,13 @@ const userSelected = async (userGUID) => {
     }
   }
   if (!chatFound) {
-    const selectedUser = users.value.find(user => user.guid === userGUID);
-    console.log("USERS", selectedUser)
+    console.log("INFO", currentChatGUID.value, directChats.value);
+    const selectedUser = users.value.find((user) => user.guid === userGUID);
+    console.log("USERS", selectedUser);
     // Create temporary window, which will initiate a chat if a message is sent
     directChats.value.unshift({
       chat_guid: "unassigned",
-      friend: { username: selectedUser.username, friend_guid: selectedUser.guid },
+      friend: { username: selectedUser.username, guid: selectedUser.guid },
       created_at: null,
       has_new_messages: false,
       new_messages_count: 0,
@@ -105,9 +124,9 @@ const userSelected = async (userGUID) => {
     });
     currentChatGUID.value = "unassigned";
     chatSelected.value = true;
-    currentChatMessages.value = [] // clear messages history from previous chat
+    currentChatMessages.value = []; // clear messages history from previous chat
+    friendUserName.value = selectedUser.username;
   }
-
 };
 
 // get user chat if already have one
