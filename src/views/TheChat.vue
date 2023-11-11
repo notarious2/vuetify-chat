@@ -3,24 +3,7 @@
     <v-row no-gutters>
       <!-- LEFT PANEL START -->
       <v-col cols="4" class="bg-teal-lighten-5 rounded-s-lg">
-        <!-- MENU PANEL START -->
-        <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
-          <div class="mt-5 mb-3 d-flex justify-space-around">
-            <v-icon size="large" class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
-              @click="toggleSearch">mdi-compass
-            </v-icon>
-            <v-icon size="large" class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
-              @click="toggleChat">mdi-chat
-            </v-icon>
-            <v-icon size="large" class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
-              @click="toggleGroup">mdi-account-group
-            </v-icon>
-           
-          </div>
-          <v-divider />
-        </v-card>
-        <!-- MENU PANEL END -->
-        <!-- LEFT PANEL CHATS START -->
+        <MenuPanel/>
         <div v-if="isChat" style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
           <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
             <v-list-item class="px-2" @click="loadChat(directChat)">
@@ -43,51 +26,25 @@
             </v-list-item>
           </v-list>
         </div>
-        <!-- LEFT PANEL SEARCH START -->
-        <SearchBar v-if="isSearch" />
-        <!-- LEFT PANEL SEARCH END -->
+        <ContactList v-if="isSearch" />
       </v-col>
       <!-- LEFT PANEL CHATS END -->
 
       <!-- RIGHT PANEL START -->
       <v-col v-if="isChat && chatSelected">
-        <!-- MESSAGE BOX HEADING START -->
-        <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3">
-          <v-card-title style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            ">
-            <div>
-              <v-avatar class="ml-auto mb-1">
-                <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
-              </v-avatar>
-              <v-icon v-if="friendStatus === 'online'" size="x-small" class="mt-5 ml-n3 mb-n2"
-                color="success">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else-if="friendStatus === 'inactive'" size="x-small" class="mt-5 ml-n3 mb-n2"
-                color="orange-lighten-2">mdi-checkbox-blank-circle</v-icon>
-              <v-icon v-else size="x-small" class="mt-5 ml-n3 mb-n2"
-                color="teal-darken-1">mdi-checkbox-blank-circle-outline</v-icon>
-              <span class="ml-3">{{ friendUserName }}</span>
-            </div>
-            <v-icon color="teal">mdi-dots-vertical</v-icon>
-          </v-card-title>
-        </v-card>
-        <!-- MESSAGE BOX HEADING END -->
-
-        <!-- MESSAGES CONTAINER START -->
+        <ChatBoxHeader/>
+        <!-- MAIN CHAT START -->
         <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
             <div v-if="inputLocked" class="d-flex justify-end mr-10">
               <v-progress-circular indeterminate color="teal"></v-progress-circular>
             </div>
-
             <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
               <div v-if="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
               </div>
-              <speaker-bubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
+              <SpeakerBubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
                 <v-list-item class="py-2 my-3 text-right">
                   <v-list-item-title class="text-wrap">{{ message.content }}</v-list-item-title>
 
@@ -97,8 +54,8 @@
                       :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
                   </v-list-item-subtitle>
                 </v-list-item>
-              </speaker-bubble>
-              <partner-bubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index"
+              </SpeakerBubble>
+              <PartnerBubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index"
                 :observer="observer">
                 <v-list-item class="py-2 my-3 ml-2 text-left">
                   <v-list-item-title class="text-wrap">{{ message.content }} </v-list-item-title>
@@ -106,7 +63,7 @@
                     {{ formatTimestamp(message.created_at) }}
                   </v-list-item-subtitle>
                 </v-list-item>
-              </partner-bubble>
+              </PartnerBubble>
 
             </div>
             <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto"
@@ -117,7 +74,7 @@
             <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
           </v-btn>
         </v-card>
-        <!-- MESSAGES CONTAINER END -->
+        <!-- MAIN CHAT END -->
         <div style="position: relative;">
           <EmojiPicker v-show="showEmoji" style="position: absolute; bottom: 80%;" @select="onSelectEmoji" />
         </div>
@@ -189,44 +146,10 @@ import ThreeDots from "@/components/ThreeDots.vue";
 import EmptyChatWindow from "@/components/EmptyChatWindow.vue";
 import EmptyGroupWindow from "@/components/EmptyGroupWindow.vue";
 import SearchWindow from "@/components/SearchWindow.vue";
-import SearchBar from "@/components/SearchBar.vue";
+import ContactList from "@/components/ContactList.vue";
+import MenuPanel from "@/components/MenuPanel.vue";
+import ChatBoxHeader from "@/components/ChatBoxHeader.vue";
 
-
-
-
-// const isSearch = ref(false);
-// const isChat = ref(true);
-// const isGroup = ref(false);
-
-// const chatSelected = ref(false);
-
-const toggleSearch = () => {
-  isSearch.value = true;
-  isChat.value = false;
-  isGroup.value = false;
-  console.log("Current Messages Search", currentChatMessages.value);
-
-
-  // remove unassigned chat from directChats list
-  if (currentChatGUID.value === "unassigned") {
-    directChats.value.shift();
-    currentChatGUID.value = "";
-    chatSelected.value = false;
-    moreMessagesToLoad.value = false;
-  }
-};
-const toggleChat = () => {
-  isChat.value = true;
-  isSearch.value = false;
-  isGroup.value = false;
-  console.log("Current Messages", currentChatMessages.value);
-  console.log("Current ChatGUID", currentChatGUID);
-};
-const toggleGroup = () => {
-  isGroup.value = true;
-  isChat.value = false;
-  isSearch.value = false;
-};
 
 const showEmoji = ref(false);
 
@@ -268,9 +191,7 @@ const { chatSelected, currentChatGUID, directChats, friendUserName, friendStatus
 const { currentChatMessages } = storeToRefs(messageStore);
 const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 
-console.log("IS CHAT", isChat.value);
 
-console.log("IS SEARCH", isSearch.value);
 // Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
 const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
 
@@ -754,19 +675,6 @@ watch(displaySystemMessage, (newValue) => {
   }
 });
 
-// track messages to recalculate unread messages count
-// watch(
-//   allMessages,
-//   (newVal) => {
-//     // calculateNewMessagesCount(allMessages.value, userGUID);
-//     // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
-//     // setTimeout(() => {
-//     //   calculateNewMessagesCount(allMessages.value, userGUID);
-//     //   }, 1000); // 1 second
-//   },
-//   { deep: true }
-// );
-
 
 const scrollBottom = () => {
   chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
@@ -791,65 +699,10 @@ const handleScroll = () => {
   flex-direction: column-reverse;
 }
 
-#icon-search:hover,
-#icon-chats:hover,
-#icon-groups:hover {
-  color: #009688 !important;
-}
-
-.searchTab {
-  color: #009688 !important;
-  animation: rotate 0.5s;
-}
-
-.chatsTab
- {
-  color: #009688 !important;
-  animation: beat 0.5s;
-}
-
-.groupsTab
- {
-  color: #009688 !important;
-  animation: swing 0.5s;
-}
-
-@keyframes beat {
-  15%,
-  85% {transform: scale(1.1);}
-  25%,
-  75% {transform: scale(1.2);}
-  50% {transform: scale(1.3);}
-}
-
-@keyframes swing {
-  20%  {transform: skew(-10deg);}
-  40%  {transform: skew(-15deg);}
-  60%  {transform: skew(10deg);}
-  80%  {transform: skew(15deg);}
-}
-
-
-@keyframes rotate {
-  15%,
-  85% {transform: rotate(-0.2turn);}
-  25%,
-  75% {transform: rotate(-0.4turn);}
-  50% {transform: rotate(-0.6turn);}
-}
-
 
 .activeEmoji {
   color: #009688 !important;
 }
 
-/* #message-container {
-  background: url('/chat-background.jpg')center;
-  background-size: 600px;
-} */
-
-.custom-tooltip {
-  opacity: 0.7;
-}
 
 </style>
