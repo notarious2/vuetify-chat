@@ -3,7 +3,7 @@
     <v-row no-gutters>
       <!-- LEFT PANEL START -->
       <v-col cols="4" class="bg-teal-lighten-5 rounded-s-lg">
-        <MenuPanel/>
+        <MenuPanel />
         <div v-if="isChat" style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
           <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
             <v-list-item class="px-2" @click="loadChat(directChat)">
@@ -32,7 +32,7 @@
 
       <!-- RIGHT PANEL START -->
       <v-col v-if="isChat && chatSelected">
-        <ChatBoxHeader/>
+        <ChatBoxHeader />
         <!-- MAIN CHAT START -->
         <v-card class="rounded-0" id="message-container">
           <div id="container" ref="chatWindow">
@@ -89,46 +89,47 @@
             <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
             <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
             <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
-              variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="wsSendMessage"
-              @input="handleOwnTyping" :readonly="inputLocked"></v-textarea>
+              variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"
+              @input="websocketStore.handleUserTyping()" :readonly="inputLocked"></v-textarea>
 
-            <v-btn @click="wsSendMessage" icon="mdi-send" variant="plain" color="teal" size="x-large" class="ml-2 mb-3"
+            <v-btn @click="sendMessage" icon="mdi-send" variant="plain" color="teal" size="x-large" class="ml-2 mb-3"
               style="font-size: 30px; transform: rotate(-5deg)">
             </v-btn>
           </v-row>
 
-          <v-row v-show="friendIsTyping" class="mb-3 mt-0 ml-5 text-teal-darken-3">typing
+          <v-row v-show="friendTyping" class="mb-3 mt-0 ml-5 text-teal-darken-3">typing
             <ThreeDots class="ml-n3" />
           </v-row>
-          <v-row v-show="!friendIsTyping" class="mb-3 mt-0 ml-5">&nbsp;</v-row>
+          <v-row v-show="!friendTyping" class="mb-3 mt-0 ml-5">&nbsp;</v-row>
         </v-card>
         <!-- SEND BUTTON COMPONENT END -->
-
-        <v-alert v-if="displaySystemMessage" :color="systemMessage.type === 'error'
-          ? 'pink-accent-2'
-          : systemMessage.type === 'system'
-            ? 'blue-grey-lighten-2'
-            : 'indigo-lighten-2'
-          " theme="dark" class="text-center text-h6 font-weight-bold">{{ systemMessage.content }}</v-alert>
       </v-col>
+
       <EmptyChatWindow v-else-if="isChat && !chatSelected" />
       <SearchWindow v-else-if="isSearch" />
-      <EmptyGroupWindow v-else-if="isGroup"/>
-      
+      <EmptyGroupWindow v-else-if="isGroup" />
+
 
       <!-- RIGHT PANEL END -->
     </v-row>
   </v-container>
+  <v-alert v-if="Object.keys(systemMessage).length > 0" width="500px" height="70px" :color="systemMessage.type === 'error'
+    ? 'pink-accent-2'
+    : systemMessage.type === 'system'
+      ? 'blue-grey-lighten-2'
+      : 'indigo-lighten-2'
+    " theme="dark" :icon="systemMessage.type === 'success' ? 'mdi-power-plug' : 'mdi-power-plug-off'"
+    class="text-center text-h6 font-weight-bold mx-auto rounded-xl">{{ systemMessage.content }}</v-alert>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, onUpdated, nextTick, computed } from "vue";
-import { useWebSocket } from "@/composables/useWebSocket";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useMainStore } from "@/store/mainStore";
+import { useWebsocketStore } from "@/store/websocketStore";
 
 
 import EmojiPicker from 'vue3-emoji-picker'
@@ -149,6 +150,20 @@ import SearchWindow from "@/components/SearchWindow.vue";
 import ContactList from "@/components/ContactList.vue";
 import MenuPanel from "@/components/MenuPanel.vue";
 import ChatBoxHeader from "@/components/ChatBoxHeader.vue";
+
+
+const userStore = useUserStore();
+const chatStore = useChatStore();
+const messageStore = useMessageStore();
+const mainStore = useMainStore();
+const websocketStore = useWebsocketStore();
+
+const { currentUser } = storeToRefs(userStore);
+const { chatSelected, currentChatGUID, directChats, friendUserName, friendStatus, inputLocked, friendTyping } = storeToRefs(chatStore);
+const { currentChatMessages, systemMessage } = storeToRefs(messageStore);
+const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+const { socket } = storeToRefs(websocketStore);
+
 
 
 const showEmoji = ref(false);
@@ -179,100 +194,35 @@ const onSelectEmoji = (emoji) => {
   })
 }
 
-
-
-const userStore = useUserStore();
-const chatStore = useChatStore();
-const messageStore = useMessageStore();
-const mainStore = useMainStore();
-
-const { currentUser } = storeToRefs(userStore);
-const { chatSelected, currentChatGUID, directChats, friendUserName, friendStatus } = storeToRefs(chatStore);
-const { currentChatMessages } = storeToRefs(messageStore);
-const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
-
-
-// Establish Websocket connection, useWebSocket return socket ref that holds WebSocket object
-const { socket } = useWebSocket("ws://localhost:8001/ws/"); // TODO: Make it constant
-
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");
 const textInput = ref(null);
 const chatWindow = ref(null);
-// const currentChatGUID = ref("");
-// const allMessages = ref([]);
-const displaySystemMessage = ref(false);
-const systemMessage = ref({});
 const moreMessagesToLoad = ref(false);
 
-// Reference to the last message element
-const lastReadMessage = ref({});
 
 // User Information
-const userName = currentUser.value.userName;
 const userGUID = currentUser.value.userGUID;
 
-
-// Functions for Message Handling
-
-const meTyping = ref(false);
-const meTypingTimer = ref(null);
-const friendIsTyping = ref(false);
-const friendTypingTimer = ref(false);
-
-// input related logic/progress bar
-const inputLocked = ref(false)
 
 // display scroll to bottom
 
 const isBottom = ref(true)
 
-const wsSendTyping = async () => {
-  // Check if the WebSocket connection exists and the message is not empty
-  // should not send for not yet created chat
-  console.log("CHAT GUID", currentChatGUID.value);
-  if (currentChatGUID.value === "unassigned") {
-    return
+
+
+const sendMessage = async () => {
+  if (socket.value.readyState === 1 && messageToSend.value.trim() !== "") {
+    await websocketStore.sendMessage(messageToSend.value)
+    // Clear the input field
+    messageToSend.value = "";
+    // make input not editable before receive own message via websocket
+    inputLocked.value = true;
   }
-  await socket.value.send(
-    JSON.stringify({
-      type: "user_typing",
-      user_guid: userGUID,
-      chat_guid: currentChatGUID.value,
-    })
-  );
-};
+}
 
-const handleOwnTyping = async () => {
-  // if myTyping is still true - ignore
-  // else: send message and change meTyping to false after timeout
-  if (!meTyping.value) {
-    meTyping.value = messageToSend.value.trim() !== "";
-    await wsSendTyping();
 
-    meTypingTimer.value = setTimeout(async () => {
-      meTyping.value = false;
-    }, 1000)
-  }
 
-};
-
-const handleFriendTyping = (receivedMessage) => {
-  if (
-    receivedMessage.type === "user_typing" &&
-    receivedMessage.user_guid !== userGUID &&
-    receivedMessage.chat_guid === currentChatGUID.value
-  ) {
-    // avoid setting friendIsTyping to false if new message was received
-    clearTimeout(friendTypingTimer.value);
-    friendIsTyping.value = true;
-    // Set a timeout to reset friendIsTyping to false after 2 seconds
-    friendTypingTimer.value = setTimeout(() => {
-      friendIsTyping.value = false;
-    }, 2000);
-
-  }
-};
 
 const showDateBreak = (index) => {
   const messages = currentChatMessages.value;
@@ -314,23 +264,6 @@ const loadMoreMessages = async () => {
   }
 };
 
-const updateMessagesReadStatus = (messages, lastReadMessageDate) => {
-  for (let i = 0; i < messages.value.length; i++) {
-    const message = messages.value[i];
-    if (
-      (new Date(message.created_at) <= new Date(lastReadMessageDate)) &
-      (message.user_guid === userGUID)
-    ) {
-      if (message.is_read) {
-        break;
-      }
-      // introduce 0.5 seconds delay for marking messages as read
-      setTimeout(() => {
-        messages.value[i].is_read = true;
-      }, 500)
-    }
-  }
-};
 
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
@@ -340,7 +273,7 @@ const loadChat = async (directChat) => {
   friendUserName.value = directChat.friend.username;
   moreMessagesToLoad.value = false;
 
-  lastReadMessage.value = {};
+  messageStore.clearLastReadMessage();
 
   // Logic related to working with user without Chat
   console.log("CHAT GUID", directChat);
@@ -369,9 +302,9 @@ const loadChat = async (directChat) => {
     );
 
     if (getLastMessagesResponse.last_read_message) {
-      setLastReadMessage(getLastMessagesResponse.last_read_message);
+      messageStore.setLastReadMessage(getLastMessagesResponse.last_read_message);
     } else {
-      clearLastReadMessage();
+      messageStore.clearLastReadMessage();
     }
   } catch (error) {
     console.log("Error in loadChat", error);
@@ -384,7 +317,7 @@ const loadChat = async (directChat) => {
   console.log("SWITCHED TABS, GUID", currentChatGUID.value === directChat.chat_guid);
   if (currentChatGUID.value !== chatGUID) {
     chatStore.clearFriendStatus();
-    friendIsTyping.value = false;
+    friendTyping.value = false;
   }
   chatStore.setChatAsActive(chatGUID);
 
@@ -394,18 +327,6 @@ const loadChat = async (directChat) => {
   }
   initializeObserver();
 };
-
-const setLastReadMessage = (lastReadMessageData) => {
-  lastReadMessage.value.guid = lastReadMessageData.guid;
-  lastReadMessage.value.created_at = new Date(lastReadMessageData.created_at);
-};
-
-const clearLastReadMessage = () => {
-  lastReadMessage.value = {};
-};
-// const setChatAsActive = (chatGUID) => {
-//   currentChatGUID.value = chatGUID;
-// };
 
 
 const initializeObserver = () => {
@@ -425,48 +346,36 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-// Function to mark a message as "seen"
-const wsMarkMessageAsRead = async (message) => {
-  console.log("SENDING WS MESSAGE", message.content);
-  await socket.value.send(
-    JSON.stringify({
-      type: "message_read",
-      chat_guid: message.chat_guid,
-      message_guid: message.message_guid,
-    })
-  );
-};
 
+/**
+ * Marks a message as read and updates the last read message information.
+ * Assumes the message is not read and is from another user
+ * @param {Object} message - The message to mark as read.
+ */
 const markMessageAsRead = async (message) => {
-  // assume message is not read and of another user
-  console.log("Marking this message as read", message.content);
-  // compare with current last_read message
-  // if 'unread' message is newer accept it, else mark it as already read
-  // console.log("TRIGGERING", lastReadMessage, new Date(message.created_at), lastReadMessage.value.created_at);
-  // console.log(!lastReadMessage.value, !lastReadMessage, new Date(message.created_at) >= lastReadMessage.value.created_at);
-  console.log("Mark Message as Read", lastReadMessage.value, new Date(message.created_at) >= lastReadMessage.value.created_at);
+  // Check if there is no previous last read message or if the current message is newer
+  const isCurrentMessageNewer = messageStore.lastReadMessage.length === 0 ||
+    new Date(message.created_at) >= messageStore.lastReadMessage.created_at;
 
-  if (
-    (lastReadMessage.value.length !== 0) ||
-    new Date(message.created_at) >= lastReadMessage.value.created_at
-  ) {
-    console.log(
-      "TRIGGERING",
-      lastReadMessage,
-      new Date(message.created_at),
-    );
-    await wsMarkMessageAsRead(message);
-    lastReadMessage.value.guid = message.message_guid;
-    lastReadMessage.value.created_at = new Date(message.created_at);
-    message.is_read = true;
-  } else {
+  // If the message is newer or no previous last read message,
+  // mark it as read and update last read information
+  if (isCurrentMessageNewer) {
+    // Send a WebSocket message indicating that the message has been read
+    await websocketStore.sendMessageRead(message);
+
+    // Update the last read message information
+    messageStore.lastReadMessage = {
+      guid: message.message_guid,
+      created_at: new Date(message.created_at),
+    };
     message.is_read = true;
   }
 };
 
+
 const calculateNewMessagesCountForChat = (messages, userGUID) => {
   // Use reduce to count unread messages for the specified user
-  //   // ignore read status of own messages
+  // ignore read status of own messages
 
   return messages.reduce((count, message) => {
     if (message.user_guid !== userGUID && !message.is_read) {
@@ -483,196 +392,48 @@ const onElementObserved = async (entries) => {
       continue;
     }
     observer.value.unobserve(entry.target);
-    const msgIndex = entry.target.getAttribute("index");
-    const msg = currentChatMessages.value[msgIndex];
-    if (msg.is_read) {
-      console.log("what message?", msg.is_read, msg);
-      console.log("Already read message:", msg.content);
+
+    const messageIndex = entry.target.getAttribute("index");
+    const message = currentChatMessages.value[messageIndex];
+
+    if (message.is_read) {
+      console.log("Already read message:", message.content);
     } else {
-      await markMessageAsRead(msg);
+      await markMessageAsRead(message);
       console.log("Marking message as read...");
+
       // find chat and decrement read_messages count by 1
-      const foundChat = directChats.value.find(
-        (obj) => obj.chat_guid === msg.chat_guid
+      const foundChatIndex = directChats.value.findIndex(
+        (chat) => chat.chat_guid === message.chat_guid
       );
-      if (foundChat) {
-        console.log("FOUND CHAT", foundChat);
-        foundChat.new_messages_count--;
-      } else {
-        console.log("Chat not found.");
+
+      if (foundChatIndex !== -1) {
+        directChats.value[foundChatIndex].new_messages_count--;
       }
     }
   }
 };
 
-const handleSystemMessage = (receivedMessage) => {
-  if (
-    receivedMessage.type === "system" &&
-    receivedMessage.username !== userName
-  ) {
-    systemMessage.value = receivedMessage;
-    displaySystemMessage.value = true;
-  }
-};
 
-const wsSendMessage = async () => {
-  // Must first create a chat for unassigned chat
-  if (currentChatGUID.value === "unassigned") {
-    console.log("Sending Message to:", currentChatGUID.value)
-    const friendGUID = directChats.value[0].friend.guid;
-    const newChat = await chatStore.createDirectChat(friendGUID)
-    // update unassigned chat based on new chat data
-    directChats.value[0].chat_guid = newChat.guid
-    directChats.value[0].created_at = newChat.created_at
-    directChats.value[0].updated_at = newChat.updated_at
 
-    console.log("NEW CHAT", newChat);
-    console.log("Direct chats value", directChats.value);
-    currentChatGUID.value = newChat.guid
-    console.log("CURRENT CHAT GUID", currentChatGUID.value);
-    // CLEAR CURRENT MESSAGES AND SAVE THEM TO NEW ARRAY ON NEW MESSAGES HANDLER
-  }
-  if (socket.value && messageToSend.value.trim() !== "") {
-    // Check if the WebSocket connection exists and the message is not empty
-    console.log("Sending message via WS", messageToSend.value);
-
-    await socket.value.send(
-      JSON.stringify({
-        type: "new_message",
-        user_guid: userGUID,
-        chat_guid: currentChatGUID.value,
-        content: messageToSend.value,
-      })
-    );
-    messageToSend.value = ""; // Clear the input field
-    // chatWindow.value.scrollTop = chatWindow.value.scrollHeight;
-
-    // make input not editable before receive own message via websocket
-    inputLocked.value = true;
-  }
-};
-
-const handleNewMessage = (receivedMessage) => {
-  if (receivedMessage.type === "new") {
-
-    // release input lock
-    inputLocked.value = false;
-
-    // change date on left panel (users)
-    directChats.value.forEach((directChat) => {
-      if (directChat.chat_guid === receivedMessage.chat_guid) {
-        directChat.updated_at = receivedMessage.created_at
-      }
-    });
-
-    // append messages to the open chat
-    if (receivedMessage.chat_guid === currentChatGUID.value) {
-      currentChatMessages.value.unshift(receivedMessage);
-    }
-
-    // observe only if another user's message and belongs to latest selected chat
-    if (receivedMessage.user_guid !== userGUID && receivedMessage.chat_guid === currentChatGUID.value) {
-
-      console.log(currentChatGUID.value, receivedMessage);
-      // observe incomming message of other user
-      setTimeout(() => {
-        const newMessage = document.getElementById(
-          `${receivedMessage.message_guid}`
-        );
-        console.log("FOUND MESSAGE", newMessage);
-        observer.value.observe(newMessage);
-      }, 500); // need to wait before new message is inserted
-    }
-
-    if (receivedMessage.user_guid !== userGUID) {
-
-      // find chat and increment new_message_count for chat by +1
-      const foundChat = directChats.value.find(
-        (obj) => obj.chat_guid === receivedMessage.chat_guid
-      );
-      if (foundChat) {
-        foundChat.new_messages_count++;
-      } else {
-        console.log("Chat not found.", directChats.value, receivedMessage.chat_guid);
-      }
-      // set friend is typing to false
-      console.log("SETTING TYPING TO FALSE...");
-      friendIsTyping.value = false;
-    }
-  }
-};
-
-const handleMessageRead = (receivedMessage) => {
-  // make sure that user is in the current chat
-  if (
-    receivedMessage.type === "message_read" &&
-    receivedMessage.user_guid !== userGUID
-  ) {
-    updateMessagesReadStatus(
-      currentChatMessages,
-      receivedMessage.last_read_message_created_at
-    );
-  }
-};
-
-const handleFriendStatusMessage = (receivedMessage) => {
-  if (
-    receivedMessage.type === "status" &&
-    receivedMessage.username == friendUserName.value
-  ) {
-    friendStatus.value = receivedMessage.status;
-  }
-};
-
-const handleSocketClose = () => {
-  systemMessage.value = { type: "error", content: "You are disconnected" };
-  displaySystemMessage.value = true;
-  console.log("System Message", displaySystemMessage.value);
-};
 
 onMounted(async () => {
   directChats.value = await chatStore.getDirectChats(
     currentUser.value.userGUID
   );
-  systemMessage.value = { type: "success", content: "You are connected" };
-  displaySystemMessage.value = true;
+  await websocketStore.connectWebsocket()
+  systemMessage.value = { type: "success", content: "Websocket connection is established" };
+  // Set a timeout to clear the systemMessage after 2 seconds
+  setTimeout(() => {
+    systemMessage.value = {};
+  }, 3000);
 
-
-  socket.value.addEventListener("message", (event) => {
-    const receivedMessage = JSON.parse(event.data);
-    handleSystemMessage(receivedMessage);
-    handleNewMessage(receivedMessage);
-    handleMessageRead(receivedMessage);
-    handleFriendStatusMessage(receivedMessage);
-    handleFriendTyping(receivedMessage);
-  });
-
-  socket.value.addEventListener("close", (event) => {
-    systemMessage.value = { type: "error", content: "You are disconnected" };
-    displaySystemMessage.value = true;
-    console.log("System Message", displaySystemMessage.value);
-  });
-
-  socket.value.addEventListener("close", handleSocketClose);
-
-  // chatWindow.value.addEventListener("scroll", handleScroll);
 });
 
 const observer = ref(null);
 
 onUpdated(() => {
   console.log("Updated");
-});
-
-// Watch for changes in displaySystemMessage and set it to false after 3 seconds.
-watch(displaySystemMessage, (newValue) => {
-  if (newValue) {
-    if (systemMessage.value.type !== "error") {
-      setTimeout(() => {
-        displaySystemMessage.value = false;
-      }, 3000); // 3 seconds
-    }
-  }
 });
 
 
@@ -703,6 +464,4 @@ const handleScroll = () => {
 .activeEmoji {
   color: #009688 !important;
 }
-
-
 </style>
