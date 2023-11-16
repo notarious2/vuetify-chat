@@ -278,7 +278,7 @@ const loadChat = async (directChat) => {
   messageStore.clearLastReadMessage();
 
   // Logic related to working with user without Chat
-  if (directChat.chat_guid === "unassigned") {
+  if (chatGUID === "unassigned") {
     currentChatGUID.value = "unassigned";
     currentChatMessages.value = [];
     return
