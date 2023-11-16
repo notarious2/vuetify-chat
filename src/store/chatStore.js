@@ -39,7 +39,6 @@ export const useChatStore = defineStore("chat", {
             new_messages_count: chat["new_messages_count"],
           });
         });
-        return this.directChats;
       } catch (error) {
         console.error("Error during getting Direct Chats:", error);
         throw error;

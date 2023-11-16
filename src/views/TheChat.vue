@@ -44,19 +44,18 @@
                 {{ formatDate(message.created_at) }}
                 <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
               </div>
-              <SpeakerBubble v-if="message.user_guid === userGUID" class="ml-auto mr-2">
+              <SpeakerBubble v-if="message.user_guid === currentUser.userGUID" class="ml-auto mr-2">
                 <v-list-item class="py-2 my-3 text-right">
                   <v-list-item-title class="text-wrap">{{ message.content }}</v-list-item-title>
 
                   <v-list-item-subtitle class="mt-1">
                     {{ formatTimestamp(message.created_at) }}
-                    <v-icon v-if="message.user_guid === userGUID"
+                    <v-icon v-if="message.user_guid === currentUser.userGUID"
                       :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
                   </v-list-item-subtitle>
                 </v-list-item>
               </SpeakerBubble>
-              <PartnerBubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index"
-                :observer="observer">
+              <PartnerBubble v-else class="ml-2 partner-msg" :id="message.message_guid" :index="index">
                 <v-list-item class="py-2 my-3 ml-2 text-left">
                   <v-list-item-title class="text-wrap">{{ message.content }} </v-list-item-title>
                   <v-list-item-subtitle class="mt-2">
@@ -123,15 +122,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUpdated, nextTick, computed } from "vue";
+import { ref, watch, onMounted, onUpdated, nextTick } from "vue";
 import { storeToRefs } from "pinia";
-import { useUserStore } from "@/store/userStore";
-import { useChatStore } from "@/store/chatStore";
-import { useMessageStore } from "@/store/messageStore";
-import { useMainStore } from "@/store/mainStore";
-import { useWebsocketStore } from "@/store/websocketStore";
-
-
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
@@ -151,19 +143,26 @@ import ContactList from "@/components/ContactList.vue";
 import MenuPanel from "@/components/MenuPanel.vue";
 import ChatBoxHeader from "@/components/ChatBoxHeader.vue";
 
+import { useUserStore } from "@/store/userStore";
+import { useChatStore } from "@/store/chatStore";
+import { useMessageStore } from "@/store/messageStore";
+import { useMainStore } from "@/store/mainStore";
+import { useWebsocketStore } from "@/store/websocketStore";
+import { useObserverStore } from "@/store/observerStore";
+
 
 const userStore = useUserStore();
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
 const mainStore = useMainStore();
 const websocketStore = useWebsocketStore();
+const observerStore = useObserverStore();
 
 const { currentUser } = storeToRefs(userStore);
-const { chatSelected, currentChatGUID, directChats, friendUserName, friendStatus, inputLocked, friendTyping } = storeToRefs(chatStore);
-const { currentChatMessages, systemMessage } = storeToRefs(messageStore);
+const { chatSelected, currentChatGUID, directChats, friendUserName, inputLocked, friendTyping } = storeToRefs(chatStore);
+const { currentChatMessages, systemMessage, moreMessagesToLoad } = storeToRefs(messageStore);
 const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 const { socket } = storeToRefs(websocketStore);
-
 
 
 const showEmoji = ref(false);
@@ -184,7 +183,7 @@ const onSelectEmoji = (emoji) => {
   // Insert the selected emoji in between
   messageToSend.value = start + emoji.i + end;
 
-  // must wait for DOM to be updated
+  // must wait for the DOM update
   nextTick(() => {
     // Update the cursor position to be at the end of the inserted emoji
     textInput.value.selectionStart = cursorPosition + emoji.i.length;
@@ -198,12 +197,6 @@ const onSelectEmoji = (emoji) => {
 const messageToSend = ref("");
 const textInput = ref(null);
 const chatWindow = ref(null);
-const moreMessagesToLoad = ref(false);
-
-
-// User Information
-const userGUID = currentUser.value.userGUID;
-
 
 // display scroll to bottom
 
@@ -220,8 +213,6 @@ const sendMessage = async () => {
     inputLocked.value = true;
   }
 }
-
-
 
 
 const showDateBreak = (index) => {
@@ -267,74 +258,46 @@ const loadMoreMessages = async () => {
 
 // Functions for Chat Loading
 const loadChat = async (directChat) => {
-
   const chatGUID = directChat.chat_guid;
-  chatSelected.value = true;
+
+  // don't do anything if clicked on currently selected chat
+  if (currentChatGUID.value === chatGUID) return;
+
+
+  chatSelected.value = true; // important
   friendUserName.value = directChat.friend.username;
   moreMessagesToLoad.value = false;
 
+  // Check if the event listener is attached before removing it
+  if (chatWindow.value) {
+    chatWindow.value.removeEventListener("scroll", handleScroll);
+  }
+  // clear status, friendIsTyping, last read message
+  chatStore.clearFriendStatus();
+  friendTyping.value = false;
   messageStore.clearLastReadMessage();
 
   // Logic related to working with user without Chat
-  console.log("CHAT GUID", directChat);
   if (directChat.chat_guid === "unassigned") {
-    console.log("HERE");
     currentChatGUID.value = "unassigned";
     currentChatMessages.value = [];
-    moreMessagesToLoad.value = false;
     return
   }
+  // disconnect old observer and initialize new
+  observerStore.disconnectObserver();
+  observerStore.initializeObserver(chatWindow);
 
-  try {
-    const getLastMessagesResponse = await messageStore.getLastMessages(
-      chatGUID
-    );
-    console.log("getMessages", getLastMessagesResponse);
+  // load messages
+  await messageStore.getLastMessages(chatGUID)
 
-    currentChatMessages.value = getLastMessagesResponse.messages;
-    moreMessagesToLoad.value = getLastMessagesResponse.has_more_messages;
+    // recalculate new messages count for chat based on newly loaded messages
+  directChat.new_messages_count = messageStore.calculateNewMessagesCountForChat();
 
-    // recalculate new messages count from newly loaded messages
-
-    directChat.new_messages_count = calculateNewMessagesCountForChat(
-      getLastMessagesResponse.messages,
-      userGUID
-    );
-
-    if (getLastMessagesResponse.last_read_message) {
-      messageStore.setLastReadMessage(getLastMessagesResponse.last_read_message);
-    } else {
-      messageStore.clearLastReadMessage();
-    }
-  } catch (error) {
-    console.log("Error in loadChat", error);
-  }
-  chatWindow.value.removeEventListener("scroll", handleScroll)
   chatWindow.value.addEventListener('scroll', handleScroll);
-
-  // do not clear status, friendIsTyping if clicked the same chat
-  // clear if friend was typing in previous chat
-  console.log("SWITCHED TABS, GUID", currentChatGUID.value === directChat.chat_guid);
-  if (currentChatGUID.value !== chatGUID) {
-    chatStore.clearFriendStatus();
-    friendTyping.value = false;
-  }
   chatStore.setChatAsActive(chatGUID);
 
-  // disconnect observer if there is any from the previous chat
-  if (observer.value) {
-    observer.value.disconnect();
-  }
-  initializeObserver();
 };
 
-
-const initializeObserver = () => {
-  observer.value = new IntersectionObserver(onElementObserved, {
-    root: chatWindow.value,
-    threshold: 1.0,
-  });
-};
 
 const activeTab = ref(true);
 
@@ -347,90 +310,16 @@ document.addEventListener("visibilitychange", () => {
 });
 
 
-/**
- * Marks a message as read and updates the last read message information.
- * Assumes the message is not read and is from another user
- * @param {Object} message - The message to mark as read.
- */
-const markMessageAsRead = async (message) => {
-  // Check if there is no previous last read message or if the current message is newer
-  const isCurrentMessageNewer = messageStore.lastReadMessage.length === 0 ||
-    new Date(message.created_at) >= messageStore.lastReadMessage.created_at;
-
-  // If the message is newer or no previous last read message,
-  // mark it as read and update last read information
-  if (isCurrentMessageNewer) {
-    // Send a WebSocket message indicating that the message has been read
-    await websocketStore.sendMessageRead(message);
-
-    // Update the last read message information
-    messageStore.lastReadMessage = {
-      guid: message.message_guid,
-      created_at: new Date(message.created_at),
-    };
-    message.is_read = true;
-  }
-};
-
-
-const calculateNewMessagesCountForChat = (messages, userGUID) => {
-  // Use reduce to count unread messages for the specified user
-  // ignore read status of own messages
-
-  return messages.reduce((count, message) => {
-    if (message.user_guid !== userGUID && !message.is_read) {
-      return count + 1;
-    } else {
-      return count;
-    }
-  }, 0);
-};
-
-const onElementObserved = async (entries) => {
-  for (const entry of entries) {
-    if (!entry.isIntersecting) {
-      continue;
-    }
-    observer.value.unobserve(entry.target);
-
-    const messageIndex = entry.target.getAttribute("index");
-    const message = currentChatMessages.value[messageIndex];
-
-    if (message.is_read) {
-      console.log("Already read message:", message.content);
-    } else {
-      await markMessageAsRead(message);
-      console.log("Marking message as read...");
-
-      // find chat and decrement read_messages count by 1
-      const foundChatIndex = directChats.value.findIndex(
-        (chat) => chat.chat_guid === message.chat_guid
-      );
-
-      if (foundChatIndex !== -1) {
-        directChats.value[foundChatIndex].new_messages_count--;
-      }
-    }
-  }
-};
-
-
-
-
 onMounted(async () => {
-  directChats.value = await chatStore.getDirectChats(
-    currentUser.value.userGUID
-  );
+  await chatStore.getDirectChats(currentUser.value.userGUID);
   await websocketStore.connectWebsocket()
   systemMessage.value = { type: "success", content: "Websocket connection is established" };
-  // Set a timeout to clear the systemMessage after 2 seconds
+  // Set a timeout to clear the systemMessage after 3 seconds
   setTimeout(() => {
     systemMessage.value = {};
   }, 3000);
-
 });
 
-const observer = ref(null);
 
 onUpdated(() => {
   console.log("Updated");

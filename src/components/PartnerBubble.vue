@@ -5,19 +5,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted } from "vue";
+
+import { useObserverStore } from "@/store/observerStore";
+const observerStore = useObserverStore();
+
+
 
 const messageBubble = ref(null);
 onMounted(() => {
-  if (props.observer) {
-    props.observer.observe(messageBubble.value);
-    console.log("observing..")
+  if (observerStore.observer) {
+    observerStore.observer.observe(messageBubble.value);
   } else {
-    console.log("Observer not initiated, must fix", props.observer);
+    console.log("Could not observe, must fix");
   }
 });
 
-const props = defineProps(["observer"]);
 </script>
 
 <style scoped>
