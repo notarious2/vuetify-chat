@@ -9,9 +9,11 @@ export const useObserverStore = defineStore("observer", {
     };
   },
   actions: {
-    initializeObserver(observationWindow) {
+    initializeObserver() {
+      const chatStore = useChatStore();
+
       this.observer = new IntersectionObserver(this.onElementObserved, {
-        root: observationWindow.value,
+        root: chatStore.chatWindow,
         threshold: 1.0,
       });
     },

@@ -14,11 +14,37 @@ export const useChatStore = defineStore("chat", {
       friendTypingTimer: null,
       meTyping: false,
       meTypingTimer: null,
-
+      chatWindow: null,
+      isBottom: true,
     };
   },
 
   actions: {
+    setChatWindow(chatWindow) {
+      this.chatWindow = chatWindow;
+    },
+
+    handleScroll() {
+      if (this.chatWindow.scrollTop >= -50) {
+        this.isBottom = true;
+      } else {
+        this.isBottom = false;
+      }
+    },
+    addWindowScrollHandler() {
+      this.chatWindow.addEventListener("scroll", this.handleScroll);
+    },
+
+    removeWindowScrollHandler() {
+      // Check if the event listener is attached before removing it
+      if (this.chatWindow) {
+        this.chatWindow.removeEventListener("scroll", this.handleScroll);
+      }
+    },
+    scrollToBottom() {
+      this.chatWindow.scrollTop = this.chatWindow.scrollHeight;
+    },
+
     async getDirectChats(userGUID) {
       try {
         const response = await axios.get("/chats/direct/");
@@ -46,7 +72,10 @@ export const useChatStore = defineStore("chat", {
     },
 
     removeUnassignedChat() {
-      if (this.directChats.length > 0 && this.directChats[0].chat_guid === "unassigned") {
+      if (
+        this.directChats.length > 0 &&
+        this.directChats[0].chat_guid === "unassigned"
+      ) {
         this.directChats.shift();
       }
     },
@@ -87,7 +116,9 @@ export const useChatStore = defineStore("chat", {
 
     stopTimeoutFriendTyping() {
       clearTimeout(this.friendTypingTimer);
-    }
-
+    },
+  },
+  getters: {
+    getChatWindow: (state) => state.chatWindow,
   },
 });

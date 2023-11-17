@@ -91,7 +91,7 @@ export const useMessageStore = defineStore("messages", {
       const websocketStore = useWebsocketStore();
       // Check if there is no previous last read message or if the current message is newer
       const isCurrentMessageNewer =
-        this.lastReadMessage.length === 0 ||
+      Object.keys(this.lastReadMessage).length === 0 ||
         new Date(message.created_at) >= this.lastReadMessage.created_at;
 
       // If the message is newer or no previous last read message,
