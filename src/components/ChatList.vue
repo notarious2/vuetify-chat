@@ -22,25 +22,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUpdated, nextTick } from "vue";
 import { storeToRefs } from "pinia";
 import {formatTimeFromDateString} from "@/utils/dateUtils";
 import { useChatStore } from "@/store/chatStore";
 import { useObserverStore } from "@/store/observerStore";
 import { useMessageStore } from "@/store/messageStore";
-import { useUserStore } from "@/store/userStore";
-const userStore = useUserStore();
-
 
 const chatStore = useChatStore();
 const observerStore = useObserverStore();
 const messageStore = useMessageStore();
 
 
-
-const { chatSelected, currentChatGUID, directChats, friendUserName, inputLocked, friendTyping } = storeToRefs(chatStore);
-const { currentChatMessages, systemMessage, moreMessagesToLoad } = storeToRefs(messageStore);
-const { currentUser } = storeToRefs(userStore);
+const { chatSelected, currentChatGUID, friendUserName, directChats, friendTyping } = storeToRefs(chatStore);
+const { currentChatMessages, moreMessagesToLoad } = storeToRefs(messageStore);
 
 const loadChat = async (directChat) => {
   const chatGUID = directChat.chat_guid;
@@ -51,7 +45,7 @@ const loadChat = async (directChat) => {
   chatSelected.value = true; // important
   friendUserName.value = directChat.friend.username;
   moreMessagesToLoad.value = false;
-  
+
   chatStore.removeWindowScrollHandler();
 
   // clear status, friendIsTyping, last read message
@@ -75,7 +69,7 @@ const loadChat = async (directChat) => {
 
   // recalculate new messages count for chat based on newly loaded messages
   directChat.new_messages_count = messageStore.calculateNewMessagesCountForChat();
-  
+
   // chatWindow full of messages is available after messages are loaded
   chatStore.addWindowScrollHandler();
 
@@ -83,8 +77,4 @@ const loadChat = async (directChat) => {
 
 };
 
-onMounted(async () => {
-  await chatStore.getDirectChats(currentUser.value.userGUID);
-
-});
 </script>

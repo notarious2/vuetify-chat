@@ -46,7 +46,7 @@ const messageStore = useMessageStore();
 const mainStore = useMainStore();
 const { currentChatMessages } = storeToRefs(messageStore);
 
-const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+const { isSearch, isChat } = storeToRefs(mainStore);
 
 const { directChats, chatSelected, currentChatGUID, friendUserName, curren } =
   storeToRefs(chatStore);
@@ -111,6 +111,7 @@ const userSelected = async (userGUID) => {
       new_messages_count: 0,
       updated_at: null,
     });
+    console.log("Created a temporary chat")
     currentChatGUID.value = "unassigned";
     chatSelected.value = true;
     currentChatMessages.value = []; // clear messages history from previous chat

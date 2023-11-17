@@ -79,16 +79,19 @@ import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useMainStore } from "@/store/mainStore";
 import { useWebsocketStore } from "@/store/websocketStore";
+import { useUserStore } from "@/store/userStore";
 
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
 const mainStore = useMainStore();
 const websocketStore = useWebsocketStore();
+const userStore = useUserStore();
 
 const { chatSelected, inputLocked, friendTyping } = storeToRefs(chatStore);
 const { systemMessage } = storeToRefs(messageStore);
 const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 const { socket } = storeToRefs(websocketStore);
+const { currentUser } = storeToRefs(userStore);
 
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");
@@ -145,6 +148,7 @@ document.addEventListener("visibilitychange", () => {
 
 
 onMounted(async () => {
+  await chatStore.getDirectChats(currentUser.value.userGUID);
   await websocketStore.connectWebsocket()
   systemMessage.value = { type: "success", content: "Websocket connection is established" };
   // Set a timeout to clear the systemMessage after 3 seconds
