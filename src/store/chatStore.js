@@ -45,6 +45,12 @@ export const useChatStore = defineStore("chat", {
       }
     },
 
+    removeUnassignedChat() {
+      if (this.directChats.length > 0 && this.directChats[0].chat_guid === "unassigned") {
+        this.directChats.shift();
+      }
+    },
+
     setChatAsActive(chatGUID) {
       this.currentChatGUID = chatGUID;
     },

@@ -56,33 +56,24 @@ const users = ref([]);
 const searchContact = ref("");
 
 const userSelected = async (userGUID) => {
-  console.log("User was selected", userGUID);
   isSearch.value = false;
   isChat.value = true;
-  console.log("DIRECT CHATS", directChats.value);
-
-  console.log("CURRENT CHAT GUID", currentChatGUID.value);
 
   let chatFound = false;
-  console.log("DIRECT CHATS SEARCH", (directChats.value));
   for (const chat of directChats.value) {
-    console.log("CHAT...", chat);
     // open already existing chat
     if (chat.friend.guid === userGUID) {
       console.log("You already have a chat with this user");
       chatSelected.value = true;
       currentChatGUID.value = chat.chat_guid;
-      console.log("Current chat guid", chat.chat_guid);
       chatFound = true;
       // if that chat was unselected previously, must load that chat again
-      console.log("CURRENT CHAT MESSAGES IN SEARCH", currentChatMessages.value.length === 0);
       if (currentChatMessages.value.length === 0) {
         console.log("Re-loading chat again...");
         try {
-          const getLastMessagesResponse = await messageStore.getLastMessages(
+          await messageStore.getLastMessages(
             chat.chat_guid
           );
-          currentChatMessages.value = getLastMessagesResponse.messages;
         } catch (error) {
           console.log("Error in loadChat", error);
         }
@@ -110,9 +101,7 @@ const userSelected = async (userGUID) => {
     }
   }
   if (!chatFound) {
-    console.log("INFO", currentChatGUID.value, directChats.value);
     const selectedUser = users.value.find((user) => user.guid === userGUID);
-    console.log("USERS", selectedUser);
     // Create temporary window, which will initiate a chat if a message is sent
     directChats.value.unshift({
       chat_guid: "unassigned",
@@ -129,18 +118,6 @@ const userSelected = async (userGUID) => {
   }
 };
 
-// get user chat if already have one
-
-// directChats.value.unshift({
-//   friend: {username: "guest"},
-//   chat_guid: "123123",
-//   created_at: "2023-09-28T04:30:52.219020Z",
-//   has_new_messages: false,
-//   new_messages_count: 0,
-//   updated_at: "2023-10-30T06:11:14.650050Z",
-// });
-
-console.log("USERS", users.value);
 
 const filteredUsers = () => {
   return users.value.filter(

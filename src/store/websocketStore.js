@@ -45,7 +45,7 @@ export const useWebsocketStore = defineStore("websocket", {
 
       // Must first create a chat for unassigned chat
       if (chatStore.currentChatGUID === "unassigned") {
-        const friendGUID = directChats.value[0].friend.guid;
+        const friendGUID = chatStore.directChats[0].friend.guid;
         const newChat = await chatStore.createDirectChat(friendGUID);
         // update unassigned chat based on new chat data
         chatStore.directChats[0].chat_guid = newChat.guid;

@@ -19,8 +19,11 @@
   
   import { useMainStore } from "@/store/mainStore";
   import { storeToRefs } from "pinia";
-
+  import { useChatStore } from "@/store/chatStore";
+  
+  const chatStore = useChatStore();
   const mainStore = useMainStore();
+
 
   const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
 
@@ -29,6 +32,7 @@
     isSearch.value = true;
     isChat.value = false;
     isGroup.value = false;
+    chatStore.removeUnassignedChat();
   };
   
   const toggleChat = () => {
