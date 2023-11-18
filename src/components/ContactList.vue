@@ -26,7 +26,9 @@
               alt="John"
             ></v-img>
           </v-avatar>
-          <p class="ml-2">{{ user.username }}</p>
+          <StatusCircle :friendStatus="friendStatuses[user.guid]"/>
+          <p>{{ user.username }}</p>
+
         </v-list-item-title>
       </v-list-item>
     </v-list>
@@ -35,23 +37,26 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "@/api/axios";
 import { useMainStore } from "@/store/mainStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { storeToRefs } from "pinia";
+import { useUserStore } from "@/store/userStore";
 
+import StatusCircle from "@/components/StatusCircle.vue";
+
+const userStore = useUserStore();
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
 const mainStore = useMainStore();
-const { currentChatMessages } = storeToRefs(messageStore);
 
+const { currentChatMessages } = storeToRefs(messageStore);
+const { users, friendStatuses } = storeToRefs(userStore);
 const { isSearch, isChat } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID, friendUserName, curren } =
+const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendGUID } =
   storeToRefs(chatStore);
 
-const users = ref([]);
 
 const searchContact = ref("");
 
@@ -66,6 +71,8 @@ const userSelected = async (userGUID) => {
       console.log("You already have a chat with this user");
       chatSelected.value = true;
       currentChatGUID.value = chat.chat_guid;
+      currentFriendGUID.value = chat.friend.guid;
+      currentFriendUserName.value = chat.friend.username
       chatFound = true;
       // if that chat was unselected previously, must load that chat again
       if (currentChatMessages.value.length === 0) {
@@ -115,7 +122,7 @@ const userSelected = async (userGUID) => {
     currentChatGUID.value = "unassigned";
     chatSelected.value = true;
     currentChatMessages.value = []; // clear messages history from previous chat
-    friendUserName.value = selectedUser.username;
+    currentFriendUserName.value = selectedUser.username;
   }
 };
 
@@ -128,18 +135,9 @@ const filteredUsers = () => {
   );
 };
 
-const getUsers = async () => {
-  try {
-    const response = await axios.get("/users/");
-    users.value = response.data;
-  } catch (error) {
-    console.error("Error during getting Users:", error);
-    throw error;
-  }
-};
 
 onMounted(async () => {
-  await getUsers();
+  await userStore.getUsers();
 });
 </script>
 

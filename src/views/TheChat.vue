@@ -149,6 +149,7 @@ document.addEventListener("visibilitychange", () => {
 onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
   await websocketStore.connectWebsocket()
+  userStore.setEmptyFriendStatuses();
   systemMessage.value = { type: "success", content: "Websocket connection is established" };
   // Set a timeout to clear the systemMessage after 3 seconds
   setTimeout(() => {

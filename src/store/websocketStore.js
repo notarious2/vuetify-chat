@@ -12,7 +12,7 @@ export const useWebsocketStore = defineStore("websocket", {
 
   actions: {
     async connectWebsocket() {
-      const messageStore = useMessageStore()
+      const messageStore = useMessageStore();
 
       try {
         this.socket = new WebSocket("ws://localhost:8001/ws/");
@@ -31,7 +31,10 @@ export const useWebsocketStore = defineStore("websocket", {
 
         this.socket.addEventListener("close", (event) => {
           console.log("WebSocket connection closed.", event);
-          messageStore.systemMessage = { type: "error", content: "Websocket connection is disconnected" };
+          messageStore.systemMessage = {
+            type: "error",
+            content: "Websocket connection is disconnected",
+          };
         });
       } catch (error) {
         console.log("Error during connecting to Websocket", error);
@@ -104,7 +107,6 @@ export const useWebsocketStore = defineStore("websocket", {
           }
         }
 
-
         if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
           // find chat and increment new_message_count for chat by +1
           const foundChat = chatStore.directChats.find(
@@ -161,12 +163,18 @@ export const useWebsocketStore = defineStore("websocket", {
 
     handleStatusMessage(receivedMessage) {
       const chatStore = useChatStore();
+      const userStore = useUserStore();
 
-      if (
-        receivedMessage.type === "status" &&
-        receivedMessage.username == chatStore.friendUserName
-      ) {
-        chatStore.friendStatus = receivedMessage.status;
+      if (receivedMessage.type === "status") {
+
+        if (receivedMessage.username === chatStore.currentFriendUserName) {
+          chatStore.friendStatus = receivedMessage.status;
+        }
+
+        if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
+          userStore.updateFriendStatus(receivedMessage.user_guid, receivedMessage.status)
+        }
+
       }
     },
 
@@ -183,6 +191,5 @@ export const useWebsocketStore = defineStore("websocket", {
         );
       }
     },
-
   },
 });

@@ -6,6 +6,8 @@ export const useUserStore = defineStore("user", {
     return {
       currentUser: {},
       isLoggedIn: false,
+      users: [],
+      friendStatuses: {},
     };
   },
 
@@ -48,6 +50,28 @@ export const useUserStore = defineStore("user", {
         throw error;
       }
     },
+
+    async getUsers() {
+      try {
+        const response = await axios.get("/users/");
+        this.users = response.data;
+      } catch (error) {
+        console.error("Error during getting Users:", error);
+        throw error;
+      }
+    },
+
+    setEmptyFriendStatuses() {  
+      this.friendStatuses = this.users.reduce((result, item) => {
+        result[item.guid] = "offline";
+        return result;
+      }, {});
+    },
+
+    updateFriendStatus(friendGUID, status) {
+      this.friendStatuses[friendGUID] = status
+    },
+
   },
   persist: true,
 });

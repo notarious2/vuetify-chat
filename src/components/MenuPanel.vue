@@ -16,16 +16,20 @@
   </template>
   
   <script setup>
-  
-  import { useMainStore } from "@/store/mainStore";
   import { storeToRefs } from "pinia";
+
+  import { useMainStore } from "@/store/mainStore";
   import { useChatStore } from "@/store/chatStore";
-  
+  import { useMessageStore } from "@/store/messageStore";
+
+
   const chatStore = useChatStore();
   const mainStore = useMainStore();
+  const messageStore = useMessageStore();
 
 
   const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+  const { isBottom } = storeToRefs(chatStore);
 
 
   const toggleSearch = () => {
@@ -33,6 +37,8 @@
     isChat.value = false;
     isGroup.value = false;
     chatStore.removeUnassignedChat();
+    messageStore.clearMoreMessagesToLoad();
+    isBottom.value = true;
   };
   
   const toggleChat = () => {

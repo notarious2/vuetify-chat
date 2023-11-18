@@ -4,9 +4,10 @@
             <v-list-item class="px-2" @click="loadChat(directChat)">
               <v-list-item-title class="d-flex align-center py-2 rounded-lg"
                 :class="{ 'bg-teal-lighten-1': currentChatGUID === directChat.chat_guid }">
-                <v-avatar class="ml-2 mr-5">
+                <v-avatar class="ml-2">
                   <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
                 </v-avatar>
+                <StatusCircle :friendStatus="friendStatuses[directChat.friend.guid]"/>
                 <p>{{ directChat.friend.username }}</p>
                 <p v-if="directChat.new_messages_count"
                   class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2">
@@ -27,14 +28,19 @@ import {formatTimeFromDateString} from "@/utils/dateUtils";
 import { useChatStore } from "@/store/chatStore";
 import { useObserverStore } from "@/store/observerStore";
 import { useMessageStore } from "@/store/messageStore";
+import { useUserStore } from "@/store/userStore";
+
+import StatusCircle from "@/components/StatusCircle.vue";
 
 const chatStore = useChatStore();
 const observerStore = useObserverStore();
 const messageStore = useMessageStore();
+const userStore = useUserStore();
 
 
-const { chatSelected, currentChatGUID, friendUserName, directChats, friendTyping } = storeToRefs(chatStore);
+const { chatSelected, currentChatGUID, currentFriendUserName, currentFriendGUID, directChats, friendTyping } = storeToRefs(chatStore);
 const { currentChatMessages, moreMessagesToLoad } = storeToRefs(messageStore);
+const { friendStatuses } = storeToRefs(userStore);
 
 const loadChat = async (directChat) => {
   const chatGUID = directChat.chat_guid;
@@ -43,7 +49,9 @@ const loadChat = async (directChat) => {
   if (currentChatGUID.value === chatGUID) return;
 
   chatSelected.value = true; // important
-  friendUserName.value = directChat.friend.username;
+  currentFriendUserName.value = directChat.friend.username;
+  currentFriendGUID.value = directChat.friend.guid;
+
   moreMessagesToLoad.value = false;
 
   chatStore.removeWindowScrollHandler();

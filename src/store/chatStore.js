@@ -7,7 +7,8 @@ export const useChatStore = defineStore("chat", {
       directChats: [],
       chatSelected: false,
       currentChatGUID: "",
-      friendUserName: "",
+      currentFriendUserName: "",
+      currentFriendGUID: "",
       friendStatus: "offline",
       inputLocked: false,
       friendTyping: false,
@@ -25,6 +26,7 @@ export const useChatStore = defineStore("chat", {
     },
 
     handleScroll() {
+      console.log("Scrolling...");
       if (this.chatWindow.scrollTop >= -50) {
         this.isBottom = true;
       } else {
