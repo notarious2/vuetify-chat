@@ -10,6 +10,7 @@ export const useObserverStore = defineStore("observer", {
   },
   actions: {
     initializeObserver() {
+      console.log("Observer Initialized");
       const chatStore = useChatStore();
 
       this.observer = new IntersectionObserver(this.onElementObserved, {

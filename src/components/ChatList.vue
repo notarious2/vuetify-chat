@@ -1,7 +1,7 @@
 <template>
         <div style="height: 580px; overflow: auto" class="bg-teal-lighten-5 rounded-0">
           <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
-            <v-list-item class="px-2" @click="loadChat(directChat)">
+            <v-list-item class="px-2" @click="chatStore.loadChat(directChat)">
               <v-list-item-title class="d-flex align-center py-2 rounded-lg"
                 :class="{ 'bg-teal-lighten-1': currentChatGUID === directChat.chat_guid }">
                 <v-avatar class="ml-2">
@@ -26,63 +26,16 @@
 import { storeToRefs } from "pinia";
 import {formatTimeFromDateString} from "@/utils/dateUtils";
 import { useChatStore } from "@/store/chatStore";
-import { useObserverStore } from "@/store/observerStore";
-import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
 
 import StatusCircle from "@/components/StatusCircle.vue";
 
 const chatStore = useChatStore();
-const observerStore = useObserverStore();
-const messageStore = useMessageStore();
 const userStore = useUserStore();
 
 
-const { chatSelected, currentChatGUID, currentFriendUserName, currentFriendGUID, directChats, friendTyping } = storeToRefs(chatStore);
-const { currentChatMessages, moreMessagesToLoad } = storeToRefs(messageStore);
+const { currentChatGUID, directChats } = storeToRefs(chatStore);
 const { friendStatuses } = storeToRefs(userStore);
 
-const loadChat = async (directChat) => {
-  const chatGUID = directChat.chat_guid;
-
-  // don't do anything if clicked on currently selected chat
-  if (currentChatGUID.value === chatGUID) return;
-
-  chatSelected.value = true; // important
-  currentFriendUserName.value = directChat.friend.username;
-  currentFriendGUID.value = directChat.friend.guid;
-
-  moreMessagesToLoad.value = false;
-
-  chatStore.removeWindowScrollHandler();
-
-  // clear status, friendIsTyping, last read message
-  chatStore.clearFriendStatus();
-  friendTyping.value = false;
-  messageStore.clearLastReadMessage();
-
-  // Logic related to working with user without Chat
-  if (chatGUID === "unassigned") {
-    currentChatGUID.value = "unassigned";
-    currentChatMessages.value = [];
-    return
-  }
-  // Start observer before messages are loaded
-  // disconnect old observer and initialize new
-  observerStore.disconnectObserver();
-  observerStore.initializeObserver();
-
-  // load messages
-  await messageStore.getLastMessages(chatGUID)
-
-  // recalculate new messages count for chat based on newly loaded messages
-  directChat.new_messages_count = messageStore.calculateNewMessagesCountForChat();
-
-  // chatWindow full of messages is available after messages are loaded
-  chatStore.addWindowScrollHandler();
-
-  chatStore.setChatAsActive(chatGUID);
-
-};
 
 </script>

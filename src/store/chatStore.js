@@ -1,5 +1,8 @@
 import { defineStore } from "pinia";
 import axios from "@/api/axios";
+import { useMessageStore } from "@/store/messageStore";
+import { useObserverStore } from "@/store/observerStore";
+
 
 export const useChatStore = defineStore("chat", {
   state: () => {
@@ -34,10 +37,12 @@ export const useChatStore = defineStore("chat", {
       }
     },
     addWindowScrollHandler() {
+      console.log("Scroll Listener Added!");
       this.chatWindow.addEventListener("scroll", this.handleScroll);
     },
 
     removeWindowScrollHandler() {
+      console.log("Scroll Listener Removed!");
       // Check if the event listener is attached before removing it
       if (this.chatWindow) {
         this.chatWindow.removeEventListener("scroll", this.handleScroll);
@@ -71,6 +76,52 @@ export const useChatStore = defineStore("chat", {
         console.error("Error during getting Direct Chats:", error);
         throw error;
       }
+    },
+
+    async loadChat(directChat) {
+      const messageStore = useMessageStore();
+      const observerStore = useObserverStore();
+
+      const chatGUID = directChat.chat_guid;
+    
+      // don't do anything if clicked on currently selected chat
+      if (this.currentChatGUID === chatGUID) return;
+    
+      this.chatSelected = true; // important
+      this.currentFriendUserName = directChat.friend.username;
+      this.currentFriendGUID = directChat.friend.guid;
+    
+      messageStore.clearMoreMessagesToLoad();
+    
+      this.removeWindowScrollHandler();
+    
+      // clear status, friendIsTyping, last read message
+      this.clearFriendStatus();
+      this.friendTyping = false;
+      messageStore.clearLastReadMessage();
+    
+      // Logic related to working with user without Chat
+      if (chatGUID === "unassigned") {
+        this.currentChatGUID = "unassigned";
+        messageStore.clearCurrentChatMessages();
+        return
+      }
+      // Start observer before messages are loaded
+      // disconnect old observer and initialize new
+      observerStore.disconnectObserver();
+      observerStore.initializeObserver();
+    
+      // load messages -> means currentChatMessages is updated
+      await messageStore.getLastMessages(chatGUID)
+    
+      // recalculate new messages count for chat based on newly loaded messages
+      directChat.new_messages_count = messageStore.calculateNewMessagesCountForChat();
+    
+      // chatWindow full of messages is available after messages are loaded
+      this.addWindowScrollHandler();
+    
+      this.setChatAsActive(chatGUID);
+    
     },
 
     removeUnassignedChat() {

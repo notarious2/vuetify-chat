@@ -54,7 +54,7 @@ const { currentChatMessages } = storeToRefs(messageStore);
 const { users, friendStatuses } = storeToRefs(userStore);
 const { isSearch, isChat } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendGUID } =
+const { directChats, chatSelected, currentChatGUID, currentFriendUserName } =
   storeToRefs(chatStore);
 
 
@@ -66,46 +66,14 @@ const userSelected = async (userGUID) => {
 
   let chatFound = false;
   for (const chat of directChats.value) {
-    // open already existing chat
-    if (chat.friend.guid === userGUID) {
-      console.log("You already have a chat with this user");
-      chatSelected.value = true;
-      currentChatGUID.value = chat.chat_guid;
-      currentFriendGUID.value = chat.friend.guid;
-      currentFriendUserName.value = chat.friend.username
-      chatFound = true;
-      // if that chat was unselected previously, must load that chat again
-      if (currentChatMessages.value.length === 0) {
-        console.log("Re-loading chat again...");
-        try {
-          await messageStore.getLastMessages(
-            chat.chat_guid
-          );
-        } catch (error) {
-          console.log("Error in loadChat", error);
-        }
-      }
 
-      break;
-    } else if (
-      chat.friend.guid === userGUID &&
-      currentChatGUID.value !== chat.chat_guid
-    ) {
-      // must load chat
-      let chatGUID = chat.chat_guid;
-      chatSelected.value = true;
-      chatStore.setChatAsActive(chatGUID);
-      try {
-        const getLastMessagesResponse = await messageStore.getLastMessages(
-          chatGUID
-        );
-        currentChatMessages.value = getLastMessagesResponse.messages;
-      } catch (error) {
-        console.log("Error in loadChat", error);
-      }
+    // load existing chat if there is chat with selected user
+    if (chat.friend.guid === userGUID) {
+      console.log("You already have conversation with this user, loading chat...");
+      await chatStore.loadChat(chat);
       chatFound = true;
       break;
-    }
+    } 
   }
   if (!chatFound) {
     const selectedUser = users.value.find((user) => user.guid === userGUID);

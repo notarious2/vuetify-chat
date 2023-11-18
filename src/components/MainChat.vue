@@ -149,7 +149,9 @@ const loadMoreMessages = async () => {
 
 
 onMounted(() => {
- chatStore.setChatWindow(chatWindow.value)
+  chatStore.setChatWindow(chatWindow.value);
+  // TODO: fix the case when already selected chat stops being scroll listened
+ chatStore.addWindowScrollHandler();
 });
 </script>
 

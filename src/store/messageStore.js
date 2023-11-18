@@ -61,6 +61,10 @@ export const useMessageStore = defineStore("messages", {
       this.moreMessagesToLoad = false;
     },
 
+    clearCurrentChatMessages() {
+      this.currentChatMessages = [];
+    },
+
     updateMessagesReadStatus(lastReadMessageDate) {
       const userStore = useUserStore();
       const currentDate = new Date(lastReadMessageDate);

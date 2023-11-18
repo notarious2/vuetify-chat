@@ -70,7 +70,7 @@ export const useWebsocketStore = defineStore("websocket", {
     },
 
     async sendMessageRead(message) {
-      console.log("sending message read via WS");
+      console.log("Sending Message Read via Websocket");
       await this.socket.send(
         JSON.stringify({
           type: "message_read",
