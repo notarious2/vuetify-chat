@@ -98,23 +98,12 @@ export const useWebsocketStore = defineStore("websocket", {
         // append new message to the open chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
           messageStore.currentChatMessages.unshift(receivedMessage);
+          // scroll to bottom if own message
+          if (receivedMessage.user_guid === userStore.currentUser.userGUID) {
+            chatStore.scrollToBottom();
+          }
         }
 
-        // // observe only if another user's message and belongs to latest selected chat
-        // if (
-        //   receivedMessage.user_guid !== userGUID &&
-        //   receivedMessage.chat_guid === currentChatGUID.value
-        // ) {
-        //   console.log(currentChatGUID.value, receivedMessage);
-        //   // observe incomming message of other user
-        //   setTimeout(() => {
-        //     const newMessage = document.getElementById(
-        //       `${receivedMessage.message_guid}`
-        //     );
-        //     console.log("FOUND MESSAGE", newMessage);
-        //     observer.value.observe(newMessage);
-        //   }, 500); // need to wait before new message is inserted
-        // }
 
         if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
           // find chat and increment new_message_count for chat by +1

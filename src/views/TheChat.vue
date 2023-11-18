@@ -132,7 +132,6 @@ const sendMessage = async () => {
     messageToSend.value = "";
     // make input not editable before receive own message via websocket
     inputLocked.value = true;
-    chatStore.scrollToBottom();
   }
 }
 
