@@ -9,7 +9,7 @@
         :key="message.message_guid"
       >
         <div
-          v-if="showDateBreak(index)"
+          v-show="showDateBreak(index)"
           class="text-center text-black my-2 font-weight-medium"
         >
           {{ formatDate(message.created_at) }}
@@ -64,7 +64,7 @@
       >
     </div>
     <v-btn
-      v-if="!isBottom"
+      v-show="!isBottom"
       icon
       class="rounded-circle"
       style="position: absolute; top: 88%; right: 5%; width: 35px; height: 35px"
@@ -79,8 +79,8 @@
 <script setup>
 import { onMounted, ref } from "vue";
 
-import PartnerBubble from "@/components/PartnerBubble.vue";
-import SpeakerBubble from "@/components/SpeakerBubble.vue";
+import PartnerBubble from "@/components/chat/PartnerBubble.vue";
+import SpeakerBubble from "@/components/chat/SpeakerBubble.vue";
 
 import { storeToRefs } from "pinia";
 
@@ -151,7 +151,7 @@ const loadMoreMessages = async () => {
 onMounted(() => {
   chatStore.setChatWindow(chatWindow.value);
   // TODO: fix the case when already selected chat stops being scroll listened
- chatStore.addWindowScrollHandler();
+  chatStore.addWindowScrollHandler();
 });
 </script>
 

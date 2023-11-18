@@ -1,5 +1,5 @@
 <template>
-    
+
     <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3">
           <v-card-title style="
               display: flex;
