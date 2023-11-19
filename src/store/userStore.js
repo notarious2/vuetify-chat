@@ -61,7 +61,17 @@ export const useUserStore = defineStore("user", {
       }
     },
 
-    setEmptyFriendStatuses() {  
+    async logout() {
+      try {
+        await axios.get("/logout/");
+        this.isLoggedIn = false;
+      } catch (error) {
+        console.error("Error during log out:", error);
+        throw error;
+      }
+    },
+
+    setEmptyFriendStatuses() {
       this.friendStatuses = this.users.reduce((result, item) => {
         result[item.guid] = "offline";
         return result;

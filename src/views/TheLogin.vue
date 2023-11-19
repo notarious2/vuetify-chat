@@ -36,14 +36,12 @@
 
 <script setup>
 
-import { ref, onBeforeMount } from "vue";
+import { ref } from "vue";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/userStore";
-import { storeToRefs } from 'pinia';
 
 const userStore = useUserStore();
-const { currentUser } = storeToRefs(userStore)
 
 
 const router = useRouter();

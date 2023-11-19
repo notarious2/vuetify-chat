@@ -73,7 +73,7 @@ const userSelected = async (userGUID) => {
       await chatStore.loadChat(chat);
       chatFound = true;
       break;
-    } 
+    }
   }
   if (!chatFound) {
     const selectedUser = users.value.find((user) => user.guid === userGUID);
@@ -105,6 +105,7 @@ const filteredUsers = () => {
 
 
 onMounted(async () => {
+  console.log("Getting users");
   await userStore.getUsers();
 });
 </script>
