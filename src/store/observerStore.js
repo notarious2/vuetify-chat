@@ -43,14 +43,21 @@ export const useObserverStore = defineStore("observer", {
           await messageStore.markMessageAsRead(message);
           console.log("Marking message as read:", message.content);
 
-          // find chat and decrement read_messages count by 1
+          // find chat and recalculate new messages count
           const foundChatIndex = chatStore.directChats.findIndex(
             (chat) => chat.chat_guid === message.chat_guid
           );
 
           if (foundChatIndex !== -1) {
-            chatStore.directChats[foundChatIndex].new_messages_count--;
+            chatStore.directChats[foundChatIndex].new_messages_count = messageStore.calculateNewMessagesCountForChat();
           }
+
+        // update 'unread messages' tab with some delay
+        setTimeout(() => {
+          messageStore.setIndexOfEarliestUnreadMessage();
+        }, 2000);
+
+
         }
       }
     },

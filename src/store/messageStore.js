@@ -10,11 +10,12 @@ export const useMessageStore = defineStore("messages", {
       lastReadMessage: {},
       systemMessage: {},
       moreMessagesToLoad: false,
+      earliestUnreadMessageIndex: false,
     };
   },
   actions: {
     async getLastMessages(chatGUID) {
-      
+
       try {
         const response = await axios.get(`/chat/${chatGUID}/messages/`, {
           withCredentials: true,
@@ -22,7 +23,7 @@ export const useMessageStore = defineStore("messages", {
         let messagesInfo = response.data;
         this.currentChatMessages = messagesInfo.messages;
         this.moreMessagesToLoad = messagesInfo.has_more_messages;
-        
+
         if (messagesInfo.last_read_message) {
           this.setLastReadMessage(messagesInfo.last_read_message);
         } else {
@@ -63,6 +64,21 @@ export const useMessageStore = defineStore("messages", {
 
     clearCurrentChatMessages() {
       this.currentChatMessages = [];
+    },
+
+    setIndexOfEarliestUnreadMessage () {
+      const userStore = useUserStore()
+      for (let i = this.currentChatMessages.length - 1; i >= 0; i--) {
+        if (!this.currentChatMessages[i].is_read && this.currentChatMessages[i].user_guid !== userStore.currentUser.userGUID
+        ) {
+          // Update the state with the index of the first/earliest unread message
+          this.earliestUnreadMessageIndex = i;
+          // Break the loop as soon as the index is found
+          return;
+        }
+      }
+      // If no unread messages are found, set the state to false
+      this.earliestUnreadMessageIndex = false;
     },
 
     updateMessagesReadStatus(lastReadMessageDate) {
@@ -113,7 +129,26 @@ export const useMessageStore = defineStore("messages", {
           guid: message.message_guid,
           created_at: new Date(message.created_at),
         };
+
         message.is_read = true;
+
+        // mark all earlier messages as read
+        this.markMessagesAsReadAfter(message.message_guid)
+
+
+      }
+    },
+
+    markMessagesAsReadAfter(targetMessageGuid) {
+      const userStore = useUserStore();
+      const index = this.currentChatMessages.findIndex(message => message.message_guid === targetMessageGuid);
+      // mark all previous friend messages as read
+      if (index !== -1) {
+        this.currentChatMessages.slice(index + 1).forEach(message => {
+          if (message.user_guid !== userStore.currentUser.userGUID) {
+            message.is_read = true;
+          }
+        });
       }
     },
 
@@ -130,5 +165,8 @@ export const useMessageStore = defineStore("messages", {
         }
       }, 0);
     },
+  },
+  getters: {
+    getEarliestUnreadMessageIndex: (state) => state.earliestUnreadMessageIndex,
   },
 });

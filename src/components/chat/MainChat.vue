@@ -20,6 +20,8 @@
             thickness="2px"
           ></v-divider>
         </div>
+
+        <div v-show="earliestUnreadMessageIndex === index" class="bg-teal-lighten-5 text-center py-2"><p class="text-teal font-weight-medium">Unread messages</p></div>
         <SpeakerBubble
           v-if="message.user_guid === currentUser.userGUID"
           class="ml-auto mr-2"
@@ -39,8 +41,10 @@
             </v-list-item-subtitle>
           </v-list-item>
         </SpeakerBubble>
+        <!-- to scroll to unread messages label: scroll-margin: 50px; -->
         <PartnerBubble
           v-else
+          style="scroll-margin: 50px;"
           class="ml-2 partner-msg"
           :id="message.message_guid"
           :index="index"
@@ -96,7 +100,7 @@ const messageStore = useMessageStore();
 
 const { currentUser } = storeToRefs(userStore);
 const { currentChatGUID, isBottom, inputLocked } = storeToRefs(chatStore);
-const { currentChatMessages, moreMessagesToLoad } = storeToRefs(messageStore);
+const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex } = storeToRefs(messageStore);
 
 import {
   formatTimestamp,
@@ -150,7 +154,6 @@ const loadMoreMessages = async () => {
 
 onMounted(() => {
   chatStore.setChatWindow(chatWindow.value);
-  // TODO: fix the case when already selected chat stops being scroll listened
   chatStore.addWindowScrollHandler();
 });
 </script>
