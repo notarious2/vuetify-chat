@@ -27,7 +27,7 @@
             <v-row v-show="friendTyping" class="mb-3 mt-0 ml-5 text-teal-darken-3">typing
                 <ThreeDots class="ml-n3" />
             </v-row>
-            <v-row v-show="!friendTyping" class="mb-3 mt-0 ml-5">&nbsp;</v-row>
+            <v-row v-show="!friendTyping" class="mb-3 mt-0 ml-5" style="user-select: none;">&nbsp;</v-row>
         </v-card>
         <!-- SEND BUTTON COMPONENT END -->
     </v-col>

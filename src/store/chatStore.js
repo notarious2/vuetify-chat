@@ -42,8 +42,13 @@ export const useChatStore = defineStore("chat", {
       }
     },
     scrollToBottom() {
-      this.chatWindow.scrollTop = this.chatWindow.scrollHeight;
-      this.isBottom = true;
+      if (this.chatWindow) {
+        this.chatWindow.scrollTo({
+          top: this.chatWindow.scrollHeight,
+          behavior: 'smooth',
+        });
+        this.isBottom = true;
+      }
     },
 
     async getDirectChats(userGUID) {
