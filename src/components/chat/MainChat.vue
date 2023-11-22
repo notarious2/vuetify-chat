@@ -166,4 +166,19 @@ onMounted(() => {
   display: flex;
   flex-direction: column-reverse;
 }
+
+/* Styling the scrollbar */
+#container::-webkit-scrollbar {
+  width: 19px; /* Width of the entire scrollbar */
+}
+
+#container::-webkit-scrollbar-track {
+  background: #b2e6e1; /* Color of the track (the area behind the thumb) */
+
+}
+
+#container::-webkit-scrollbar-thumb {
+  background-color: teal; /* Color of the thumb (the draggable part) */
+  border-radius: 6px; /* Roundness of the thumb */
+}
 </style>
