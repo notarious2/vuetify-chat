@@ -3,7 +3,6 @@ import axios from "@/api/axios";
 import { useMessageStore } from "@/store/messageStore";
 import { useObserverStore } from "@/store/observerStore";
 
-
 export const useChatStore = defineStore("chat", {
   state: () => {
     return {
@@ -29,12 +28,9 @@ export const useChatStore = defineStore("chat", {
     },
 
     handleScroll() {
-      if (this.chatWindow.scrollTop >= -50) {
-        this.isBottom = true;
-      } else {
-        this.isBottom = false;
-      }
+      this.isBottom = this.chatWindow.scrollTop >= -50 ? true : false;
     },
+
     addWindowScrollHandler() {
       this.chatWindow.addEventListener("scroll", this.handleScroll);
     },
@@ -47,6 +43,7 @@ export const useChatStore = defineStore("chat", {
     },
     scrollToBottom() {
       this.chatWindow.scrollTop = this.chatWindow.scrollHeight;
+      this.isBottom = true;
     },
 
     async getDirectChats(userGUID) {
@@ -101,7 +98,7 @@ export const useChatStore = defineStore("chat", {
       if (chatGUID === "unassigned") {
         this.currentChatGUID = "unassigned";
         messageStore.clearCurrentChatMessages();
-        return
+        return;
       }
       // Start observer before messages are loaded
       // disconnect old observer and initialize new
@@ -109,16 +106,33 @@ export const useChatStore = defineStore("chat", {
       observerStore.initializeObserver();
 
       // load messages -> means currentChatMessages is updated
-      await messageStore.getLastMessages(chatGUID)
+      await messageStore.getLastMessages(chatGUID);
 
       // recalculate new messages count for chat based on newly loaded messages
-      directChat.new_messages_count = messageStore.calculateNewMessagesCountForChat();
+      directChat.new_messages_count =
+        messageStore.calculateNewMessagesCountForChat();
 
       // chatWindow full of messages is available after messages are loaded
       this.addWindowScrollHandler();
 
       this.setChatAsActive(chatGUID);
 
+      // traverse through each message to find earliest unread message
+      messageStore.setIndexOfEarliestUnreadMessage();
+
+      // scroll to earliest unread message or bottom
+      if (messageStore.getEarliestUnreadMessageIndex !== false) {
+        const unreadMessageToScroll =
+        this.chatWindow.children[messageStore.getEarliestUnreadMessageIndex].lastElementChild;
+
+        unreadMessageToScroll.scrollIntoView({ behavior: 'auto', block: 'start' });
+
+      } else {
+        // scroll to bottom if chatWindow is set
+        if (this.chatWindow) {
+          this.scrollToBottom();
+        }
+      }
     },
 
     removeUnassignedChat() {

@@ -105,6 +105,7 @@ export const useWebsocketStore = defineStore("websocket", {
           if (receivedMessage.user_guid === userStore.currentUser.userGUID) {
             chatStore.scrollToBottom();
           }
+
         }
 
         if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
@@ -167,6 +168,7 @@ export const useWebsocketStore = defineStore("websocket", {
 
       if (receivedMessage.type === "status") {
 
+        // TODO: Probably not needed anymore
         if (receivedMessage.username === chatStore.currentFriendUserName) {
           chatStore.friendStatus = receivedMessage.status;
         }
