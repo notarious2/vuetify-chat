@@ -91,11 +91,13 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
+import { useObserverStore } from "@/store/observerStore";
 
 
 const userStore = useUserStore();
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
+const observerStore = useObserverStore();
 
 
 const { currentUser } = storeToRefs(userStore);
@@ -153,8 +155,14 @@ const loadMoreMessages = async () => {
 
 
 onMounted(() => {
+  // remove old scroll listener and observer
+  chatStore.removeWindowScrollHandler();
   chatStore.setChatWindow(chatWindow.value);
+  observerStore.disconnectObserver();
+  
+  // add new scroll listener and observer
   chatStore.addWindowScrollHandler();
+  observerStore.initializeObserver();
 });
 </script>
 

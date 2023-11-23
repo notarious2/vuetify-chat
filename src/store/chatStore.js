@@ -32,7 +32,11 @@ export const useChatStore = defineStore("chat", {
     },
 
     addWindowScrollHandler() {
-      this.chatWindow.addEventListener("scroll", this.handleScroll);
+      if (this.chatWindow) {
+        this.chatWindow.addEventListener("scroll", this.handleScroll);
+      } else {
+        console.log("No Chat Window", this.chatWindow);
+      }
     },
 
     removeWindowScrollHandler() {
