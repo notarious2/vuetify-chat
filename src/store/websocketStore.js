@@ -15,7 +15,7 @@ export const useWebsocketStore = defineStore("websocket", {
       const messageStore = useMessageStore();
 
       try {
-        this.socket = new WebSocket("ws://localhost:8001/ws/");
+        this.socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
 
         this.socket.addEventListener("open", () => {
           console.log("WebSocket connection established.");
