@@ -5,7 +5,7 @@ import pinia from "@/store";
 import router from '@/router'
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8001',
+  baseURL: import.meta.env.VITE_API_ENDPOINT,
   // Other default configurations if needed
 });
 
