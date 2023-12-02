@@ -1,31 +1,21 @@
 <template>
-  <v-card class="rounded-0" id="message-container">
-    <div id="container" ref="chatWindow">
+  <v-card class="rounded-0">
+    <!-- for compact view 600 - 60 (header) - 90 (send button)
+    for large view 700 - 60 (header) - 90 (send button) -->
+    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '450px' } : { 'height': '550px' }">
       <div v-if="inputLocked" class="d-flex justify-end mr-10">
         <v-progress-circular indeterminate color="teal"></v-progress-circular>
       </div>
-      <div
-        v-for="(message, index) in currentChatMessages"
-        :key="message.message_guid"
-      >
-        <div
-          v-show="showDateBreak(index)"
-          class="text-center text-black my-2 font-weight-medium"
-        >
+      <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
+        <div v-show="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
           {{ formatDate(message.created_at) }}
-          <v-divider
-            class="mt-2 mx-auto border-opacity-75"
-            width="200px"
-            color="teal"
-            thickness="2px"
-          ></v-divider>
+          <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
         </div>
 
-        <div v-show="earliestUnreadMessageIndex === index" class="bg-teal-lighten-5 text-center py-2"><p class="text-teal font-weight-medium">Unread messages</p></div>
-        <SpeakerBubble
-          v-if="message.user_guid === currentUser.userGUID"
-          class="ml-auto mr-2"
-        >
+        <div v-show="earliestUnreadMessageIndex === index" class="bg-teal-lighten-5 text-center py-2">
+          <p class="text-teal font-weight-medium">Unread messages</p>
+        </div>
+        <SpeakerBubble v-if="message.user_guid === currentUser.userGUID" class="ml-auto mr-2">
           <v-list-item class="py-2 my-3 text-right">
             <v-list-item-title class="text-wrap">{{
               message.content
@@ -33,25 +23,16 @@
 
             <v-list-item-subtitle class="mt-1">
               {{ formatTimestamp(message.created_at) }}
-              <v-icon
-                v-if="message.user_guid === currentUser.userGUID"
-                :class="message.is_read ? 'text-blue' : 'text-gray'"
-                >mdi-check-all</v-icon
-              >
+              <v-icon v-if="message.user_guid === currentUser.userGUID"
+                :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
             </v-list-item-subtitle>
           </v-list-item>
         </SpeakerBubble>
         <!-- to scroll to unread messages label: scroll-margin: 50px; -->
-        <PartnerBubble
-          v-else
-          style="scroll-margin: 50px;"
-          class="ml-2 partner-msg"
-          :id="message.message_guid"
-          :index="index"
-        >
+        <PartnerBubble v-else style="scroll-margin: 50px;" class="ml-2 partner-msg" :id="message.message_guid"
+          :index="index">
           <v-list-item class="py-2 my-3 ml-2 text-left">
-            <v-list-item-title class="text-wrap"
-              >{{ message.content }}
+            <v-list-item-title class="text-wrap">{{ message.content }}
             </v-list-item-title>
             <v-list-item-subtitle class="mt-2">
               {{ formatTimestamp(message.created_at) }}
@@ -92,12 +73,15 @@ import { useUserStore } from "@/store/userStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useObserverStore } from "@/store/observerStore";
+import { useMainStore } from "@/store/mainStore";
 
 
 const userStore = useUserStore();
 const chatStore = useChatStore();
 const messageStore = useMessageStore();
 const observerStore = useObserverStore();
+const mainStore = useMainStore();
+const { compactView } = storeToRefs(mainStore);
 
 
 const { currentUser } = storeToRefs(userStore);
@@ -159,7 +143,7 @@ onMounted(() => {
   chatStore.removeWindowScrollHandler();
   chatStore.setChatWindow(chatWindow.value);
   observerStore.disconnectObserver();
-  
+
   // add new scroll listener and observer
   chatStore.addWindowScrollHandler();
   observerStore.initializeObserver();
@@ -169,7 +153,7 @@ onMounted(() => {
 
 <style scoped>
 #container {
-  height: 500px;
+  /* height: 450px; */
   overflow: auto;
   display: flex;
   flex-direction: column-reverse;
@@ -177,16 +161,20 @@ onMounted(() => {
 
 /* Styling the scrollbar */
 #container::-webkit-scrollbar {
-  width: 19px; /* Width of the entire scrollbar */
+  width: 19px;
+  /* Width of the entire scrollbar */
 }
 
 #container::-webkit-scrollbar-track {
-  background: #b2e6e1; /* Color of the track (the area behind the thumb) */
+  background: #b2e6e1;
+  /* Color of the track (the area behind the thumb) */
 
 }
 
 #container::-webkit-scrollbar-thumb {
-  background-color: teal; /* Color of the thumb (the draggable part) */
-  border-radius: 6px; /* Roundness of the thumb */
+  background-color: teal;
+  /* Color of the thumb (the draggable part) */
+  border-radius: 6px;
+  /* Roundness of the thumb */
 }
 </style>
