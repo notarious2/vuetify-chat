@@ -88,6 +88,8 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
+// important to render appropriate view
+compactView.value = window.innerWidth < 700 ? true : false;
 
 onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
