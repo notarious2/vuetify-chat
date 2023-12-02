@@ -18,7 +18,7 @@ export const useWebsocketStore = defineStore("websocket", {
         this.socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
 
         this.socket.addEventListener("open", () => {
-          console.log("WebSocket connection established.");
+          console.log("WebSocket connected");
         });
 
         this.socket.addEventListener("message", (event) => {
@@ -33,7 +33,7 @@ export const useWebsocketStore = defineStore("websocket", {
           console.log("WebSocket connection closed.", event);
           messageStore.systemMessage = {
             type: "error",
-            content: "Websocket connection is disconnected",
+            content: "Websocket disconnected",
           };
         });
       } catch (error) {

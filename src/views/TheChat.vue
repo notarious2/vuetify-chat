@@ -1,50 +1,48 @@
 <template>
-  <div id="Chat">
-    <v-container style="max-width: 1000px;">
-    <v-row no-gutters>
-      <!-- LEFT PANEL START -->
-      <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
-        <MenuPanel v-if="!compactView" />
-        <!-- these two appear irrespective of view -->
-        <ContactList v-if="isSearch" :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
-          :class="compactView ? '' : 'rounded-bs-lg'" />
-        <ChatsList v-if="isChat && !chatSelected || isChat && !compactView"
-          :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
-          :class="compactView ? '' : 'rounded-bs-lg'" />
-        <!-- these two appear irrespective of view -->
+    <v-container style="max-width: 1000px;" :class="compactView? 'pa-0' : ''">
+      <v-row no-gutters>
+        <!-- LEFT PANEL START -->
+        <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
+          <MenuPanel v-if="!compactView" />
+          <!-- these two appear irrespective of view -->
+          <ContactList v-if="isSearch" :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
+            :class="compactView ? '' : 'rounded-bs-lg'" />
+          <ChatsList v-if="isChat && !chatSelected || isChat && !compactView"
+            :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
+            :class="compactView ? '' : 'rounded-bs-lg'" />
+          <!-- these two appear irrespective of view -->
 
-        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 600px" />
-        <GroupsList v-if="!compactView && isGroup" style="height: 640px;" />
-        <EmptyGroupWindow v-if="compactView && isGroup" style="height: 600px;" />
+          <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 600px" />
+          <GroupsList v-if="!compactView && isGroup" style="height: 640px;" />
+          <EmptyGroupWindow v-if="compactView && isGroup" style="height: 600px;" />
 
-      </v-col>
-      <v-col v-if="compactView">
-        <MenuPanel />
-      </v-col>
-
-
-      <!-- LEFT PANEL CHATS END -->
-
-      <!-- RIGHT PANEL START  ONLY FOR LARGE VIEW -->
-      <v-col v-if="!compactView" class="ma-0 pa-0">
-        <SelectedChatWindow v-if="isChat && chatSelected" />
-        <EmptyChatWindow v-else-if="isChat && !chatSelected" />
-        <EmptySearchWindow v-else-if="isSearch" />
-        <EmptyGroupWindow v-else-if="isGroup" class="rounded-e-lg" />
-      </v-col>
-      <!-- RIGHT PANEL END -->
-    </v-row>
-    <v-alert v-if="Object.keys(systemMessage).length > 0" height="70px" :color="systemMessage.type === 'error'
-    ? 'pink-accent-2'
-    : systemMessage.type === 'system'
-      ? 'blue-grey-lighten-2'
-      : 'indigo-lighten-2'
-    " theme="dark" :icon="systemMessage.type === 'success' ? 'mdi-power-plug' : 'mdi-power-plug-off'"
-    class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl w-75">{{ systemMessage.content }}</v-alert>
-  </v-container>
-  </div>
+        </v-col>
+        <v-col v-if="compactView">
+          <MenuPanel />
+        </v-col>
 
 
+        <!-- LEFT PANEL CHATS END -->
+
+        <!-- RIGHT PANEL START  ONLY FOR LARGE VIEW -->
+        <v-col v-if="!compactView" class="ma-0 pa-0">
+          <SelectedChatWindow v-if="isChat && chatSelected" />
+          <EmptyChatWindow v-else-if="isChat && !chatSelected" />
+          <EmptySearchWindow v-else-if="isSearch" />
+          <EmptyGroupWindow v-else-if="isGroup" class="rounded-e-lg" />
+        </v-col>
+        <!-- RIGHT PANEL END -->
+      </v-row>
+      <v-alert v-if="Object.keys(systemMessage).length > 0" height="70px" :color="systemMessage.type === 'error'
+        ? 'pink-accent-2'
+        : systemMessage.type === 'system'
+          ? 'blue-grey-lighten-2'
+          : 'indigo-lighten-2'
+        " style="position: absolute; bottom: 60%; right: 12%;" closable theme="dark"
+        :icon="systemMessage.type === 'success' ? 'mdi-power-plug' : 'mdi-power-plug-off'"
+        class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl w-75">
+        {{ systemMessage.content }}</v-alert>
+    </v-container>
 </template>
 
 <script setup>
@@ -95,7 +93,7 @@ onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
   await websocketStore.connectWebsocket()
   userStore.setEmptyFriendStatuses();
-  systemMessage.value = { type: "success", content: "Websocket connection is established" };
+  systemMessage.value = { type: "success", content: "Websocket connected" };
   // Set a timeout to clear the systemMessage after 3 seconds
   setTimeout(() => {
     systemMessage.value = {};
@@ -127,8 +125,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-
-#Chat{
+/* #Chat {
   background-image: url("@/assets/chat-background.jpg");
-}
+} */
 </style>
