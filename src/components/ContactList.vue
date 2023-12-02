@@ -1,8 +1,9 @@
 <template>
-  <div style="height: 580px; overflow: auto; color: inherit" class="rounded-0">
+  <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
+  <div class="bg-teal-lighten-5">
     <v-text-field
       variant="solo"
-      class="mx-5 my-2 pa-0 search-input"
+      class="mx-3 py-2 search-input"
       rounded
       prepend-inner-icon="mdi-magnify"
       clearable

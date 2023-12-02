@@ -1,5 +1,5 @@
 <template>
-  <v-card class="bg-teal-lighten-4 rounded-0 rounded-ts-lg">
+  <v-card :class="compactView ? 'rounded-t-0' : 'rounded-ts-lg'" class="bg-teal-lighten-4 rounded-0" style="height: 60px;">
     <div class="mt-5 mb-3 d-flex justify-space-around">
       <v-menu :close-on-content-click="false" @click:outside="clickedOutside">
         <template v-slot:activator="{ props }">
@@ -31,7 +31,6 @@
       </v-icon>
 
     </div>
-    <v-divider />
   </v-card>
 </template>
 
@@ -55,7 +54,7 @@ const mainStore = useMainStore();
 const messageStore = useMessageStore();
 const userStore = useUserStore();
 
-const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+const { isSearch, isChat, isGroup, compactView } = storeToRefs(mainStore);
 const { isBottom } = storeToRefs(chatStore);
 
 const colorMode = ref("Teal")

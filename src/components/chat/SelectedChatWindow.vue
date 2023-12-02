@@ -1,13 +1,13 @@
 <template>
-    <v-col>
+    <div>
         <ChatBoxHeader />
-        <MainChat />
+        <MainChat/>
         <div style="position: relative;">
             <EmojiPicker v-show="showEmoji" style="position: absolute; bottom: 80%;" @select="onSelectEmoji" />
         </div>
 
         <!-- SEND BUTTON COMPONENT START -->
-        <v-card class="rounded-0 rounded-be-lg">
+        <v-card class="rounded-0 rounded-be-lg" height="90px">
             <v-row align="center" justify="center" no-gutters>
 
                 <v-icon class="ml-2" size="x-large" color="teal" style="transform: rotate(10deg)">mdi-paperclip</v-icon>
@@ -20,17 +20,17 @@
                     @input="websocketStore.handleUserTyping()" :readonly="inputLocked"></v-textarea>
 
                 <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'gray' : 'teal'"
-                    size="x-large" class="ml-2 mb-3" style="font-size: 30px; transform: rotate(-5deg);">
+                    size="x-large" class="ml-0" style="font-size: 30px; transform: rotate(-5deg);">
                 </v-btn>
             </v-row>
 
-            <v-row v-show="friendTyping" class="mb-3 mt-0 ml-5 text-teal-darken-3">typing
+            <v-row v-show="friendTyping" class="mb-1 mt-0 ml-5 text-teal-darken-3">typing
                 <ThreeDots class="ml-n3" />
             </v-row>
-            <v-row v-show="!friendTyping" class="mb-3 mt-0 ml-5" style="user-select: none;">&nbsp;</v-row>
+            <v-row v-show="!friendTyping" class="mb-1 mt-0 ml-5" style="user-select: none;">&nbsp;</v-row>
         </v-card>
         <!-- SEND BUTTON COMPONENT END -->
-    </v-col>
+      </div>
 </template>
 
 <script setup>

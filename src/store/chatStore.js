@@ -88,7 +88,7 @@ export const useChatStore = defineStore("chat", {
       const chatGUID = directChat.chat_guid;
 
       // don't do anything if clicked on currently selected chat
-      if (this.currentChatGUID === chatGUID) return;
+      // if (this.currentChatGUID === chatGUID) return;
 
       this.chatSelected = true; // important
       this.currentFriendUserName = directChat.friend.username;

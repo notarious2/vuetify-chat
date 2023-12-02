@@ -1,29 +1,50 @@
 <template>
-  <v-container>
+  <div id="Chat">
+    <v-container style="max-width: 1000px;">
     <v-row no-gutters>
       <!-- LEFT PANEL START -->
-      <v-col cols="4" class="bg-teal-lighten-5 rounded-s-lg"> <!--:cols="compactView? 8: 4" -->
-        <MenuPanel />
-        <ContactList v-if="isSearch" />
-        <ChatList v-if="isChat"/>
+      <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
+        <MenuPanel v-if="!compactView" />
+        <!-- these two appear irrespective of view -->
+        <ContactList v-if="isSearch" :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
+          :class="compactView ? '' : 'rounded-bs-lg'" />
+        <ChatsList v-if="isChat && !chatSelected || isChat && !compactView"
+          :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
+          :class="compactView ? '' : 'rounded-bs-lg'" />
+        <!-- these two appear irrespective of view -->
+
+        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 600px" />
+        <GroupsList v-if="!compactView && isGroup" style="height: 640px;" />
+        <EmptyGroupWindow v-if="compactView && isGroup" style="height: 600px;" />
+
       </v-col>
+      <v-col v-if="compactView">
+        <MenuPanel />
+      </v-col>
+
+
       <!-- LEFT PANEL CHATS END -->
 
-      <!-- RIGHT PANEL START -->
-      <SelectedChatWindow v-if="isChat && chatSelected"/>
-      <EmptyChatWindow v-else-if="isChat && !chatSelected" />
-      <SearchWindow v-else-if="isSearch" />
-      <EmptyGroupWindow v-else-if="isGroup" />
+      <!-- RIGHT PANEL START  ONLY FOR LARGE VIEW -->
+      <v-col v-if="!compactView" class="ma-0 pa-0">
+        <SelectedChatWindow v-if="isChat && chatSelected" />
+        <EmptyChatWindow v-else-if="isChat && !chatSelected" />
+        <EmptySearchWindow v-else-if="isSearch" />
+        <EmptyGroupWindow v-else-if="isGroup" class="rounded-e-lg" />
+      </v-col>
       <!-- RIGHT PANEL END -->
     </v-row>
-  </v-container>
-  <v-alert v-if="Object.keys(systemMessage).length > 0" width="500px" height="70px" :color="systemMessage.type === 'error'
+    <v-alert v-if="Object.keys(systemMessage).length > 0" height="70px" :color="systemMessage.type === 'error'
     ? 'pink-accent-2'
     : systemMessage.type === 'system'
       ? 'blue-grey-lighten-2'
       : 'indigo-lighten-2'
     " theme="dark" :icon="systemMessage.type === 'success' ? 'mdi-power-plug' : 'mdi-power-plug-off'"
-    class="text-center text-h6 font-weight-bold mx-auto rounded-xl">{{ systemMessage.content }}</v-alert>
+    class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl w-75">{{ systemMessage.content }}</v-alert>
+  </v-container>
+  </div>
+
+
 </template>
 
 <script setup>
@@ -33,12 +54,13 @@ import { storeToRefs } from "pinia";
 
 import MenuPanel from "@/components/MenuPanel.vue";
 import ContactList from "@/components/ContactList.vue";
-import ChatList from "@/components/ChatList.vue";
+import ChatsList from "@/components/ChatsList.vue";
+import GroupsList from "@/components/GroupsList.vue";
 
 import SelectedChatWindow from "@/components/chat/SelectedChatWindow.vue";
 import EmptyChatWindow from "@/components/EmptyChatWindow.vue";
 import EmptyGroupWindow from "@/components/EmptyGroupWindow.vue";
-import SearchWindow from "@/components/SearchWindow.vue";
+import EmptySearchWindow from "@/components/EmptySearchWindow.vue";
 
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
@@ -54,7 +76,7 @@ const userStore = useUserStore();
 
 const { chatSelected } = storeToRefs(chatStore);
 const { systemMessage } = storeToRefs(messageStore);
-const { isSearch, isChat, isGroup } = storeToRefs(mainStore);
+const { isSearch, isChat, isGroup, compactView } = storeToRefs(mainStore);
 const { currentUser } = storeToRefs(userStore);
 
 
@@ -68,7 +90,6 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-// const compactView = ref(false)
 
 onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
@@ -80,18 +101,18 @@ onMounted(async () => {
     systemMessage.value = {};
   }, 3000);
 
-  // window.addEventListener('resize', handleWindowChange);
-
+  window.addEventListener('resize', handleWindowChange);
+  compactView.value = window.innerWidth < 700 ? true : false;
 });
 
 
-// const handleWindowChange = () => {
-//   // console.log("WIDTH", window.innerWidth, "Available", window.screen.availWidth);
-//   compactView.value = window.innerWidth < 700 ? true : false;
+const handleWindowChange = () => {
+  // console.log("WIDTH", window.innerWidth, "Available", window.screen.availWidth);
+  compactView.value = window.innerWidth < 700 ? true : false;
 
-//   console.log("Compact view:", compactView.value);
+  console.log("Compact view:", compactView.value);
 
-// }
+}
 
 onUpdated(() => {
   console.log("Updated");
@@ -99,8 +120,15 @@ onUpdated(() => {
 
 onUnmounted(() => {
   // must remove event listener(s)
-  // window.removeEventListener('resize', handleWindowChange);
+  window.removeEventListener('resize', handleWindowChange);
 
 })
 
 </script>
+
+<style scoped>
+
+#Chat{
+  background-image: url("@/assets/chat-background.jpg");
+}
+</style>
