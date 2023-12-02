@@ -5,35 +5,43 @@
     </v-card-text>
 
     <form @submit.prevent="submit">
-      <v-text-field v-model="firstName.value.value" :counter="150" :error-messages="firstName.errorMessage.value"
-        label="First Name" bg-color="teal-lighten-5"></v-text-field>
+      <v-text-field v-model="firstName.value.value" :counter="20" :error-messages="firstName.errorMessage.value"
+        label="First Name" bg-color="teal-lighten-5" clearable class="mb-1"></v-text-field>
 
-      <v-text-field v-model="lastName.value.value" :counter="10" :error-messages="lastName.errorMessage.value"
-        label="Last Name" bg-color="teal-lighten-5"></v-text-field>
+      <v-text-field v-model="lastName.value.value" :counter="20" :error-messages="lastName.errorMessage.value"
+        label="Last Name" bg-color="teal-lighten-5" clearable class="mb-1"></v-text-field>
 
-      <v-text-field v-model="username.value.value" :counter="10" :error-messages="username.errorMessage.value"
-        label="Username" bg-color="teal-lighten-5"></v-text-field>
+      <v-text-field v-model="username.value.value" :counter="20" :error-messages="username.errorMessage.value"
+        label="Username" bg-color="teal-lighten-5" clearable class="mb-1"></v-text-field>
 
       <v-text-field v-model="email.value.value" :error-messages="email.errorMessage.value" label="E-mail"
-        bg-color="teal-lighten-5"></v-text-field>
-      <v-text-field v-model="password.value.value" label="Password" :error-messages="password.errorMessage.value"
-        bg-color="teal-lighten-5" type="password" name="current-password"></v-text-field>
+        bg-color="teal-lighten-5" clearable class="mb-1"></v-text-field>
 
-      <v-btn size="large" width="400px" type="submit"> Register </v-btn>
+      <v-text-field v-model="password.value.value" counter label="Password" :error-messages="password.errorMessage.value"
+        bg-color="teal-lighten-5" :type="passwordType" :append-inner-icon="passwordIcon" @click:append-inner="toggleShow"
+        class="mb-1"></v-text-field>
+
+      <v-hover v-slot:default="{ isHovering, props }">
+        <v-btn v-bind="props" :color="isHovering ? 'teal-lighten-3' : ''" class="rounded-lg" size="large" width="400px" type="submit">
+          Register </v-btn>
+      </v-hover>
 
     </form>
     <div class="text-center my-3">
       Already have an account?
       <a href="/login/" class="text-teal-darken-1 text-decoration-none font-weight-medium">Login</a>
     </div>
-    <div v-if="registrationError" class="text-red text-center mt-2">{{ registrationError }}</div>
+    <div v-if="registrationError" class="text-red text-center mt-2">
+      {{ registrationError }}
+    </div>
 
-    <p class="decorated mt-5" style="user-select: none;"><span>or</span></p>
+    <p class="decorated mt-5" style="user-select: none"><span>or</span></p>
 
     <div class="bg-white rounded-lg py-2 my-3 d-flex space-around" id="google">
       <v-icon class="ml-5" color="teal-darken-3" size="x-large">mdi-google</v-icon>
-      <p class="mx-auto my-auto" style="user-select: none;"> Continue with Google</p>
-
+      <p class="mx-auto my-auto" style="user-select: none">
+        Continue with Google
+      </p>
     </div>
   </v-card>
 </template>
@@ -50,13 +58,10 @@ const registrationError = ref(null);
 
 // Shared validation function for firstName, lastName, and username
 function validateName(value) {
-  if (value?.length >= 2 && value?.length <= 150) return true;
-  if (!value) {
-    return "Field cannot be blank";
-  } else if (value?.length < 2) {
+  if (value?.length < 2) {
     return "Field needs to be at least 2 characters.";
   } else {
-    return "Field cannot be longer than 150 characters.";
+    return true;
   }
 }
 const { handleSubmit, handleReset } = useForm({
@@ -68,7 +73,12 @@ const { handleSubmit, handleReset } = useForm({
       return validateName(value);
     },
     username(value) {
-      return validateName(value);
+      if (value?.length < 2) {
+        return "Field needs to be at least 2 characters.";
+      } else if (/\s/.test(value)) {
+        return "Username cannot contain spaces.";
+      }
+      return true;
     },
     email(value) {
       if (/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value)) return true;
@@ -88,14 +98,29 @@ const username = useField("username");
 const email = useField("email");
 const password = useField("password");
 
+const passwordIcon = ref("mdi-eye");
+const showPassword = ref(false);
+const passwordType = ref("password");
+
+const toggleShow = () => {
+  showPassword.value = !showPassword.value;
+  if (showPassword.value) {
+    passwordType.value = "text";
+    passwordIcon.value = "mdi-eye-off";
+  } else {
+    passwordType.value = "password";
+    passwordIcon.value = "mdi-eye";
+  }
+};
+
 const submit = handleSubmit(async (data) => {
   let userData = {
     first_name: data.firstName,
     last_name: data.lastName,
     username: data.username,
     email: data.email,
-    password: data.password
-  }
+    password: data.password,
+  };
 
   try {
     const response = await userStore.register(userData);
@@ -109,18 +134,17 @@ const submit = handleSubmit(async (data) => {
       registrationError.value = error.response.data.detail;
     } else {
       registrationError.value = "An error occurred during registration.";
-      handleReset()
+      handleReset();
     }
   }
-
 });
 </script>
 
 <style scoped>
-
 /* change bg color on hover */
 #google:hover {
-  background-color: rgb(190, 190, 190) !important;
+  /* teal-lighten-3 */
+  background-color: #80CBC4 !important;
   cursor: pointer;
 }
 
@@ -137,7 +161,7 @@ const submit = handleSubmit(async (data) => {
 
 .decorated>span:before,
 .decorated>span:after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   border-bottom: 1px solid;

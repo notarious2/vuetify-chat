@@ -8,13 +8,17 @@
         bg-color="teal-lighten-5" clearable class="my-3"></v-text-field>
 
       <v-text-field v-model="password.value.value" label="Password" :error-messages="password.errorMessage.value"
-        bg-color="teal-lighten-5" type="password" clearable></v-text-field>
+        bg-color="teal-lighten-5" counter :type="passwordType" :append-inner-icon="passwordIcon"
+        @click:append-inner="toggleShow"></v-text-field>
 
       <v-row justify="center" align="center">
         <v-col cols="auto">
-          <v-btn class="my-3 rounded-lg" width="400px" size="large" type="submit">
-            Login
-          </v-btn>
+          <v-hover v-slot:default="{ isHovering, props }">
+            <v-btn v-bind="props" :color="isHovering ? 'teal-lighten-3' : ''" class="my-3 rounded-lg" width="400px"
+              size="large" type="submit">
+              Login
+            </v-btn>
+          </v-hover>
         </v-col>
       </v-row>
     </form>
@@ -52,8 +56,8 @@ const loginError = ref(null);
 const { handleSubmit, handleReset } = useForm({
   validationSchema: {
     username(value) {
-      if (!value) {
-        return "Field cannot be blank";
+      if (value?.length < 2) {
+        return "Field needs to be at least 2 characters.";
       }
       return true;
     },
@@ -87,6 +91,22 @@ const submit = handleSubmit(async (userData) => {
 const username = useField("username");
 const password = useField("password");
 
+const passwordIcon = ref("mdi-eye")
+const showPassword = ref(false);
+const passwordType = ref("password");
+
+const toggleShow = () => {
+  showPassword.value = !showPassword.value;
+  if (showPassword.value) {
+    passwordType.value = "text";
+    passwordIcon.value = "mdi-eye-off"
+
+
+  } else {
+    passwordType.value = "password";
+    passwordIcon.value = "mdi-eye"
+  }
+}
 
 
 </script>
@@ -94,7 +114,8 @@ const password = useField("password");
 <style scoped>
 /* change bg color on hover */
 #google:hover {
-  background-color: rgb(190, 190, 190) !important;
+  /* teal-lighten-3 */
+  background-color: #80CBC4 !important;
   cursor: pointer;
 }
 
