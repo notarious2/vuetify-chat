@@ -40,7 +40,7 @@ const imageURL = new URL("@/assets/arrow_back.svg", import.meta.url).href;
 const goBack = () => {
   console.log("Going back");
   chatSelected.value = false;
-  currentChatGUID.value = "";
+  currentChatGUID.value = null;
 }
 
 
