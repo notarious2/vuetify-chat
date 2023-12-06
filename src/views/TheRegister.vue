@@ -19,10 +19,15 @@
 
       <v-text-field v-model="password.value.value" counter label="Password" :error-messages="password.errorMessage.value"
         bg-color="teal-lighten-5" :type="passwordType" :append-inner-icon="passwordIcon" @click:append-inner="toggleShow"
-        class="mb-1"></v-text-field>
+        class="mb-1" autocomplete="on"></v-text-field>
+
+      <v-file-input v-model="profileImage.value.value" :error-messages="profileImage.errorMessage.value"
+        bg-color="teal-lighten-5" clearable show-size :prepend-icon="null" prepend-inner-icon="mdi-camera"
+        accept="image/*" text-align: center label="Profile image [Optional]" class="mb-1"></v-file-input>
 
       <v-hover v-slot:default="{ isHovering, props }">
-        <v-btn v-bind="props" :color="isHovering ? 'teal-lighten-3' : ''" class="rounded-lg" size="large" width="400px" type="submit">
+        <v-btn v-bind="props" :color="isHovering ? 'teal-lighten-3' : ''" class="rounded-lg" size="large" width="400px"
+          type="submit">
           Register </v-btn>
       </v-hover>
 
@@ -90,6 +95,13 @@ const { handleSubmit, handleReset } = useForm({
 
       return "Password needs to be at least 6 characters.";
     },
+
+    profileImage(value) {
+      if (value?.[0]?.size > (2 * 1024 * 1024)) {
+        return "Avatar size should be less than 2 MB!";
+      }
+      return true;
+    },
   },
 });
 const firstName = useField("firstName");
@@ -97,6 +109,8 @@ const lastName = useField("lastName");
 const username = useField("username");
 const email = useField("email");
 const password = useField("password");
+const profileImage = useField("profileImage");
+
 
 const passwordIcon = ref("mdi-eye");
 const showPassword = ref(false);
@@ -120,6 +134,7 @@ const submit = handleSubmit(async (data) => {
     username: data.username,
     email: data.email,
     password: data.password,
+    uploaded_image: data.profileImage?.[0]
   };
 
   try {

@@ -11,6 +11,7 @@ export const useChatStore = defineStore("chat", {
       currentChatGUID: "",
       currentFriendUserName: "",
       currentFriendGUID: "",
+      currentFriendImage: "",
       friendStatus: "offline",
       inputLocked: false,
       friendTyping: false,
@@ -49,7 +50,7 @@ export const useChatStore = defineStore("chat", {
       if (this.chatWindow) {
         this.chatWindow.scrollTo({
           top: this.chatWindow.scrollHeight,
-          behavior: 'smooth',
+          behavior: "smooth",
         });
         this.isBottom = true;
       }
@@ -93,6 +94,7 @@ export const useChatStore = defineStore("chat", {
       this.chatSelected = true; // important
       this.currentFriendUserName = directChat.friend.username;
       this.currentFriendGUID = directChat.friend.guid;
+      this.currentFriendImage = directChat.friend.user_image;
 
       messageStore.clearMoreMessagesToLoad();
 
@@ -132,10 +134,13 @@ export const useChatStore = defineStore("chat", {
       // scroll to earliest unread message or bottom
       if (messageStore.getEarliestUnreadMessageIndex !== false) {
         const unreadMessageToScroll =
-        this.chatWindow.children[messageStore.getEarliestUnreadMessageIndex].lastElementChild;
+          this.chatWindow.children[messageStore.getEarliestUnreadMessageIndex]
+            .lastElementChild;
 
-        unreadMessageToScroll.scrollIntoView({ behavior: 'auto', block: 'start' });
-
+        unreadMessageToScroll.scrollIntoView({
+          behavior: "auto",
+          block: "start",
+        });
       } else {
         // scroll to bottom if chatWindow is set
         if (this.chatWindow) {
@@ -193,5 +198,11 @@ export const useChatStore = defineStore("chat", {
   },
   getters: {
     getChatWindow: (state) => state.chatWindow,
+    getUnreadMessagesforChat: (state) => (chatGUID) => {
+      const foundChat = state.directChats.find(
+        (chat) => chat.chat_guid === chatGUID
+      );
+      return foundChat ? foundChat.new_messages_count : 0; // Return new_messages_count or a default value if chat is not found
+    },
   },
 });

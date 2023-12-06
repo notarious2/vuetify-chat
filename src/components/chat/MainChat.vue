@@ -40,23 +40,20 @@
           </v-list-item>
         </PartnerBubble>
       </div>
-      <v-btn
-        v-if="moreMessagesToLoad"
-        @click="loadMoreMessages"
-        class="mt-3 mx-auto"
-        style="text-transform: none"
-        >Load More</v-btn
-      >
+      <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto" style="text-transform: none">Load
+        More</v-btn>
     </div>
-    <v-btn
-      v-show="!isBottom"
-      icon
-      class="rounded-circle"
-      style="position: absolute; top: 88%; right: 5%; width: 35px; height: 35px"
-      @click="chatStore.scrollToBottom"
-    >
-      <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
-    </v-btn>
+
+    <div style="position: absolute; top: 88%; right: 5%;">
+      <p v-if="!isBottom && chatStore.getUnreadMessagesforChat(currentChatGUID)"
+        style="text-align: center; color: teal; font-size: 12px; font-weight: bolder;">
+        {{ chatStore.getUnreadMessagesforChat(currentChatGUID) }}</p>
+      <v-btn v-show="!isBottom" icon class="rounded-circle" @click="chatStore.scrollToBottom"
+        style="width: 35px; height: 35px;">
+        <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
+      </v-btn>
+    </div>
+
   </v-card>
 </template>
 
@@ -85,7 +82,7 @@ const { compactView } = storeToRefs(mainStore);
 
 
 const { currentUser } = storeToRefs(userStore);
-const { currentChatGUID, isBottom, inputLocked } = storeToRefs(chatStore);
+const { currentChatGUID, isBottom, inputLocked, directChats } = storeToRefs(chatStore);
 const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex } = storeToRefs(messageStore);
 
 import {
