@@ -1,11 +1,15 @@
 <template>
-  <div class="bg-teal-lighten-5">
+  <div class="bg-teal-lighten-5" id="chatList">
     <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
       <v-list-item class="px-2" @click="chatStore.loadChat(directChat)">
         <v-list-item-title class="d-flex align-center py-2 rounded-lg"
           :class="{ 'bg-teal-lighten-1': currentChatGUID === directChat.chat_guid }">
           <v-avatar class="ml-2">
-            <v-img src="https://cdn.vuetifyjs.com/images/john.jpg" alt="John"></v-img>
+            <v-img v-if="directChat.friend.user_image && !directChat.friend.imageError"
+              :src="directChat.friend.user_image" :alt="`${directChat.friend.username}_image`"
+              @error="() => handleImageError(directChat.friend)"></v-img>
+            <v-icon v-else-if="directChat.friend.imageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>
+            <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
           </v-avatar>
           <StatusCircle :friendStatus="friendStatuses[directChat.friend.guid]" />
           <p>{{ directChat.friend.username }}</p>
@@ -36,5 +40,33 @@ const userStore = useUserStore();
 const { currentChatGUID, directChats } = storeToRefs(chatStore);
 const { friendStatuses } = storeToRefs(userStore);
 
+const handleImageError = (friend) => {
+  friend.imageError = true;
+};
 
 </script>
+
+<style scoped>
+#chatList {
+  overflow: auto;
+}
+
+/* Styling the scrollbar */
+#chatList::-webkit-scrollbar {
+  width: 13px;
+  /* Width of the entire scrollbar */
+}
+
+#chatList::-webkit-scrollbar-track {
+  background: #b2e6e1;
+  /* Color of the track (the area behind the thumb) */
+
+}
+
+#chatList::-webkit-scrollbar-thumb {
+  background-color: teal;
+  /* Color of the thumb (the draggable part) */
+  border-radius: 6px;
+  /* Roundness of the thumb */
+}
+</style>

@@ -50,10 +50,11 @@ export const useUserStore = defineStore("user", {
         formData.append("email", userData.email);
         formData.append("first_name", userData.first_name);
         formData.append("last_name", userData.last_name);
+        formData.append("uploaded_image", userData.uploaded_image);
 
         const response = await axios.post("/register/", userData, {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            'Content-Type': 'multipart/form-data'
           }});
       } catch (error) {
         console.log("Error during Registration", error);

@@ -1,33 +1,20 @@
 <template>
   <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
-  <div class="bg-teal-lighten-5">
-    <v-text-field
-      variant="solo"
-      class="mx-3 py-2 search-input"
-      rounded
-      prepend-inner-icon="mdi-magnify"
-      clearable
-      v-model="searchContact"
-      hide-details
-    ></v-text-field>
-    <v-list
-      v-for="user in filteredUsers()"
-      :key="user.guid"
-      class="bg-teal-lighten-5"
-      style="cursor: pointer; user-select: none"
-    >
-      <v-list-item
-        class="list-item mx-3 rounded-lg"
-        @click="userSelected(user.guid)"
-      >
+  <div class="bg-teal-lighten-5" id="contactList">
+    <v-text-field variant="solo" class="mx-3 py-2 search-input" rounded prepend-inner-icon="mdi-magnify" clearable
+      v-model="searchContact" hide-details></v-text-field>
+    <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-teal-lighten-5"
+      style="cursor: pointer; user-select: none">
+      <v-list-item class="list-item mx-3 rounded-lg" @click="userSelected(user.guid)">
         <v-list-item-title class="d-flex align-center">
           <v-avatar class="ml-0">
-            <v-img
-              src="https://cdn.vuetifyjs.com/images/john.jpg"
-              alt="John"
-            ></v-img>
+            <v-img v-if="user.user_image && !user.imageError" :src="user.user_image" :alt="`${user.username}_image`"
+              @error="() => handleImageError(user)"></v-img>
+            <!-- Image failed to load -->
+            <v-icon v-else-if="user.imageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>
+            <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
           </v-avatar>
-          <StatusCircle :friendStatus="friendStatuses[user.guid]"/>
+          <StatusCircle :friendStatus="friendStatuses[user.guid]" />
           <p>{{ user.username }}</p>
 
         </v-list-item-title>
@@ -97,13 +84,19 @@ const userSelected = async (userGUID) => {
 
 
 const filteredUsers = () => {
-  return users.value.filter(
-    (user) =>
-      !searchContact.value ||
-      user.username.toLowerCase().includes(searchContact.value.toLowerCase())
-  );
+  if (users.value) {
+    console.log("users", users.value);
+    return users.value.filter(
+      (user) =>
+        !searchContact.value ||
+        user.username.toLowerCase().includes(searchContact.value.toLowerCase())
+    );
+  }
 };
 
+const handleImageError = (user) => {
+  user.imageError = true;
+};
 
 onMounted(async () => {
   console.log("Getting users");
@@ -118,5 +111,28 @@ onMounted(async () => {
 
 .search-input :deep() .v-field__input {
   font-size: 15px;
+}
+
+#contactList {
+  overflow: auto;
+}
+
+/* Styling the scrollbar */
+#contactList::-webkit-scrollbar {
+  width: 13px;
+  /* Width of the entire scrollbar */
+}
+
+#contactList::-webkit-scrollbar-track {
+  background: #b2e6e1;
+  /* Color of the track (the area behind the thumb) */
+
+}
+
+#contactList::-webkit-scrollbar-thumb {
+  background-color: teal;
+  /* Color of the thumb (the draggable part) */
+  border-radius: 6px;
+  /* Roundness of the thumb */
 }
 </style>
