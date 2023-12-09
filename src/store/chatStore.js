@@ -82,7 +82,22 @@ export const useChatStore = defineStore("chat", {
       }
     },
 
+    async deleteDirectChat(chatGUID) {
+      try {
+        const response = await axios.delete(`/chats/direct/${chatGUID}/`);
+        // reconstruct directChats not including deleted chat
+        this.directChats = this.directChats.filter(chat => chat.chat_guid !== chatGUID);
+
+        return response.status === 204
+      } catch (error) {
+        console.error("Error during getting Direct Chats:", error);
+        throw error;
+      }
+    },
+
     async loadChat(directChat) {
+      // to scroll first when switching chat tabs
+      this.scrollToBottom();
       const messageStore = useMessageStore();
       const observerStore = useObserverStore();
 

@@ -83,6 +83,10 @@ export const useUserStore = defineStore("user", {
     },
 
     setEmptyFriendStatuses() {
+      if (!Array.isArray(this.users)) {
+        return
+      }      if (this.users === undefined || this.users.length == 0) {
+        return }
       this.friendStatuses = this.users.reduce((result, item) => {
         result[item.guid] = "offline";
         return result;

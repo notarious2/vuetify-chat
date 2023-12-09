@@ -3,15 +3,16 @@
         <ChatBoxHeader />
         <MainChat/>
         <div style="position: relative;">
-            <EmojiPicker v-show="showEmoji" style="position: absolute; bottom: 80%;" @select="onSelectEmoji" />
+            <!-- combine v-if and v-show to not load component in mobile view -->
+            <EmojiPicker v-if="!compactView" v-show="showEmoji" style="position: absolute; bottom: 80%;" @select="onSelectEmoji" />
         </div>
 
         <!-- SEND BUTTON COMPONENT START -->
         <v-card class="rounded-0 rounded-be-lg" height="90px">
             <v-row align="center" justify="center" no-gutters>
 
-                <v-icon class="ml-2" size="x-large" color="teal" style="transform: rotate(10deg)">mdi-paperclip</v-icon>
-                <v-icon class="ml-2 mr-2" size="x-large" color="teal-lighten-2" :class="{ activeEmoji: showEmoji }"
+                <v-icon class="ml-2" :class="compactView ? 'mr-2' : ''" size="x-large" color="teal" style="transform: rotate(10deg)">mdi-paperclip</v-icon>
+                <v-icon v-if="!compactView" class="ml-2 mr-2" size="x-large" color="teal-lighten-2" :class="{ activeEmoji: showEmoji }"
                     @click="toggleEmoji">mdi-emoticon-happy-outline</v-icon>
                 <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
                 <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
@@ -46,12 +47,15 @@ import ChatBoxHeader from "@/components/chat/ChatBoxHeader.vue";
 
 import { useChatStore } from "@/store/chatStore";
 import { useWebsocketStore } from "@/store/websocketStore";
+import { useMainStore } from "@/store/mainStore";
 
 const chatStore = useChatStore();
 const websocketStore = useWebsocketStore();
+const mainStore = useMainStore();
 
 const { inputLocked, friendTyping } = storeToRefs(chatStore);
 const { socket } = storeToRefs(websocketStore);
+const { compactView } = storeToRefs(mainStore);
 
 // Chat box setup, Messages and Chat Functions
 const messageToSend = ref("");

@@ -42,7 +42,7 @@ const { currentChatMessages } = storeToRefs(messageStore);
 const { users, friendStatuses } = storeToRefs(userStore);
 const { isSearch, isChat } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID, currentFriendUserName } =
+const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendImage } =
   storeToRefs(chatStore);
 
 
@@ -68,12 +68,14 @@ const userSelected = async (userGUID) => {
     // Create temporary window, which will initiate a chat if a message is sent
     directChats.value.unshift({
       chat_guid: "unassigned",
-      friend: { username: selectedUser.username, guid: selectedUser.guid },
+      friend: { username: selectedUser.username, guid: selectedUser.guid, user_image: selectedUser.user_image },
       created_at: null,
       has_new_messages: false,
       new_messages_count: 0,
       updated_at: null,
     });
+    // set image for chat box header in unassigned chat
+    currentFriendImage.value = selectedUser.user_image
     console.log("Created a temporary chat")
     currentChatGUID.value = "unassigned";
     chatSelected.value = true;
@@ -84,14 +86,20 @@ const userSelected = async (userGUID) => {
 
 
 const filteredUsers = () => {
-  if (users.value) {
-    console.log("users", users.value);
-    return users.value.filter(
-      (user) =>
-        !searchContact.value ||
-        user.username.toLowerCase().includes(searchContact.value.toLowerCase())
-    );
+  if (!Array.isArray(users.value)) {
+    return
   }
+
+  if (users.value === undefined || users.value.length == 0) {
+    return
+  }
+
+  return users.value.filter(
+    (user) =>
+      !searchContact.value ||
+      user.username.toLowerCase().includes(searchContact.value.toLowerCase())
+  );
+
 };
 
 const handleImageError = (user) => {

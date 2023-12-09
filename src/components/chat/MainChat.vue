@@ -82,7 +82,7 @@ const { compactView } = storeToRefs(mainStore);
 
 
 const { currentUser } = storeToRefs(userStore);
-const { currentChatGUID, isBottom, inputLocked, directChats } = storeToRefs(chatStore);
+const { currentChatGUID, isBottom, inputLocked } = storeToRefs(chatStore);
 const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex } = storeToRefs(messageStore);
 
 import {
@@ -136,6 +136,7 @@ const loadMoreMessages = async () => {
 
 
 onMounted(() => {
+  console.log("Mounted!");
   // remove old scroll listener and observer
   chatStore.removeWindowScrollHandler();
   chatStore.setChatWindow(chatWindow.value);
@@ -145,6 +146,7 @@ onMounted(() => {
   chatStore.addWindowScrollHandler();
   observerStore.initializeObserver();
 });
+
 </script>
 
 
