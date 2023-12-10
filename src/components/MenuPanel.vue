@@ -1,5 +1,6 @@
 <template>
-  <v-card :class="compactView ? 'rounded-t-0' : 'rounded-ts-lg'" class="bg-teal-lighten-4 rounded-0" style="height: 60px;">
+  <v-card :class="compactView ? 'rounded-t-0' : 'rounded-ts-lg'" class="bg-teal-lighten-4 rounded-0"
+    style="height: 60px;">
     <div class="mt-5 mb-3 d-flex justify-space-around">
       <v-menu :close-on-content-click="false" @click:outside="clickedOutside">
         <template v-slot:activator="{ props }">
@@ -23,11 +24,17 @@
       <v-icon size="large" class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
         @click="toggleSearch">mdi-compass
       </v-icon>
-      <v-icon size="large" class="flex-grow-1" id="icon-chats" color="teal-lighten-3" :class="{ chatsTab: isChat }"
-        @click="toggleChat">mdi-chat
-      </v-icon>
-      <v-icon size="large" class="flex-grow-1" id="icon-groups" color="teal-lighten-3" :class="{ groupsTab: isGroup }"
-        @click="toggleGroup">mdi-account-group
+      <div class="d-flex flex-grow-1" style="position: relative;">
+        <v-icon id="icon-chats" :class="{ chatsTab: isChat }" class="flex-grow-1" size="large" color="teal-lighten-3"
+          @click="toggleChat">mdi-chat
+        </v-icon>
+        <p v-if="totalUnreadMessagesCount" class="px-1 bg-pink-lighten-3 rounded-lg"
+          style="font-size: 10px; z-index: 1; user-select: none; position: absolute;"
+          :style="compactView ? { 'right': '30%' } : { 'right': '20%' }"><span>{{ totalUnreadMessagesCount }}</span></p>
+      </div>
+
+      <v-icon size="large" class="flex-grow-1" id="icon-groups" :class="{ groupsTab: isGroup }" @click="toggleGroup"
+        color="teal-lighten-3">mdi-account-group
       </v-icon>
 
     </div>
@@ -55,7 +62,7 @@ const messageStore = useMessageStore();
 const userStore = useUserStore();
 
 const { isSearch, isChat, isGroup, compactView } = storeToRefs(mainStore);
-const { isBottom } = storeToRefs(chatStore);
+const { isBottom, totalUnreadMessagesCount } = storeToRefs(chatStore);
 
 const colorMode = ref("Teal")
 

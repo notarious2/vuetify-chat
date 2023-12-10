@@ -115,6 +115,7 @@ export const useWebsocketStore = defineStore("websocket", {
           );
           if (foundChat) {
             foundChat.new_messages_count++;
+            chatStore.totalUnreadMessagesCount++;
           }
           // set friend is typing to false
           chatStore.friendTyping = false;

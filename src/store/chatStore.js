@@ -20,6 +20,7 @@ export const useChatStore = defineStore("chat", {
       meTypingTimer: null,
       chatWindow: null,
       isBottom: true,
+      totalUnreadMessagesCount: 0,
     };
   },
 
@@ -63,7 +64,10 @@ export const useChatStore = defineStore("chat", {
         // override current direct chats array
         this.directChats = [];
 
-        response.data.forEach((chat) => {
+        const chats = response.data.chats
+        this.totalUnreadMessagesCount = response.data.total_unread_messages_count
+
+        chats.forEach((chat) => {
           // leave friend only from chat.users
           const friendInfo = chat.users.find((user) => user.guid !== userGUID);
 
@@ -163,6 +167,11 @@ export const useChatStore = defineStore("chat", {
         }
       }
     },
+    calculateTotalUnreadMessagesCount() {
+      this.totalUnreadMessagesCount = this.directChats.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.new_messages_count;
+      }, 0); },
+
 
     removeUnassignedChat() {
       if (

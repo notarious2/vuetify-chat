@@ -49,7 +49,10 @@ export const useObserverStore = defineStore("observer", {
           );
 
           if (foundChatIndex !== -1) {
+            // re-calculate new messages count for observed chat
             chatStore.directChats[foundChatIndex].new_messages_count = messageStore.calculateNewMessagesCountForChat();
+            // re-calculate total unread messages count
+            chatStore.calculateTotalUnreadMessagesCount();
           }
 
         // update 'unread messages' tab with some delay
