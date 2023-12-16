@@ -18,7 +18,7 @@
                 <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
                 <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
                     variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"
-                    @input="websocketStore.handleUserTyping()" :readonly="inputLocked"></v-textarea>
+                    @input="websocketStore.handleUserTyping" :readonly="inputLocked"></v-textarea>
 
                 <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'gray' : 'teal'"
                     size="x-large" class="ml-0" style="font-size: 30px; transform: rotate(-5deg);">
@@ -96,6 +96,8 @@ const sendMessage = async () => {
     messageToSend.value = "";
     // make input not editable before receive own message via websocket
     inputLocked.value = true;
+    // close emoji if open
+    showEmoji.value = false;
   }
 }
 
@@ -103,6 +105,6 @@ const sendMessage = async () => {
 
 <style scoped>
 .activeEmoji {
-  color: #009688 !important;
+  color: teal !important;
 }
 </style>

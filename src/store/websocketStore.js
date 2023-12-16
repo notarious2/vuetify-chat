@@ -12,10 +12,11 @@ export const useWebsocketStore = defineStore("websocket", {
 
   actions: {
     async connectWebsocket() {
+      let websocketURL = import.meta.env.VITE_WEBSOCKET_URL
       const messageStore = useMessageStore();
 
       try {
-        this.socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_URL);
+        this.socket = new WebSocket(websocketURL);
 
         this.socket.addEventListener("open", () => {
           console.log("WebSocket connected");
@@ -27,6 +28,7 @@ export const useWebsocketStore = defineStore("websocket", {
           this.handleFriendTyping(receivedMessage);
           this.handleStatusMessage(receivedMessage);
           this.handleMessageRead(receivedMessage);
+          this.handleNewChatCreated(receivedMessage)
         });
 
         this.socket.addEventListener("close", (event) => {
@@ -168,16 +170,9 @@ export const useWebsocketStore = defineStore("websocket", {
       const userStore = useUserStore();
 
       if (receivedMessage.type === "status") {
+        console.log("Received status update", "friend:", receivedMessage.username === chatStore.currentFriendUserName);
 
-        // TODO: Probably not needed anymore
-        if (receivedMessage.username === chatStore.currentFriendUserName) {
-          chatStore.friendStatus = receivedMessage.status;
-        }
-
-        if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
           userStore.updateFriendStatus(receivedMessage.user_guid, receivedMessage.status)
-        }
-
       }
     },
 
@@ -192,6 +187,35 @@ export const useWebsocketStore = defineStore("websocket", {
         messageStore.updateMessagesReadStatus(
           receivedMessage.last_read_message_created_at
         );
+      }
+    },
+
+    async handleNewChatCreated(receivedMessage) {
+      // function is used to add new direct chat initiated by another user
+      // while current user still have not refreshed direct chats
+      // it also send back data to backend to subscribe user to chat and add guid/id to chats
+
+      const chatStore = useChatStore();
+      const userStore = useUserStore();
+      if (
+        receivedMessage.type === "new_chat_created"
+      ) {
+        delete receivedMessage.type
+        // needed to send data backend [add guid/id pair to chats]
+        const chatGUID = receivedMessage.chat_guid
+        const chatID = receivedMessage.chat_id
+        delete receivedMessage.chat_id // remove to not show in frontend
+        await this.socket.send(
+          JSON.stringify({
+            type: "add_user_to_chat",
+            chat_id: chatID,
+            chat_guid: chatGUID,
+          })
+        );
+        // make friend's status online
+        userStore.updateFriendStatus(receivedMessage.friend.guid, "online")
+        // add chat
+        chatStore.addNewChat(receivedMessage);
       }
     },
   },

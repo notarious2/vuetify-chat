@@ -42,7 +42,7 @@ const { currentChatMessages } = storeToRefs(messageStore);
 const { users, friendStatuses } = storeToRefs(userStore);
 const { isSearch, isChat } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendImage } =
+const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendImage, currentFriendGUID } =
   storeToRefs(chatStore);
 
 
@@ -81,6 +81,7 @@ const userSelected = async (userGUID) => {
     chatSelected.value = true;
     currentChatMessages.value = []; // clear messages history from previous chat
     currentFriendUserName.value = selectedUser.username;
+    currentFriendGUID.value = "";
   }
 };
 
