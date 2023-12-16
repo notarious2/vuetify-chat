@@ -200,6 +200,12 @@ export const useChatStore = defineStore("chat", {
       }
     },
 
+    addNewChat(newChat) {
+      this.directChats.push(newChat)
+      // new chat is added with a single message
+      this.totalUnreadMessagesCount++
+    },
+
     timeoutMeTyping() {
       this.meTypingTimer = setTimeout(() => {
         this.meTyping = false;
