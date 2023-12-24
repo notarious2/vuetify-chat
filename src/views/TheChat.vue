@@ -38,9 +38,9 @@
         : systemMessage.type === 'system'
           ? 'blue-grey-lighten-2'
           : 'indigo-lighten-2'
-        " style="position: absolute; bottom: 60%; right: 12%;" closable theme="dark"
+        " style="position: absolute; bottom: 60%;" :style="compactView? 'right: 10%;' : 'right: 30%;'"  closable theme="dark"
         :icon="systemMessage.type === 'success' ? 'mdi-power-plug' : 'mdi-power-plug-off'"
-        class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl w-75">
+        class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl">
         {{ systemMessage.content }}</v-alert>
     </v-container>
 </template>
