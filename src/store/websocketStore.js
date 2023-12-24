@@ -12,7 +12,7 @@ export const useWebsocketStore = defineStore("websocket", {
 
   actions: {
     async connectWebsocket() {
-      let websocketURL = import.meta.env.VITE_WEBSOCKET_URL
+      let websocketURL = import.meta.env.VITE_WEBSOCKET_URL;
       const messageStore = useMessageStore();
 
       try {
@@ -28,19 +28,27 @@ export const useWebsocketStore = defineStore("websocket", {
           this.handleFriendTyping(receivedMessage);
           this.handleStatusMessage(receivedMessage);
           this.handleMessageRead(receivedMessage);
-          this.handleNewChatCreated(receivedMessage)
+          this.handleNewChatCreated(receivedMessage);
         });
 
         this.socket.addEventListener("close", (event) => {
           console.log("WebSocket connection closed.", event);
-          messageStore.systemMessage = {
-            type: "error",
-            content: "Websocket disconnected",
-          };
+          if (event.reason !== "User logout") {
+            messageStore.systemMessage = {
+              type: "error",
+              content: "Websocket disconnected",
+            };
+          }
         });
       } catch (error) {
         console.log("Error during connecting to Websocket", error);
         throw error;
+      }
+    },
+
+    async disconnectWebsocket(reason) {
+      if (this.socket && reason === "logout") {
+        this.socket.close(1000, "User logout");
       }
     },
 
@@ -107,7 +115,6 @@ export const useWebsocketStore = defineStore("websocket", {
           if (receivedMessage.user_guid === userStore.currentUser.userGUID) {
             chatStore.scrollToBottom();
           }
-
         }
 
         if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
@@ -166,13 +173,17 @@ export const useWebsocketStore = defineStore("websocket", {
     },
 
     handleStatusMessage(receivedMessage) {
-      const chatStore = useChatStore();
       const userStore = useUserStore();
 
       if (receivedMessage.type === "status") {
-        console.log("Received status update", "friend:", receivedMessage.username === chatStore.currentFriendUserName);
-
-          userStore.updateFriendStatus(receivedMessage.user_guid, receivedMessage.status)
+        // ignore own messages
+        if (userStore.currentUser.userGUID === receivedMessage.user_guid) {
+          return
+        }
+        userStore.updateFriendStatus(
+          receivedMessage.user_guid,
+          receivedMessage.status
+        );
       }
     },
 
@@ -197,14 +208,12 @@ export const useWebsocketStore = defineStore("websocket", {
 
       const chatStore = useChatStore();
       const userStore = useUserStore();
-      if (
-        receivedMessage.type === "new_chat_created"
-      ) {
-        delete receivedMessage.type
+      if (receivedMessage.type === "new_chat_created") {
+        delete receivedMessage.type;
         // needed to send data backend [add guid/id pair to chats]
-        const chatGUID = receivedMessage.chat_guid
-        const chatID = receivedMessage.chat_id
-        delete receivedMessage.chat_id // remove to not show in frontend
+        const chatGUID = receivedMessage.chat_guid;
+        const chatID = receivedMessage.chat_id;
+        delete receivedMessage.chat_id; // remove to not show in frontend
         await this.socket.send(
           JSON.stringify({
             type: "add_user_to_chat",
@@ -213,7 +222,7 @@ export const useWebsocketStore = defineStore("websocket", {
           })
         );
         // make friend's status online
-        userStore.updateFriendStatus(receivedMessage.friend.guid, "online")
+        userStore.updateFriendStatus(receivedMessage.friend.guid, "online");
         // add chat
         chatStore.addNewChat(receivedMessage);
       }

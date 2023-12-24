@@ -1,12 +1,14 @@
 import { defineStore } from "pinia";
 import axios from "@/api/axios";
-import { resetAllPiniaStores } from '@/store/index';
+import { resetAllPiniaStores } from "@/store/index";
+import { useWebsocketStore } from "@/store/websocketStore";
+
 
 export const useUserStore = defineStore("user", {
   state: () => {
     return {
       currentUser: {},
-      isLoggedIn: true,
+      isLoggedIn: false,
       users: [],
       friendStatuses: {},
     };
@@ -56,8 +58,9 @@ export const useUserStore = defineStore("user", {
 
         const response = await axios.post("/register/", userData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }});
+            "Content-Type": "multipart/form-data",
+          },
+        });
       } catch (error) {
         console.log("Error during Registration", error);
         throw error;
@@ -66,8 +69,10 @@ export const useUserStore = defineStore("user", {
 
     async loginWithGoogle(accessToken) {
       try {
-        const googleLoginURL = "/google-login/"
-        const response = await axios.post(googleLoginURL, {access_token: accessToken});
+        const googleLoginURL = "/google-login/";
+        const response = await axios.post(googleLoginURL, {
+          access_token: accessToken,
+        });
 
         let userInfo = response.data;
         // Handle user profile photo
@@ -79,13 +84,11 @@ export const useUserStore = defineStore("user", {
           lastName: userInfo.last_name,
         };
         this.isLoggedIn = true;
-
       } catch (error) {
         console.log("Error while authenticating with Google", error);
         throw error;
       }
     },
-
 
     async getUsers() {
       try {
@@ -97,10 +100,11 @@ export const useUserStore = defineStore("user", {
       }
     },
 
-    // TODO: Must disconnect websocket connection on logout
     async logout() {
+      const websocketStore = useWebsocketStore();
       try {
         await axios.get("/logout/");
+        await websocketStore.disconnectWebsocket("logout");
         resetAllPiniaStores();
       } catch (error) {
         console.error("Error during log out:", error);
@@ -110,9 +114,11 @@ export const useUserStore = defineStore("user", {
 
     setEmptyFriendStatuses() {
       if (!Array.isArray(this.users)) {
-        return
-      }      if (this.users === undefined || this.users.length == 0) {
-        return }
+        return;
+      }
+      if (this.users === undefined || this.users.length == 0) {
+        return;
+      }
       this.friendStatuses = this.users.reduce((result, item) => {
         result[item.guid] = "offline";
         return result;
@@ -120,9 +126,8 @@ export const useUserStore = defineStore("user", {
     },
 
     updateFriendStatus(friendGUID, status) {
-      this.friendStatuses[friendGUID] = status
+      this.friendStatuses[friendGUID] = status;
     },
-
   },
   persist: true,
 });
