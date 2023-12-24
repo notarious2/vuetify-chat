@@ -42,11 +42,10 @@
 
     <p class="decorated mt-5" style="user-select: none"><span>or</span></p>
 
-    <div class="bg-white rounded-lg py-2 my-3 d-flex space-around" id="google">
+    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google" @click="() => login()">
       <v-icon class="ml-5" color="teal-darken-3" size="x-large">mdi-google</v-icon>
-      <p class="mx-auto my-auto" style="user-select: none">
-        Continue with Google
-      </p>
+      <button class="mx-auto my-auto" style="user-select: none" :disabled="!isReady">Continue with
+        Google</button>
     </div>
   </v-card>
 </template>
@@ -56,6 +55,24 @@ import { useField, useForm } from "vee-validate";
 import { useUserStore } from "@/store/userStore";
 
 import { useRouter } from "vue-router";
+import { useTokenClient } from "vue3-google-signin";
+
+const handleOnSuccess = async (response) => {
+  // get access token after user logs in and send it to backend
+  // backend verifies token and gets user data
+  const accessToken = response.access_token
+  await userStore.loginWithGoogle(accessToken)
+  router.push("/chat/")
+};
+
+const handleOnError = (errorResponse) => {
+  console.log("Error: ", errorResponse);
+};
+
+const { isReady, login } = useTokenClient({
+  onSuccess: handleOnSuccess,
+  onError: handleOnError,
+});
 
 const userStore = useUserStore();
 const router = useRouter();

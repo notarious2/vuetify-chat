@@ -6,7 +6,7 @@ export const useUserStore = defineStore("user", {
   state: () => {
     return {
       currentUser: {},
-      isLoggedIn: false,
+      isLoggedIn: true,
       users: [],
       friendStatuses: {},
     };
@@ -37,6 +37,7 @@ export const useUserStore = defineStore("user", {
           firstName: userInfo.first_name,
           lastName: userInfo.last_name,
         };
+        this.isLoggedIn = true;
       } catch (error) {
         console.log("Error during Login", error);
         throw error;
@@ -63,6 +64,29 @@ export const useUserStore = defineStore("user", {
       }
     },
 
+    async loginWithGoogle(accessToken) {
+      try {
+        const googleLoginURL = "/google-login/"
+        const response = await axios.post(googleLoginURL, {access_token: accessToken});
+
+        let userInfo = response.data;
+        // Handle user profile photo
+        this.currentUser = {
+          userGUID: userInfo.user_guid,
+          email: userInfo.email,
+          username: userInfo.username,
+          firstName: userInfo.first_name,
+          lastName: userInfo.last_name,
+        };
+        this.isLoggedIn = true;
+
+      } catch (error) {
+        console.log("Error while authenticating with Google", error);
+        throw error;
+      }
+    },
+
+
     async getUsers() {
       try {
         const response = await axios.get("/users/");
@@ -73,6 +97,7 @@ export const useUserStore = defineStore("user", {
       }
     },
 
+    // TODO: Must disconnect websocket connection on logout
     async logout() {
       try {
         await axios.get("/logout/");
