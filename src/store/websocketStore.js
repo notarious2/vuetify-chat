@@ -2,6 +2,8 @@ import { defineStore } from "pinia";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
+import { nextTick  } from 'vue';
+
 
 export const useWebsocketStore = defineStore("websocket", {
   state: () => {
@@ -98,36 +100,43 @@ export const useWebsocketStore = defineStore("websocket", {
       if (receivedMessage.type === "new") {
         // release input lock
         chatStore.inputLocked = false;
+        const isMessageFromCurrentUser =
+          receivedMessage.user_guid === userStore.currentUser.userGUID;
 
-        // change date on left panel (users)
-        const foundChat = chatStore.directChats.find(
+        const foundChatIndex = chatStore.directChats.findIndex(
           (directChat) => directChat.chat_guid === receivedMessage.chat_guid
         );
-
-        if (foundChat) {
+        // check if index is found
+        if (foundChatIndex !== -1) {
+          const foundChat = chatStore.directChats[foundChatIndex];
+          // update updated_at (for chats list on left panel)
           foundChat.updated_at = receivedMessage.created_at;
+          // increment new message count for chat and all chats if not own message
+          if (!isMessageFromCurrentUser) {
+            foundChat.new_messages_count++;
+            chatStore.totalUnreadMessagesCount++;
+            chatStore.friendTyping = false;
+          }
+
+          // Unshift the found chat to the beginning of the array
+          // if it is not already on top
+          if (foundChatIndex !== 0) {
+            // Remove the found chat from its current position
+            chatStore.directChats.splice(foundChatIndex, 1);
+            chatStore.directChats.unshift(foundChat);
+          }
         }
 
-        // append new message to the open chat
+        // append new message to the open chat if new message belongs to current chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
           messageStore.currentChatMessages.unshift(receivedMessage);
           // scroll to bottom if own message
-          if (receivedMessage.user_guid === userStore.currentUser.userGUID) {
-            chatStore.scrollToBottom();
+          if (isMessageFromCurrentUser) {
+            // wait for DOM to update
+            nextTick(() => {
+              chatStore.scrollToBottom();
+            })
           }
-        }
-
-        if (receivedMessage.user_guid !== userStore.currentUser.userGUID) {
-          // find chat and increment new_message_count for chat by +1
-          const foundChat = chatStore.directChats.find(
-            (obj) => obj.chat_guid === receivedMessage.chat_guid
-          );
-          if (foundChat) {
-            foundChat.new_messages_count++;
-            chatStore.totalUnreadMessagesCount++;
-          }
-          // set friend is typing to false
-          chatStore.friendTyping = false;
         }
       }
     },
@@ -178,7 +187,7 @@ export const useWebsocketStore = defineStore("websocket", {
       if (receivedMessage.type === "status") {
         // ignore own messages
         if (userStore.currentUser.userGUID === receivedMessage.user_guid) {
-          return
+          return;
         }
         userStore.updateFriendStatus(
           receivedMessage.user_guid,

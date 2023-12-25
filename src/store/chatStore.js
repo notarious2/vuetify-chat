@@ -48,6 +48,7 @@ export const useChatStore = defineStore("chat", {
       }
     },
     scrollToBottom() {
+      console.log("Scrolling to bottom...");
       if (this.chatWindow) {
         this.chatWindow.scrollTo({
           top: this.chatWindow.scrollHeight,
