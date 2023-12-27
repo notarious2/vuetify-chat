@@ -3,7 +3,6 @@ import axios from "@/api/axios";
 import { resetAllPiniaStores } from "@/store/index";
 import { useWebsocketStore } from "@/store/websocketStore";
 
-
 export const useUserStore = defineStore("user", {
   state: () => {
     return {
@@ -31,13 +30,13 @@ export const useUserStore = defineStore("user", {
         });
 
         let userInfo = response.data;
-
         this.currentUser = {
           userGUID: userInfo.user_guid,
           email: userInfo.email,
           username: userInfo.username,
           firstName: userInfo.first_name,
           lastName: userInfo.last_name,
+          userImage: userInfo.user_image,
         };
         this.isLoggedIn = true;
       } catch (error) {
@@ -82,6 +81,7 @@ export const useUserStore = defineStore("user", {
           username: userInfo.username,
           firstName: userInfo.first_name,
           lastName: userInfo.last_name,
+          userImage: userInfo.user_image,
         };
         this.isLoggedIn = true;
       } catch (error) {

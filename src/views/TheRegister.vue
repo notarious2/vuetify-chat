@@ -1,7 +1,8 @@
 <template>
-  <v-card class="mx-auto my-10 py-5 px-5" color="teal-lighten-4" width="400px" rounded="lg">
-    <v-card-text class="text-center text-h5 my-3">
-      Create a New Account
+  <v-card class="mx-auto my-10 py-5 px-5" color="teal-lighten-4" width="400px" rounded="lg"
+    style="font-family: Sriracha;">
+    <v-card-text class="text-center text-h5 my-3" style="font-family: Sriracha !important;">
+      Create an Account
     </v-card-text>
 
     <form @submit.prevent="submit">
