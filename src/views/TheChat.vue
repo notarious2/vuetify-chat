@@ -5,16 +5,17 @@
       <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
         <MenuPanel v-if="!compactView" />
         <!-- these two appear irrespective of view -->
-        <ContactList v-if="isSearch" :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
+        <ContactList v-if="isSearch" :style="compactView ? { 'height': '540px' } : { 'height': '640px' }"
           :class="compactView ? '' : 'rounded-bs-lg'" />
         <ChatsList v-if="isChat && !chatSelected || isChat && !compactView"
-          :style="compactView ? { 'height': '600px' } : { 'height': '640px' }"
-          :class="compactView ? '' : 'rounded-bs-lg'" />
+          :style="compactView ? { 'height': '540px' } : { 'height': '640px' }"
+          :class="compactView ? '' : 'rounded-bs-lg'"/>
+
         <!-- these two appear irrespective of view -->
 
-        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 600px" />
+        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 540px;" />
         <GroupsList v-if="!compactView && isGroup" style="height: 640px;" />
-        <EmptyGroupWindow v-if="compactView && isGroup" style="height: 600px;" />
+        <EmptyGroupWindow v-if="compactView && isGroup" style="height: 540px;" />
 
       </v-col>
       <v-col v-if="compactView">

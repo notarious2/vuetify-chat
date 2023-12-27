@@ -2,7 +2,7 @@
   <v-card class="rounded-0">
     <!-- for compact view 600 - 60 (header) - 90 (send button)
     for large view 700 - 60 (header) - 90 (send button) -->
-    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '450px' } : { 'height': '550px' }">
+    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }">
       <div v-if="inputLocked" class="d-flex justify-end mr-10">
         <v-progress-circular indeterminate color="teal"></v-progress-circular>
       </div>
