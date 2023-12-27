@@ -1,7 +1,8 @@
 <template>
-  <v-card class="mx-auto mt-10 py-5 px-5" color="teal-lighten-4" width="400px" rounded="lg">
-    <v-card-text class="text-center text-h5">
-      Login to ChatApp
+  <v-card class="mx-auto mt-10 py-5 px-5" color="teal-lighten-4" width="400px" rounded="lg"
+    style="font-family: Sriracha;">
+    <v-card-text class="text-center text-h5" style="font-family: Sriracha !important;">
+      Login to continue
     </v-card-text>
     <form @submit.prevent="submit">
       <v-text-field v-model="username.value.value" :error-messages="username.errorMessage.value" label="Username or Email"

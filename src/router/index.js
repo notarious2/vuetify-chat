@@ -22,26 +22,57 @@ const routes = [
   },
   {
     path: "/chat/",
-    name: "chat",
-    component: () => import("@/views/TheChat.vue"),
+    component: () => import("@/layouts/default/Default.vue"),
+    children: [
+      {
+        path: "",
+        name: "Chat",
+        component: () => import("@/views/TheChat.vue"),
+      },
+    ]
+    ,
     beforeEnter: (to, from, next) => {
       const userStore = useUserStore(pinia);
       if (!userStore.isLoggedIn) {
-        next({ name: "login" });
+        next({ name: "Login" });
       } else {
         next();
       }
     },
   },
-  { path: "/register/", component: () => import("@/views/TheRegister.vue") },
   {
-    path: "/login/",
-    name: "login",
-    component: () => import("@/views/TheLogin.vue"),
+    path: "/register/",
+    component: () => import("@/layouts/default/Default.vue"),
+    children: [
+      {
+        path: "",
+        name: "Register",
+        component: () => import("@/views/TheRegister.vue"),
+      },
+    ],
     beforeEnter: (to, from, next) => {
       const userStore = useUserStore(pinia);
       if (userStore.isLoggedIn) {
-        next({ name: "chat" });
+        next({ name: "Chat" });
+      } else {
+        next();
+      }
+    },
+  },
+  {
+    path: "/login/",
+    component: () => import("@/layouts/default/Default.vue"),
+    children: [
+      {
+        path: "",
+        name: "Login",
+        component: () => import("@/views/TheLogin.vue"),
+      },
+    ],
+    beforeEnter: (to, from, next) => {
+      const userStore = useUserStore(pinia);
+      if (userStore.isLoggedIn) {
+        next({ name: "Chat" });
       } else {
         next();
       }

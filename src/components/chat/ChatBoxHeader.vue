@@ -1,5 +1,6 @@
 <template>
-  <v-card class="rounded-0 rounded-te-lg bg-teal-lighten-3" height="60px">
+  <v-card class="rounded-0 bg-teal-lighten-3" height="60px" :class="compactView ? 'rounded-te-0' : 'rounded-te-lg'">
+
     <v-card-title style="
               display: flex;
               justify-content: space-between;
@@ -44,6 +45,7 @@
 import { storeToRefs } from "pinia";
 import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
+import { useMainStore } from "@/store/mainStore";
 
 import { ref } from "vue";
 
@@ -52,7 +54,9 @@ import StatusCircle from "@/components/StatusCircle.vue";
 const chatStore = useChatStore();
 const userStore = useUserStore();
 const currentFriendImageError = ref(false);
+const mainStore = useMainStore();
 
+const { compactView } = storeToRefs(mainStore);
 const { friendStatuses } = storeToRefs(userStore);
 const { currentFriendUserName, currentFriendGUID, currentFriendImage, chatSelected, currentChatGUID } = storeToRefs(chatStore);
 
@@ -60,6 +64,7 @@ const imageURL = new URL("@/assets/arrow_back.svg", import.meta.url).href;
 
 const showPhoto = ref(false)
 
+console.log("Compact View?", compactView.value)
 const goBack = () => {
   chatSelected.value = false;
   currentChatGUID.value = null;
