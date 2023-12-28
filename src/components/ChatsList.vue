@@ -19,7 +19,7 @@
           <p v-if="directChat.new_messages_count" class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2">
             {{ directChat.new_messages_count }}
           </p>
-          <p class="ml-auto mr-2">
+          <p class="ml-auto mr-2 font-weight-medium text-caption">
             {{ formatTimeFromDateString(directChat.updated_at) }}
           </p>
         </v-list-item-title>
