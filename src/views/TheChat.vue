@@ -94,9 +94,13 @@ compactView.value = window.innerWidth < 700 ? true : false;
 
 onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
-  await websocketStore.connectWebsocket()
+  // connect to websocket only if connection does not exist
+  if (!websocketStore.socketExists) { 
+    await websocketStore.connectWebsocket()
+    systemMessage.value = { type: "success", content: "Websocket connected" };
+  } 
+
   userStore.setEmptyFriendStatuses();
-  systemMessage.value = { type: "success", content: "Websocket connected" };
   // Set a timeout to clear the systemMessage after 3 seconds
   setTimeout(() => {
     systemMessage.value = {};

@@ -5,7 +5,7 @@
         <v-icon icon="mdi-chat" color="teal-lighten-3" />
         <v-icon icon="mdi-chat" color="teal-darken-2" class="ml-n5" />
 
-        <span class="ml-2 text-gray font-weight-bold" style="user-select: none; font-family: Courgette">Ponder Pal</span>
+        <span class="mx-2 text-gray font-weight-bold" style="user-select: none; font-family: Courgette">Ponder Pal</span>
       </v-app-bar-title>
     </router-link>
 

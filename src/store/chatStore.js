@@ -10,6 +10,7 @@ export const useChatStore = defineStore("chat", {
       chatSelected: false,
       currentChatGUID: "",
       currentFriendUserName: "",
+      currentFriendFirstName: "",
       currentFriendGUID: "",
       currentFriendImage: "",
       friendStatus: "offline",
@@ -113,6 +114,7 @@ export const useChatStore = defineStore("chat", {
 
       this.chatSelected = true; // important
       this.currentFriendUserName = directChat.friend.username;
+      this.currentFriendFirstName = directChat.friend.first_name;
       this.currentFriendGUID = directChat.friend.guid;
       this.currentFriendImage = directChat.friend.user_image;
 

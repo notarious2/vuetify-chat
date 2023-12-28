@@ -237,4 +237,7 @@ export const useWebsocketStore = defineStore("websocket", {
       }
     },
   },
+  getters: {
+    socketExists: (state) => state.socket
+  }
 });

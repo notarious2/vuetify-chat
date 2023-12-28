@@ -1,22 +1,43 @@
 <template>
   <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
   <div class="bg-teal-lighten-5" id="contactList">
-    <v-text-field variant="solo" class="mx-3 py-2 search-input" rounded prepend-inner-icon="mdi-magnify" clearable
-      v-model="searchContact" hide-details></v-text-field>
-    <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-teal-lighten-5"
-      style="cursor: pointer; user-select: none">
-      <v-list-item class="list-item mx-3 rounded-lg" @click="userSelected(user.guid)">
+    <v-text-field
+      variant="solo"
+      class="mx-3 py-2 search-input"
+      rounded
+      prepend-inner-icon="mdi-magnify"
+      clearable
+      v-model="searchContact"
+      hide-details
+    ></v-text-field>
+    <v-list
+      v-for="user in filteredUsers()"
+      :key="user.guid"
+      class="bg-teal-lighten-5"
+      style="cursor: pointer; user-select: none"
+    >
+      <v-list-item
+        class="list-item mx-3 rounded-lg"
+        @click="userSelected(user.guid)"
+      >
         <v-list-item-title class="d-flex align-center">
-          <v-avatar class="ml-0">
-            <v-img v-if="user.user_image && !user.imageError" :src="user.user_image" :alt="`${user.username}_image`"
-              @error="() => handleImageError(user)"></v-img>
-            <!-- Image failed to load -->
-            <v-icon v-else-if="user.imageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>
-            <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
-          </v-avatar>
+          <img
+            v-if="user.user_image && !user.imageError"
+            :src="user.user_image"
+            :alt="`${user.username}_image`"
+            class="profile-image"
+            @error="() => handleImageError(user)"
+          />
+          <!-- Image failed to load -->
+          <v-icon
+            v-else-if="user.imageError"
+            icon="mdi-account-alert"
+            size="large"
+            color="teal"
+          ></v-icon>
+          <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
           <StatusCircle :friendStatus="friendStatuses[user.guid]" />
-          <p>{{ user.username }}</p>
-
+          <p>{{ user.first_name }}</p>
         </v-list-item-title>
       </v-list-item>
     </v-list>
@@ -42,9 +63,15 @@ const { currentChatMessages } = storeToRefs(messageStore);
 const { users, friendStatuses } = storeToRefs(userStore);
 const { isSearch, isChat } = storeToRefs(mainStore);
 
-const { directChats, chatSelected, currentChatGUID, currentFriendUserName, currentFriendImage, currentFriendGUID } =
-  storeToRefs(chatStore);
-
+const {
+  directChats,
+  chatSelected,
+  currentChatGUID,
+  currentFriendUserName,
+  currentFriendFirstName,
+  currentFriendImage,
+  currentFriendGUID,
+} = storeToRefs(chatStore);
 
 const searchContact = ref("");
 
@@ -54,10 +81,11 @@ const userSelected = async (userGUID) => {
 
   let chatFound = false;
   for (const chat of directChats.value) {
-
     // load existing chat if there is chat with selected user
     if (chat.friend.guid === userGUID) {
-      console.log("You already have conversation with this user, loading chat...");
+      console.log(
+        "You already have conversation with this user, loading chat..."
+      );
       await chatStore.loadChat(chat);
       chatFound = true;
       break;
@@ -68,39 +96,44 @@ const userSelected = async (userGUID) => {
     // Create temporary window, which will initiate a chat if a message is sent
     directChats.value.unshift({
       chat_guid: "unassigned",
-      friend: { username: selectedUser.username, guid: selectedUser.guid, user_image: selectedUser.user_image },
+      friend: {
+        first_name: selectedUser.first_name,
+        last_name: selectedUser.last_name,
+        username: selectedUser.username,
+        guid: selectedUser.guid,
+        user_image: selectedUser.user_image,
+      },
       created_at: null,
       has_new_messages: false,
       new_messages_count: 0,
       updated_at: null,
     });
     // set image for chat box header in unassigned chat
-    currentFriendImage.value = selectedUser.user_image
-    console.log("Created a temporary chat")
+    currentFriendImage.value = selectedUser.user_image;
+    console.log("Created a temporary chat");
     currentChatGUID.value = "unassigned";
     chatSelected.value = true;
     currentChatMessages.value = []; // clear messages history from previous chat
     currentFriendUserName.value = selectedUser.username;
+    currentFriendFirstName.value = selectedUser.first_name;
     currentFriendGUID.value = "";
   }
 };
 
-
 const filteredUsers = () => {
   if (!Array.isArray(users.value)) {
-    return
+    return;
   }
 
   if (users.value === undefined || users.value.length == 0) {
-    return
+    return;
   }
 
   return users.value.filter(
     (user) =>
       !searchContact.value ||
-      user.username.toLowerCase().includes(searchContact.value.toLowerCase())
+      user.first_name.toLowerCase().includes(searchContact.value.toLowerCase())
   );
-
 };
 
 const handleImageError = (user) => {
@@ -135,7 +168,6 @@ onMounted(async () => {
 #contactList::-webkit-scrollbar-track {
   background: #b2e6e1;
   /* Color of the track (the area behind the thumb) */
-
 }
 
 #contactList::-webkit-scrollbar-thumb {

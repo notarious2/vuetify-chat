@@ -8,17 +8,16 @@
             ">
       <div class="d-flex align-center">
         <img :src="imageURL" style="height: 30px; cursor: pointer;" class="filter-teal mr-5" @click="goBack" />
-        <v-avatar class="ml-auto">
-          <v-img v-if="currentFriendImage && !currentFriendImageError" :src="currentFriendImage"
-            :alt="`${currentFriendUserName}_image`" style="cursor: pointer;" @error="handleImageError()"
-            @click="showPhoto = true"></v-img>
+          <img v-if="currentFriendImage && !currentFriendImageError" :src="currentFriendImage"
+          class="profile-image"
+            :alt="`${currentFriendFirstName}_image`" style="cursor: pointer;" @error="handleImageError()"
+            @click="showPhoto = true"/>
 
           <!-- Image failed to load -->
           <v-icon v-else-if="currentFriendImageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>
           <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
-        </v-avatar>
         <StatusCircle :friendStatus="friendStatuses[currentFriendGUID]" />
-        <span class="ml-1">{{ currentFriendUserName }}</span>
+        <span class="ml-1">{{ currentFriendFirstName }}</span>
       </div>
 
       <v-menu :close-on-content-click="false">
@@ -58,7 +57,7 @@ const mainStore = useMainStore();
 
 const { compactView } = storeToRefs(mainStore);
 const { friendStatuses } = storeToRefs(userStore);
-const { currentFriendUserName, currentFriendGUID, currentFriendImage, chatSelected, currentChatGUID } = storeToRefs(chatStore);
+const { currentFriendUserName, currentFriendFirstName, currentFriendGUID, currentFriendImage, chatSelected, currentChatGUID } = storeToRefs(chatStore);
 
 const imageURL = new URL("@/assets/arrow_back.svg", import.meta.url).href;
 
@@ -70,6 +69,10 @@ const goBack = () => {
   currentChatGUID.value = null;
   currentFriendImage.value = "";
   currentFriendUserName.value = "";
+  currentFriendFirstName.value = "";
+  currentFriendGUID.value = "";
+
+
 }
 
 const handleImageError = () => {
