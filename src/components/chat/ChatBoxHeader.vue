@@ -7,11 +7,11 @@
               align-items: center;
             ">
       <div class="d-flex align-center">
-        <img :src="imageURL" style="height: 30px; cursor: pointer;" class="filter-teal mr-5" @click="goBack" />
-          <img v-if="currentFriendImage && !currentFriendImageError" :src="currentFriendImage"
+        <img :src="imageURL" style="height: 30px; cursor: pointer;" class="filter-teal mr-3" @click="goBack" />
+        <img v-if="currentFriendImage && !currentFriendImageError" :src="currentFriendImage"
           class="profile-image"
-            :alt="`${currentFriendFirstName}_image`" style="cursor: pointer;" @error="handleImageError()"
-            @click="showPhoto = true"/>
+          :alt="`${currentFriendFirstName}_image`" style="cursor: pointer;" @error="handleImageError()"
+          @click="showPhoto = true"/>
 
           <!-- Image failed to load -->
           <v-icon v-else-if="currentFriendImageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>

@@ -21,21 +21,23 @@
         @click="userSelected(user.guid)"
       >
         <v-list-item-title class="d-flex align-center">
-          <img
-            v-if="user.user_image && !user.imageError"
-            :src="user.user_image"
-            :alt="`${user.username}_image`"
-            class="profile-image"
-            @error="() => handleImageError(user)"
-          />
-          <!-- Image failed to load -->
-          <v-icon
-            v-else-if="user.imageError"
-            icon="mdi-account-alert"
-            size="large"
-            color="teal"
-          ></v-icon>
-          <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
+          <div style="width: 45px;">
+              <img
+                v-if="user.user_image && !user.imageError"
+                :src="user.user_image"
+                :alt="`${user.username}_image`"
+                class="profile-image"
+                @error="() => handleImageError(user)"
+              />
+              <!-- Image failed to load -->
+              <v-icon
+                v-else-if="user.imageError"
+                icon="mdi-account-alert"
+                size="large"
+                color="teal"
+              ></v-icon>
+              <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
+          </div>
           <StatusCircle :friendStatus="friendStatuses[user.guid]" />
           <p>{{ user.first_name }}</p>
         </v-list-item-title>
