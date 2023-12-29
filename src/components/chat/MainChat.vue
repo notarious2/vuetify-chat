@@ -3,9 +3,6 @@
     <!-- for compact view 600 - 60 (header) - 90 (send button)
     for large view 700 - 60 (header) - 90 (send button) -->
     <div id="container" ref="chatWindow" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }">
-      <div v-if="inputLocked" class="d-flex justify-end mr-10">
-        <v-progress-circular indeterminate color="teal"></v-progress-circular>
-      </div>
       <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
         <div v-show="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
           {{ formatDate(message.created_at) }}
@@ -23,7 +20,10 @@
 
             <v-list-item-subtitle class="mt-1">
               {{ formatTimestamp(message.created_at) }}
-              <v-icon v-if="message.user_guid === currentUser.userGUID"
+
+              <v-icon v-if="message.is_sending"
+                class="text-gray">mdi-check</v-icon>
+              <v-icon v-else
                 :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
             </v-list-item-subtitle>
           </v-list-item>
@@ -136,7 +136,6 @@ const loadMoreMessages = async () => {
 
 
 onMounted(() => {
-  console.log("Mounted!");
   // remove old scroll listener and observer
   chatStore.removeWindowScrollHandler();
   chatStore.setChatWindow(chatWindow.value);

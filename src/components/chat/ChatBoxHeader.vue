@@ -61,11 +61,8 @@ const ArrowBackImageURL = new URL("@/assets/arrow_back.svg", import.meta.url).hr
 const defaultPhotoURL = new URL("@/assets/photo-default.png", import.meta.url).href;
 const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.meta.url).href;
 
-console.log("HEADER!");
-
 const showPhoto = ref(false)
 
-console.log("Compact View?", compactView.value)
 const goBack = () => {
   chatSelected.value = false;
   currentChatGUID.value = null;
@@ -101,14 +98,14 @@ const deleteChat = async (chatGUID) => {
   border-radius: 50%;
   width:  500px;
   height:  500px;
-  object-fit: cover; 
+  object-fit: cover;
 }
 
 .image-enlarged-small {
   border-radius: 50%;
   width:  300px;
   height:  300px;
-  object-fit: cover; 
+  object-fit: cover;
   position: absolute;
   bottom: 0;
   left: -25%;

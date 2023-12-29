@@ -141,7 +141,6 @@ const handleImageError = (user) => {
 };
 
 onMounted(async () => {
-  console.log("Getting users");
   await userStore.getUsers();
 });
 </script>

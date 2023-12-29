@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
-import { nextTick  } from 'vue';
 
 
 export const useWebsocketStore = defineStore("websocket", {
@@ -131,13 +130,15 @@ export const useWebsocketStore = defineStore("websocket", {
 
         // append new message to the open chat if new message belongs to current chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
-          messageStore.currentChatMessages.unshift(receivedMessage);
-          // scroll to bottom if own message
+        // Change data in temporary message
+        // assumes can hold only 1 temporary chat
+        // hence, replaces the first element
           if (isMessageFromCurrentUser) {
-            // wait for DOM to update
-            nextTick(() => {
-              chatStore.scrollToBottom("smooth");
-            })
+            messageStore.currentChatMessages[0].is_sending = false;
+            messageStore.currentChatMessages[0].message_guid = receivedMessage.message_guid;
+            messageStore.currentChatMessages[0].created_at = receivedMessage.created_at;
+          } else {
+            messageStore.currentChatMessages.unshift(receivedMessage);
           }
         }
       }
@@ -215,7 +216,7 @@ export const useWebsocketStore = defineStore("websocket", {
     async handleNewChatCreated(receivedMessage) {
       // function is used to add new direct chat initiated by another user
       // while current user still have not refreshed direct chats
-      // it also send back data to backend to subscribe user to chat and add guid/id to chats
+      // it also sends back data to backend to subscribe user to chat and add guid/id to chats
 
       const chatStore = useChatStore();
       const userStore = useUserStore();

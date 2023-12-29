@@ -32,16 +32,15 @@ export const useObserverStore = defineStore("observer", {
         if (!entry.isIntersecting) {
           continue;
         }
+
         this.observer.unobserve(entry.target);
 
         const messageIndex = entry.target.getAttribute("index");
         const message = messageStore.currentChatMessages[messageIndex];
 
         if (message.is_read) {
-          console.log("Already read message:", message.content);
         } else {
           await messageStore.markMessageAsRead(message);
-          console.log("Marking message as read:", message.content);
 
           // find chat and recalculate new messages count
           const foundChatIndex = chatStore.directChats.findIndex(

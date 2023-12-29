@@ -95,10 +95,10 @@ compactView.value = window.innerWidth < 700 ? true : false;
 onMounted(async () => {
   await chatStore.getDirectChats(currentUser.value.userGUID);
   // connect to websocket only if connection does not exist
-  if (!websocketStore.socketExists) { 
+  if (!websocketStore.socketExists) {
     await websocketStore.connectWebsocket()
     systemMessage.value = { type: "success", content: "Websocket connected" };
-  } 
+  }
 
   userStore.setEmptyFriendStatuses();
   // Set a timeout to clear the systemMessage after 3 seconds
@@ -114,9 +114,6 @@ onMounted(async () => {
 const handleWindowChange = () => {
   // console.log("WIDTH", window.innerWidth, "Available", window.screen.availWidth);
   compactView.value = window.innerWidth < 700 ? true : false;
-
-  console.log("Compact view:", compactView.value);
-
 }
 
 onUpdated(() => {
