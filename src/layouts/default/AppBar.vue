@@ -74,9 +74,14 @@ const handleImageError = () => {
 
 .v-list-item--active {
   /* border-bottom: 3px solid teal; */
-  text-decoration: underline teal;
-  text-underline-position: under;
+  text-decoration-line: underline;
+  -webkit-text-decoration-line: underline;
+  text-decoration-color: teal;
+  -webkit-text-decoration-color: teal;
   text-decoration-thickness: 3px;
+  -webkit-text-decoration-thickness: 3px;
+  text-underline-position: under;
+  -webkit-text-underline-position: under;
 }
 .remove-overlay :deep(.v-list-item__overlay) {
   background-color: transparent;

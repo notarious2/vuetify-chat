@@ -41,6 +41,8 @@ export const useWebsocketStore = defineStore("websocket", {
               content: "Websocket disconnected",
             };
           }
+          // nullify socket variable
+          this.socket = null;
         });
       } catch (error) {
         console.log("Error during connecting to Websocket", error);
