@@ -112,6 +112,7 @@ export const useChatStore = defineStore("chat", {
       const observerStore = useObserverStore();
 
       const chatGUID = directChat.chat_guid;
+      messageStore.clearCurrentChatMessages()
 
       // don't do anything if clicked on currently selected chat
       // if (this.currentChatGUID === chatGUID) return;
