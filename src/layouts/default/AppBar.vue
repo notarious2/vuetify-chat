@@ -10,13 +10,16 @@
     </router-link>
 
     <div class="ml-auto" style="font-family: Sriracha">
-      <v-list class="d-flex" v-if="isLoggedIn" style="background: inherit;">
-        <v-list-item class="remove-overlay" :to="{ name: 'Chat' }">Chat</v-list-item>
+
+      <div v-if="isLoggedIn" class="menu">
+        <router-link class="link" :to="{ name: 'Chat' }">Chat</router-link>
         <v-menu :close-on-content-click="false">
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props">
-              <img v-if="currentUser.userImage && !userImageError" :src="currentUser.userImage" alt="userImage" class="profile-image"  @error="() => handleImageError()">
-              <img v-else-if="userImageError" :src="notAvailablePhotoURL" alt="userImageNotAvailable" class="profile-image">
+              <img v-if="currentUser.userImage && !userImageError" :src="currentUser.userImage" alt="userImage"
+                class="profile-image" @error="() => handleImageError()">
+              <img v-else-if="userImageError" :src="notAvailablePhotoURL" alt="userImageNotAvailable"
+                class="profile-image">
               <img v-else :src="defaultPhotoURL" alt="defaultUserImage" class="profile-image">
             </v-list-item>
           </template>
@@ -25,18 +28,15 @@
             <v-list-item @click="logoutAndRedirect">Logout</v-list-item>
           </v-list>
         </v-menu>
+      </div>
 
 
-
-      </v-list>
-      <v-list v-else class="d-flex" style="background: inherit;">
-        <!-- v-list-item is a wrapper for router-link -->
-        <v-list-item class="remove-overlay" v-ripple="false" :to="{ name: 'Login' }">Login</v-list-item>
-        <v-list-item class="remove-overlay" v-ripple="false" :to="{ name: 'Register' }">Register</v-list-item>
-      </v-list>
+      <div v-else class="menu">
+        <router-link class="link" :to="{ name: 'Login' }">Login</router-link>
+        <router-link class="link mr-5" :to="{ name: 'Register' }">Register</router-link>
+      </div>
 
     </div>
-    <div class="testing">Nice</div>
 
   </v-app-bar>
 </template>
@@ -74,8 +74,19 @@ const handleImageError = () => {
   /* background: radial-gradient(801px at 4.2% 16.4%, rgba(104, 211, 218, 0.99) 0%, rgb(184, 77, 235) 88.8%); */
 }
 
-.v-list-item--active {
-  /* border-bottom: 3px solid teal; */
+.menu {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+
+.link {
+  text-decoration: none;
+  color: black;
+}
+
+a.router-link-active {
   text-decoration-line: underline;
   -webkit-text-decoration-line: underline;
   text-decoration-color: teal;
@@ -84,21 +95,5 @@ const handleImageError = () => {
   -webkit-text-decoration-thickness: 3px;
   text-underline-position: under;
   -webkit-text-underline-position: under;
-}
-
-.testing {
-  /* border-bottom: 3px solid teal; */
-  text-decoration-line: underline;
-  -webkit-text-decoration-line: underline;
-  text-decoration-color: teal;
-  -webkit-text-decoration-color: teal;
-  text-decoration-thickness: 3px;
-  -webkit-text-decoration-thickness: 3px;
-  text-underline-position: under;
-  -webkit-text-underline-position: under;
-}
-
-.remove-overlay :deep(.v-list-item__overlay) {
-  background-color: transparent;
 }
 </style>
