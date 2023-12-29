@@ -48,7 +48,7 @@
       <p v-if="!isBottom && chatStore.getUnreadMessagesforChat(currentChatGUID)"
         style="text-align: center; color: teal; font-size: 12px; font-weight: bolder;">
         {{ chatStore.getUnreadMessagesforChat(currentChatGUID) }}</p>
-      <v-btn v-show="!isBottom" icon class="rounded-circle" @click="chatStore.scrollToBottom"
+      <v-btn v-show="!isBottom" icon class="rounded-circle" @click="chatStore.scrollToBottom('smooth')"
         style="width: 35px; height: 35px;">
         <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
       </v-btn>

@@ -13,6 +13,7 @@ export const useChatStore = defineStore("chat", {
       currentFriendFirstName: "",
       currentFriendGUID: "",
       currentFriendImage: "",
+      currentFriendImageError: false,
       friendStatus: "offline",
       inputLocked: false,
       friendTyping: false,
@@ -48,12 +49,11 @@ export const useChatStore = defineStore("chat", {
         this.chatWindow.removeEventListener("scroll", this.handleScroll);
       }
     },
-    scrollToBottom() {
-      console.log("Scrolling to bottom...");
+    scrollToBottom(behavior) {
       if (this.chatWindow) {
         this.chatWindow.scrollTo({
           top: this.chatWindow.scrollHeight,
-          behavior: "smooth",
+          behavior: behavior,
         });
         this.isBottom = true;
       }
@@ -72,6 +72,8 @@ export const useChatStore = defineStore("chat", {
         chats.forEach((chat) => {
           // leave friend only from chat.users
           const friendInfo = chat.users.find((user) => user.guid !== userGUID);
+          // user image error default is false
+          friendInfo.imageError = false;
 
           this.directChats.push({
             chat_guid: chat["chat_guid"],
@@ -102,8 +104,10 @@ export const useChatStore = defineStore("chat", {
     },
 
     async loadChat(directChat) {
+      this.currentFriendImageError = false;
+
       // to scroll first when switching chat tabs
-      this.scrollToBottom();
+      // this.scrollToBottom("instant");
       const messageStore = useMessageStore();
       const observerStore = useObserverStore();
 
@@ -166,7 +170,7 @@ export const useChatStore = defineStore("chat", {
       } else {
         // scroll to bottom if chatWindow is set
         if (this.chatWindow) {
-          this.scrollToBottom();
+          this.scrollToBottom("instant");
         }
       }
     },

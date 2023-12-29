@@ -11,15 +11,13 @@
 
     <div class="ml-auto" style="font-family: Sriracha">
       <v-list class="d-flex" v-if="isLoggedIn" style="background: inherit;">
-        <v-list-item :to="{ name: 'Chat' }">Chat</v-list-item>
+        <v-list-item class="remove-overlay" :to="{ name: 'Chat' }">Chat</v-list-item>
         <v-menu :close-on-content-click="false">
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props">
-              <v-btn icon v-if="!currentUser.userImage">
-                <v-icon color="teal" size="large">mdi-account</v-icon>
-              </v-btn>
-              <v-avatar v-else>
-                <v-img v-if="currentUser.userImage" :src="currentUser.userImage" alt="userimage" /></v-avatar>
+              <img v-if="currentUser.userImage && !userImageError" :src="currentUser.userImage" alt="userImage" class="profile-image"  @error="() => handleImageError()">
+              <img v-else-if="userImageError" :src="notAvailablePhotoURL" alt="userImageNotAvailable" class="profile-image">
+              <img v-else :src="defaultPhotoURL" alt="defaultUserImage" class="profile-image">
             </v-list-item>
           </template>
           <v-list bg-color="teal-darken-1">
@@ -33,8 +31,8 @@
       </v-list>
       <v-list v-else class="d-flex" style="background: inherit;">
         <!-- v-list-item is a wrapper for router-link -->
-        <v-list-item v-ripple="false" :to="{ name: 'Login' }">Login</v-list-item>
-        <v-list-item v-ripple="false" :to="{ name: 'Register' }">Register</v-list-item>
+        <v-list-item class="remove-overlay" v-ripple="false" :to="{ name: 'Login' }">Login</v-list-item>
+        <v-list-item class="remove-overlay" v-ripple="false" :to="{ name: 'Register' }">Register</v-list-item>
       </v-list>
 
     </div>
@@ -45,18 +43,28 @@
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 import { useRouter } from "vue-router";
+import { ref } from "vue";
 
 const router = useRouter();
 const userStore = useUserStore();
 
 const { isLoggedIn, currentUser } = storeToRefs(userStore);
+const defaultPhotoURL = new URL("@/assets/photo-default.png", import.meta.url).href;
+const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.meta.url).href;
+const userImageError = ref(false);
 
 const logoutAndRedirect = async () => {
   await userStore.logout()
   router.push("/")
 };
 
-console.log("Logged in?", isLoggedIn.value);
+
+const handleImageError = () => {
+  userImageError.value = true;
+};
+
+
+
 </script>
 
 <style scoped>
@@ -65,12 +73,12 @@ console.log("Logged in?", isLoggedIn.value);
 }
 
 .v-list-item--active {
-  /* background-color: #B2EBF2; */
-  border-bottom: 3px solid teal;
+  /* border-bottom: 3px solid teal; */
+  text-decoration: underline teal;
+  text-underline-position: under;
+  text-decoration-thickness: 3px;
 }
-
-.v-list-item {
-  box-shadow: none;
-
+.remove-overlay :deep(.v-list-item__overlay) {
+  background-color: transparent;
 }
 </style>

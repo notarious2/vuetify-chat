@@ -30,13 +30,8 @@
                 @error="() => handleImageError(user)"
               />
               <!-- Image failed to load -->
-              <v-icon
-                v-else-if="user.imageError"
-                icon="mdi-account-alert"
-                size="large"
-                color="teal"
-              ></v-icon>
-              <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
+              <img v-else-if="user.imageError" :src="notAvailablePhotoURL" class="profile-image" />
+              <img v-else :src="defaultPhotoURL" class="profile-image" />
           </div>
           <StatusCircle :friendStatus="friendStatuses[user.guid]" />
           <p>{{ user.first_name }}</p>
@@ -55,6 +50,9 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
 
 import StatusCircle from "@/components/StatusCircle.vue";
+
+const defaultPhotoURL = new URL("@/assets/photo-default.png", import.meta.url).href;
+const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.meta.url).href;
 
 const userStore = useUserStore();
 const chatStore = useChatStore();

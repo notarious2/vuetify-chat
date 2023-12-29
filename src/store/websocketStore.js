@@ -134,7 +134,7 @@ export const useWebsocketStore = defineStore("websocket", {
           if (isMessageFromCurrentUser) {
             // wait for DOM to update
             nextTick(() => {
-              chatStore.scrollToBottom();
+              chatStore.scrollToBottom("smooth");
             })
           }
         }

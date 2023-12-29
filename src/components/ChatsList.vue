@@ -11,8 +11,12 @@
                 class="profile-image" 
                 :src="directChat.friend.user_image" :alt="`${directChat.friend.username}_image`"
                 @error="() => handleImageError(directChat.friend)"/>
-              <v-icon v-else-if="directChat.friend.imageError" icon="mdi-account-alert" size="large" color="teal"></v-icon>
-              <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon>
+              <!-- <v-icon v-else-if="directChat.friend.imageError" icon="mdi-account-alert" size="large" color="teal"></v-icon> -->
+              <img v-else-if="directChat.friend.imageError" :src="notAvailablePhotoURL" class="profile-image" />
+
+              <img v-else :src="defaultPhotoURL" class="profile-image" />
+
+              <!-- <v-icon v-else icon="mdi-account" size="large" color="teal"></v-icon> -->
           </div>  
           <StatusCircle :friendStatus="friendStatuses[directChat.friend.guid]" />
           <p>{{ directChat.friend.first_name }}</p>
@@ -38,6 +42,8 @@ import StatusCircle from "@/components/StatusCircle.vue";
 
 const chatStore = useChatStore();
 const userStore = useUserStore();
+const defaultPhotoURL = new URL("@/assets/photo-default.png", import.meta.url).href;
+const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.meta.url).href;
 
 
 const { currentChatGUID, directChats } = storeToRefs(chatStore);
