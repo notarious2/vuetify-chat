@@ -37,14 +37,17 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from "vue";
+import { ref, nextTick, defineAsyncComponent } from "vue";
 import { storeToRefs } from "pinia";
+
+
 
 import EmojiPicker from 'vue3-emoji-picker'
 import 'vue3-emoji-picker/css'
 
+const ThreeDots = defineAsyncComponent(() => import("@/components/chat/ThreeDots.vue"))
+
 import MainChat from "@/components/chat/MainChat.vue";
-import ThreeDots from "@/components/chat/ThreeDots.vue";
 import ChatBoxHeader from "@/components/chat/ChatBoxHeader.vue";
 
 import { useChatStore } from "@/store/chatStore";

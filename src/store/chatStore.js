@@ -114,7 +114,10 @@ export const useChatStore = defineStore("chat", {
       const observerStore = useObserverStore();
 
       const chatGUID = directChat.chat_guid;
+
+      this.setChatAsActive(chatGUID);
       messageStore.clearCurrentChatMessages()
+
 
       // don't do anything if clicked on currently selected chat
       // if (this.currentChatGUID === chatGUID) return;
@@ -140,6 +143,7 @@ export const useChatStore = defineStore("chat", {
         messageStore.clearCurrentChatMessages();
         return;
       }
+
       // Start observer before messages are loaded
       // disconnect old observer and initialize new
       observerStore.disconnectObserver();
@@ -155,7 +159,6 @@ export const useChatStore = defineStore("chat", {
       // chatWindow full of messages is available after messages are loaded
       this.addWindowScrollHandler();
 
-      this.setChatAsActive(chatGUID);
 
       // traverse through each message to find earliest unread message
       messageStore.setIndexOfEarliestUnreadMessage();
