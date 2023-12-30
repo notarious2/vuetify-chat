@@ -43,11 +43,13 @@
 
     <p class="decorated mt-5" style="user-select: none"><span>or</span></p>
 
-    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google" @click="() => login()">
+    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google" @click="userStore.googleAuthenticate">
       <v-icon class="ml-5" color="teal-darken-3" size="x-large">mdi-google</v-icon>
-      <button class="mx-auto my-auto" style="user-select: none" :disabled="!isReady">Continue with
-        Google</button>
+      <button class="mx-auto my-auto" style="user-select: none">Continue with
+        Google
+      </button>
     </div>
+
   </v-card>
 </template>
 <script setup>
@@ -56,24 +58,7 @@ import { useField, useForm } from "vee-validate";
 import { useUserStore } from "@/store/userStore";
 
 import { useRouter } from "vue-router";
-import { useTokenClient } from "vue3-google-signin";
 
-const handleOnSuccess = async (response) => {
-  // get access token after user logs in and send it to backend
-  // backend verifies token and gets user data
-  const accessToken = response.access_token
-  await userStore.loginWithGoogle(accessToken)
-  router.push("/chat/")
-};
-
-const handleOnError = (errorResponse) => {
-  console.log("Error: ", errorResponse);
-};
-
-const { isReady, login } = useTokenClient({
-  onSuccess: handleOnSuccess,
-  onError: handleOnError,
-});
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -81,7 +66,9 @@ const registrationError = ref(null);
 
 // Shared validation function for firstName, lastName, and username
 function validateName(value) {
-  if (value?.length < 2) {
+  if (!value) {
+    return "Field cannot be blank"
+  } else if (value?.length < 2) {
     return "Field needs to be at least 2 characters.";
   } else {
     return true;
@@ -96,22 +83,26 @@ const { handleSubmit, handleReset } = useForm({
       return validateName(value);
     },
     username(value) {
-      if (value?.length < 2) {
-        return "Field needs to be at least 2 characters.";
+      if (!value) {
+        return "Field cannot be blank"
+      } else if (value?.length < 2) {
+        return "Field needs to be at least 2 characters";
       } else if (/\s/.test(value)) {
-        return "Username cannot contain spaces.";
+        return "Username cannot contain spaces";
       }
       return true;
     },
+    // shorter regex alternative: /[^\s@]+@[^\s@]+\.[^\s@]+/
     email(value) {
-      if (/^[a-z.-]+@[a-z.-]+\.[a-z]+$/i.test(value)) return true;
+      // fully compliant with the RFC-2822 spec for email addresses.
+      if (/(?:[a-z0-9+!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/i.test(value)) return true;
 
-      return "Must be a valid e-mail.";
+      return "Must be a valid e-mail";
     },
     password(value) {
       if (value?.length >= 6) return true;
 
-      return "Password needs to be at least 6 characters.";
+      return "Password needs to be at least 6 characters";
     },
 
     profileImage(value) {
@@ -157,7 +148,6 @@ const submit = handleSubmit(async (data) => {
 
   try {
     const response = await userStore.register(userData);
-    console.log("Response", response);
     setTimeout(() => {
       router.push("/login/"), 50;
     });

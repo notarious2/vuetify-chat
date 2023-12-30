@@ -1,37 +1,18 @@
 <template>
   <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
   <div class="bg-teal-lighten-5" id="contactList">
-    <v-text-field
-      variant="solo"
-      class="mx-3 py-2 search-input"
-      rounded
-      prepend-inner-icon="mdi-magnify"
-      clearable
-      v-model="searchContact"
-      hide-details
-    ></v-text-field>
-    <v-list
-      v-for="user in filteredUsers()"
-      :key="user.guid"
-      class="bg-teal-lighten-5"
-      style="cursor: pointer; user-select: none"
-    >
-      <v-list-item
-        class="list-item mx-3 rounded-lg"
-        @click="userSelected(user.guid)"
-      >
+    <v-text-field variant="solo" class="mx-3 py-2 search-input" rounded prepend-inner-icon="mdi-magnify" clearable
+      v-model="searchContact" hide-details></v-text-field>
+    <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-teal-lighten-5"
+      style="cursor: pointer; user-select: none">
+      <v-list-item v-ripple="false" class="list-item mx-3 rounded-lg" @click="userSelected(user.guid)">
         <v-list-item-title class="d-flex align-center">
           <div style="width: 45px;">
-              <img
-                v-if="user.user_image && !user.imageError"
-                :src="user.user_image"
-                :alt="`${user.username}_image`"
-                class="profile-image"
-                @error="() => handleImageError(user)"
-              />
-              <!-- Image failed to load -->
-              <img v-else-if="user.imageError" :src="notAvailablePhotoURL" class="profile-image" />
-              <img v-else :src="defaultPhotoURL" class="profile-image" />
+            <img v-if="user.user_image && !user.imageError" :src="user.user_image" :alt="`${user.username}_image`"
+              class="profile-image" @error="() => handleImageError(user)" />
+            <!-- Image failed to load -->
+            <img v-else-if="user.imageError" :src="notAvailablePhotoURL" class="profile-image" />
+            <img v-else :src="defaultPhotoURL" class="profile-image" />
           </div>
           <StatusCircle :friendStatus="friendStatuses[user.guid]" />
           <p>{{ user.first_name }}</p>

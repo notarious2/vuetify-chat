@@ -30,10 +30,12 @@
     <div v-if="loginError" class="text-red text-center">{{ loginError }}</div>
 
     <p class="decorated mt-5" style="user-select: none;"><span>or</span></p>
-    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google" @click="() => login()">
+
+    <div class="bg-white rounded-lg py-2 my-3 d-flex" id="google" @click="userStore.googleAuthenticate">
       <v-icon class="ml-5" color="teal-darken-3" size="x-large">mdi-google</v-icon>
-      <button class="mx-auto my-auto" style="user-select: none" :disabled="!isReady">Continue with
-        Google</button>
+      <button class="mx-auto my-auto" style="user-select: none">Continue with
+        Google
+      </button>
     </div>
 
   </v-card>
@@ -45,28 +47,27 @@ import { ref } from "vue";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/userStore";
-import { useTokenClient } from "vue3-google-signin";
 
 
 const userStore = useUserStore();
-
-
 const router = useRouter();
-
-
 const loginError = ref(null);
+
 
 const { handleSubmit, handleReset } = useForm({
   validationSchema: {
     username(value) {
-      if (value?.length < 2) {
-        return "Field needs to be at least 2 characters.";
+
+      if (!value) {
+        return "Field cannot be blank"
+      } else if (value?.length < 2) {
+        return "Field needs to be at least 2 characters";
       }
       return true;
     },
     password(value) {
       if (value?.length >= 6) return true;
-      return "Password needs to be at least 6 characters.";
+      return "Password needs to be at least 6 characters";
     },
   },
 });
@@ -93,7 +94,7 @@ const submit = handleSubmit(async (userData) => {
 const username = useField("username");
 const password = useField("password");
 
-const passwordIcon = ref("mdi-eye")
+const passwordIcon = ref("mdi-eye");
 const showPassword = ref(false);
 const passwordType = ref("password");
 
@@ -109,24 +110,6 @@ const toggleShow = () => {
     passwordIcon.value = "mdi-eye"
   }
 }
-
-const handleOnSuccess = async (response) => {
-  // get access token after user logs in and send it to backend
-  // backend verifies token and gets user data
-  const accessToken = response.access_token
-  await userStore.loginWithGoogle(accessToken)
-  router.push("/chat/")
-};
-
-const handleOnError = (errorResponse) => {
-  console.log("Error: ", errorResponse);
-};
-
-const { isReady, login } = useTokenClient({
-  onSuccess: handleOnSuccess,
-  onError: handleOnError,
-  // other options
-});
 
 </script>
 

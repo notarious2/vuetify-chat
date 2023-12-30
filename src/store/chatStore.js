@@ -105,6 +105,8 @@ export const useChatStore = defineStore("chat", {
 
     async loadChat(directChat) {
       this.currentFriendImageError = false;
+      // reset isBottom (when switching from another tab)
+      this.isBottom = true;
 
       // to scroll first when switching chat tabs
       // this.scrollToBottom("instant");

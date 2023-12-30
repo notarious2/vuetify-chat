@@ -119,7 +119,11 @@ const sendMessage = async () => {
         );
       // Clear the input field
       messageToSend.value = "";
-    chatStore.scrollToBottom("smooth");
+      // scroll to bottom when own new message is appended (DOM update)
+      nextTick(() => {
+        chatStore.scrollToBottom("smooth");
+      })
+
 
   }
 }

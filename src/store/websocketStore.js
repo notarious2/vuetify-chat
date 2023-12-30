@@ -70,8 +70,6 @@ export const useWebsocketStore = defineStore("websocket", {
       }
 
       // Must check that WebSocket connection exists and the message is not empty before calling
-      console.log("Sending message via WS", message);
-
       await this.socket.send(
         JSON.stringify({
           type: "new_message",
@@ -83,7 +81,6 @@ export const useWebsocketStore = defineStore("websocket", {
     },
 
     async sendMessageRead(message) {
-      console.log("Sending Message Read via Websocket");
       await this.socket.send(
         JSON.stringify({
           type: "message_read",

@@ -43,7 +43,7 @@
       <v-btn v-if="moreMessagesToLoad" @click="loadMoreMessages" class="mt-3 mx-auto" style="text-transform: none">Load
         More</v-btn>
     </div>
-
+    <!-- BOTTOM BUTTON FOR SCROLLING / DISPLAYING UNREAD MESSAGES COUNT -->
     <div style="position: absolute; top: 88%; right: 5%;">
       <p v-if="!isBottom && chatStore.getUnreadMessagesforChat(currentChatGUID)"
         style="text-align: center; color: teal; font-size: 12px; font-weight: bolder;">
