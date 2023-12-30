@@ -4,9 +4,19 @@
       <!-- LEFT PANEL START -->
       <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
         <MenuPanel v-if="!compactView" />
-        <!-- these two appear irrespective of view -->
-        <ContactList v-if="isSearch" :style="compactView ? { height: '540px' } : { height: '640px' }"
-          :class="compactView ? '' : 'rounded-bs-lg'" />
+
+        <!-- wait for asynchronous component to load -->
+        <!-- https://kaperskyguru.medium.com/exploring-suspense-in-vue-3-9e88c0c4535d -->
+        <suspense v-if="isSearch">
+          <template #default>
+            <ContactsList :style="compactView ? { height: '540px' } : { height: '640px' }"
+              :class="compactView ? '' : 'rounded-bs-lg'" />
+          </template>
+          <template #fallback>
+            <ContactsLoading v-once :style="compactView ? { height: '540px' } : { height: '640px' }" />
+          </template>
+        </suspense>
+
         <ChatsList v-if="(isChat && !chatSelected) || (isChat && !compactView)"
           :style="compactView ? { height: '540px' } : { height: '640px' }" :class="compactView ? '' : 'rounded-bs-lg'" />
 
@@ -17,27 +27,18 @@
         <EmptyGroupWindow v-if="compactView && isGroup" style="height: 540px" />
       </v-col>
       <v-col v-if="compactView">
-        <MenuPanel />
+        <MenuPanel v-once />
       </v-col>
 
       <!-- LEFT PANEL CHATS END -->
 
       <!-- RIGHT PANEL START  ONLY FOR LARGE VIEW -->
       <v-col v-if="!compactView" class="ma-0 pa-0">
-        <!-- wait for asynchronous component to load -->
-        <!-- https://kaperskyguru.medium.com/exploring-suspense-in-vue-3-9e88c0c4535d -->
-        <suspense v-if="isChat && chatSelected">
-          <template #default>
-            <SelectedChatWindow />
-          </template>
-          <template #fallback>
-            <ChatLoading />
-          </template>
-        </suspense>
 
-        <EmptyChatWindow v-else-if="isChat && !chatSelected" />
-        <EmptySearchWindow v-else-if="isSearch" />
-        <EmptyGroupWindow v-else-if="isGroup" class="rounded-e-lg" />
+        <SelectedChatWindow v-if="isChat && chatSelected"/>
+        <EmptyChatWindow v-else-if="isChat && !chatSelected" v-once />
+        <EmptySearchWindow v-else-if="isSearch" v-once />
+        <EmptyGroupWindow v-else-if="isGroup" v-once class="rounded-e-lg" />
       </v-col>
       <!-- RIGHT PANEL END -->
     </v-row>
@@ -65,29 +66,23 @@ import {
 } from "vue";
 import { storeToRefs } from "pinia";
 
-const ContactList = defineAsyncComponent(() =>
-  import("@/components/ContactList.vue")
+const ContactsList = defineAsyncComponent(() =>
+  import("@/components/ContactsList.vue")
 );
 const GroupsList = defineAsyncComponent(() =>
   import("@/components/GroupsList.vue")
 );
 
-// should not lazy load these components as they are first to be shown by default
 import EmptyChatWindow from "@/components/EmptyChatWindow.vue";
 import ChatsList from "@/components/ChatsList.vue";
 import MenuPanel from "@/components/MenuPanel.vue";
 
-import ChatLoading from "@/components/chat/ChatLoading.vue";
+import ContactsLoading from "@/components/ContactsLoading.vue";
 
-const SelectedChatWindow = defineAsyncComponent(() =>
-  import("@/components/chat/SelectedChatWindow.vue")
-);
-const EmptyGroupWindow = defineAsyncComponent(() =>
-  import("@/components/EmptyGroupWindow.vue")
-);
-const EmptySearchWindow = defineAsyncComponent(() =>
-  import("@/components/EmptySearchWindow.vue")
-);
+
+import SelectedChatWindow from "@/components/chat/SelectedChatWindow.vue"
+import EmptyGroupWindow from "@/components/EmptyGroupWindow.vue"
+import EmptySearchWindow from "@/components/EmptySearchWindow.vue"
 
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";

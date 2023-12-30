@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import axios from "@/api/axios";
 import { useMessageStore } from "@/store/messageStore";
 import { useObserverStore } from "@/store/observerStore";
+import { nextTick } from "vue";
 
 export const useChatStore = defineStore("chat", {
   state: () => {
@@ -23,6 +24,7 @@ export const useChatStore = defineStore("chat", {
       chatWindow: null,
       isBottom: true,
       totalUnreadMessagesCount: 0,
+      scrollOnMounted: "bottom",
     };
   },
 
@@ -104,6 +106,8 @@ export const useChatStore = defineStore("chat", {
     },
 
     async loadChat(directChat) {
+      this.chatSelected = true; // important
+
       this.currentFriendImageError = false;
       // reset isBottom (when switching from another tab)
       this.isBottom = true;
@@ -115,6 +119,9 @@ export const useChatStore = defineStore("chat", {
 
       const chatGUID = directChat.chat_guid;
 
+      // display loading messages
+      messageStore.loadingMessages = true;
+
       this.setChatAsActive(chatGUID);
       messageStore.clearCurrentChatMessages()
 
@@ -122,15 +129,12 @@ export const useChatStore = defineStore("chat", {
       // don't do anything if clicked on currently selected chat
       // if (this.currentChatGUID === chatGUID) return;
 
-      this.chatSelected = true; // important
       this.currentFriendUserName = directChat.friend.username;
       this.currentFriendFirstName = directChat.friend.first_name;
       this.currentFriendGUID = directChat.friend.guid;
       this.currentFriendImage = directChat.friend.user_image;
 
       messageStore.clearMoreMessagesToLoad();
-
-      this.removeWindowScrollHandler();
 
       // clear status, friendIsTyping, last read message
       this.clearFriendStatus();
@@ -152,33 +156,36 @@ export const useChatStore = defineStore("chat", {
       // load messages -> means currentChatMessages is updated
       await messageStore.getLastMessages(chatGUID);
 
+      // remove loading messages flag
+      messageStore.loadingMessages = false;
+
       // recalculate new messages count for chat based on newly loaded messages
       directChat.new_messages_count =
         messageStore.calculateNewMessagesCountForChat();
-
-      // chatWindow full of messages is available after messages are loaded
-      this.addWindowScrollHandler();
 
 
       // traverse through each message to find earliest unread message
       messageStore.setIndexOfEarliestUnreadMessage();
 
       // scroll to earliest unread message or bottom
-      if (messageStore.getEarliestUnreadMessageIndex !== false) {
-        const unreadMessageToScroll =
-          this.chatWindow.children[messageStore.getEarliestUnreadMessageIndex]
-            .lastElementChild;
+      // wait for DOM to update
+      nextTick(() => {
+        if (messageStore.getEarliestUnreadMessageIndex !== false) {
+          const unreadMessageToScroll =
+            this.chatWindow.children[messageStore.getEarliestUnreadMessageIndex]
+              .lastElementChild;
 
-        unreadMessageToScroll.scrollIntoView({
-          behavior: "auto",
-          block: "start",
-        });
-      } else {
-        // scroll to bottom if chatWindow is set
-        if (this.chatWindow) {
-          this.scrollToBottom("instant");
+          unreadMessageToScroll.scrollIntoView({
+            behavior: "auto",
+            block: "start",
+          });
+        } else {
+          // scroll to bottom if chatWindow is set
+          if (this.chatWindow) {
+            this.scrollToBottom("instant");
+          }
         }
-      }
+      })
     },
     calculateTotalUnreadMessagesCount() {
       this.totalUnreadMessagesCount = this.directChats.reduce((accumulator, currentValue) => {

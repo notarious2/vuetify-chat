@@ -1,5 +1,6 @@
 <template>
-  <v-card class="rounded-0">
+  <MessagesLoading v-if="loadingMessages" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }" />
+  <v-card v-show="!loadingMessages" class="rounded-0">
     <!-- for compact view 600 - 60 (header) - 90 (send button)
     for large view 700 - 60 (header) - 90 (send button) -->
     <div id="container" ref="chatWindow" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }">
@@ -21,10 +22,8 @@
             <v-list-item-subtitle class="mt-1">
               {{ formatTimestamp(message.created_at) }}
 
-              <v-icon v-if="message.is_sending"
-                class="text-gray">mdi-check</v-icon>
-              <v-icon v-else
-                :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
+              <v-icon v-if="message.is_sending" class="text-gray">mdi-check</v-icon>
+              <v-icon v-else :class="message.is_read ? 'text-blue' : 'text-gray'">mdi-check-all</v-icon>
             </v-list-item-subtitle>
           </v-list-item>
         </SpeakerBubble>
@@ -72,6 +71,8 @@ import { useMessageStore } from "@/store/messageStore";
 import { useObserverStore } from "@/store/observerStore";
 import { useMainStore } from "@/store/mainStore";
 
+import MessagesLoading from "@/components/chat/MessagesLoading.vue";
+
 
 const userStore = useUserStore();
 const chatStore = useChatStore();
@@ -83,7 +84,7 @@ const { compactView } = storeToRefs(mainStore);
 
 const { currentUser } = storeToRefs(userStore);
 const { currentChatGUID, isBottom, inputLocked } = storeToRefs(chatStore);
-const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex } = storeToRefs(messageStore);
+const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex, loadingMessages } = storeToRefs(messageStore);
 
 import {
   formatTimestamp,
@@ -135,15 +136,20 @@ const loadMoreMessages = async () => {
 };
 
 
+
 onMounted(() => {
   // remove old scroll listener and observer
   chatStore.removeWindowScrollHandler();
-  chatStore.setChatWindow(chatWindow.value);
   observerStore.disconnectObserver();
+
+  chatStore.setChatWindow(chatWindow.value);
+
 
   // add new scroll listener and observer
   chatStore.addWindowScrollHandler();
   observerStore.initializeObserver();
+
+
 });
 
 </script>

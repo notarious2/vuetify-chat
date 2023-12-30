@@ -1,10 +1,10 @@
 <template>
   <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
-  <div class="bg-teal-lighten-5" id="contactList">
+  <div id="contactList" class="bg-teal-lighten-5">
     <v-text-field variant="solo" class="mx-3 py-2 search-input" rounded prepend-inner-icon="mdi-magnify" clearable
       v-model="searchContact" hide-details></v-text-field>
     <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-teal-lighten-5"
-      style="cursor: pointer; user-select: none">
+      style="cursor: pointer; user-select: none;" >
       <v-list-item v-ripple="false" class="list-item mx-3 rounded-lg" @click="userSelected(user.guid)">
         <v-list-item-title class="d-flex align-center">
           <div style="width: 45px;">
@@ -127,6 +127,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+
 .list-item:hover {
   background-color: #b6e8e3;
 }

@@ -11,6 +11,7 @@ export const useMessageStore = defineStore("messages", {
       systemMessage: {},
       moreMessagesToLoad: false,
       earliestUnreadMessageIndex: false,
+      loadingMessages: false,
     };
   },
   actions: {
