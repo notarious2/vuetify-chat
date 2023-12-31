@@ -43,7 +43,7 @@
         More</v-btn>
     </div>
     <!-- BOTTOM BUTTON FOR SCROLLING / DISPLAYING UNREAD MESSAGES COUNT -->
-    <div style="position: absolute; top: 88%; right: 5%;">
+    <div style="position: absolute;" :style="compactView ? {top: '85%', right: '7%'} : {top: '88%', right: '5%'}">
       <p v-if="!isBottom && chatStore.getUnreadMessagesforChat(currentChatGUID)"
         style="text-align: center; color: teal; font-size: 12px; font-weight: bolder;">
         {{ chatStore.getUnreadMessagesforChat(currentChatGUID) }}</p>

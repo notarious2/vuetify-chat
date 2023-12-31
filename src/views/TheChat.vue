@@ -3,7 +3,7 @@
     <v-row no-gutters>
       <!-- LEFT PANEL START -->
       <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
-        <MenuPanel v-if="!compactView" />
+        <MenuPanel v-show="!compactView" />
 
         <!-- wait for asynchronous component to load -->
         <!-- https://kaperskyguru.medium.com/exploring-suspense-in-vue-3-9e88c0c4535d -->
@@ -26,8 +26,8 @@
         <GroupsList v-if="!compactView && isGroup" style="height: 640px" />
         <EmptyGroupWindow v-if="compactView && isGroup" style="height: 540px" />
       </v-col>
-      <v-col v-if="compactView">
-        <MenuPanel v-once />
+      <v-col v-show="compactView">
+        <MenuPanel />
       </v-col>
 
       <!-- LEFT PANEL CHATS END -->

@@ -105,21 +105,19 @@ export const useChatStore = defineStore("chat", {
     },
 
     async loadChat(directChat) {
+      const messageStore = useMessageStore();
+      const observerStore = useObserverStore();
+
+      messageStore.loadingMessages = true;
       this.chatSelected = true; // important
+      // display loading messages
 
       this.currentFriendImageError = false;
       // reset isBottom (when switching from another tab)
       this.isBottom = true;
 
-      // to scroll first when switching chat tabs
-      // this.scrollToBottom("instant");
-      const messageStore = useMessageStore();
-      const observerStore = useObserverStore();
 
       const chatGUID = directChat.chat_guid;
-
-      // display loading messages
-      messageStore.loadingMessages = true;
 
       this.setChatAsActive(chatGUID);
       messageStore.clearCurrentChatMessages()
