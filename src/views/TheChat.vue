@@ -119,14 +119,10 @@ onMounted(async () => {
   // connect to websocket only if connection does not exist
   if (!websocketStore.socketExists) {
     await websocketStore.connectWebsocket();
-    systemMessage.value = { type: "success", content: "Websocket connected" };
+    messageStore.displaySystemMessage("success", "Websocket connected", 1000)
   }
 
   userStore.setEmptyFriendStatuses();
-  // Set a timeout to clear the systemMessage after 3 seconds
-  setTimeout(() => {
-    systemMessage.value = {};
-  }, 1000);
 
   window.addEventListener("resize", handleWindowChange);
   compactView.value = window.innerWidth < 700 ? true : false;

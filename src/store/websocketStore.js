@@ -3,11 +3,11 @@ import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
 
-
 export const useWebsocketStore = defineStore("websocket", {
   state: () => {
     return {
       socket: null,
+      reconnectAttempted: false,
     };
   },
 
@@ -20,6 +20,15 @@ export const useWebsocketStore = defineStore("websocket", {
         this.socket = new WebSocket(websocketURL);
 
         this.socket.addEventListener("open", () => {
+          // display message for reconnection
+          if (this.reconnectAttempted) {
+            this.reconnectAttempted = false;
+            messageStore.displaySystemMessage(
+              "success",
+              "Websocket connection re-established",
+              2000
+            );
+          }
           console.log("WebSocket connected");
         });
 
@@ -34,14 +43,26 @@ export const useWebsocketStore = defineStore("websocket", {
 
         this.socket.addEventListener("close", (event) => {
           console.log("WebSocket connection closed.", event);
-          if (event.reason !== "User logout") {
-            messageStore.systemMessage = {
-              type: "error",
-              content: "Websocket disconnected",
-            };
+          if (!this.reconnectAttempted && event.reason !== "User logout") {
+            messageStore.displaySystemMessage(
+              "error",
+              "Websocket disconnected"
+            );
+
+            // Attempt to reconnect only once
+            // after 1 second
+            setTimeout(() => {
+              messageStore.displaySystemMessage(
+                "success",
+                "Reconnecting to websocket"
+              );
+              this.reconnectAttempted = true;
+              this.connectWebsocket(); // Reconnect
+            }, 1000);
+          } else {
+            // nullify socket variable
+            this.socket = null;
           }
-          // nullify socket variable
-          this.socket = null;
         });
       } catch (error) {
         console.log("Error during connecting to Websocket", error);
@@ -64,14 +85,16 @@ export const useWebsocketStore = defineStore("websocket", {
         const friendGUID = chatStore.currentFriendGUID;
         const newChat = await chatStore.createDirectChat(friendGUID);
         // find unassigned chat from directChats and update unassigned chat based on new chat data
-        const unassignedChat = chatStore.directChats.find(chat => chat.chat_guid === 'unassigned');
+        const unassignedChat = chatStore.directChats.find(
+          (chat) => chat.chat_guid === "unassigned"
+        );
         if (unassignedChat) {
           unassignedChat.chat_guid = newChat.guid;
           unassignedChat.created_at = newChat.created_at;
           unassignedChat.updated_at = newChat.updated_at;
           chatStore.currentChatGUID = newChat.guid;
         } else {
-          console.log('No unassigned Chat found');
+          console.log("No unassigned Chat found");
         }
       }
       // Must check that WebSocket connection exists and the message is not empty before calling
@@ -132,13 +155,15 @@ export const useWebsocketStore = defineStore("websocket", {
 
         // append new message to the open chat if new message belongs to current chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
-        // Change data in temporary message
-        // assumes can hold only 1 temporary chat
-        // hence, replaces the first element
+          // Change data in temporary message
+          // assumes can hold only 1 temporary chat
+          // hence, replaces the first element
           if (isMessageFromCurrentUser) {
             messageStore.currentChatMessages[0].is_sending = false;
-            messageStore.currentChatMessages[0].message_guid = receivedMessage.message_guid;
-            messageStore.currentChatMessages[0].created_at = receivedMessage.created_at;
+            messageStore.currentChatMessages[0].message_guid =
+              receivedMessage.message_guid;
+            messageStore.currentChatMessages[0].created_at =
+              receivedMessage.created_at;
           } else {
             messageStore.currentChatMessages.unshift(receivedMessage);
           }
@@ -243,6 +268,6 @@ export const useWebsocketStore = defineStore("websocket", {
     },
   },
   getters: {
-    socketExists: (state) => state.socket
-  }
+    socketExists: (state) => state.socket,
+  },
 });
