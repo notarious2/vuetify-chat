@@ -35,7 +35,7 @@
       <!-- RIGHT PANEL START  ONLY FOR LARGE VIEW -->
       <v-col v-if="!compactView" class="ma-0 pa-0">
 
-        <SelectedChatWindow v-if="isChat && chatSelected"/>
+        <SelectedChatWindow v-if="isChat && chatSelected" />
         <EmptyChatWindow v-else-if="isChat && !chatSelected" v-once />
         <EmptySearchWindow v-else-if="isSearch" v-once />
         <EmptyGroupWindow v-else-if="isGroup" v-once class="rounded-e-lg" />
@@ -126,7 +126,7 @@ onMounted(async () => {
   // Set a timeout to clear the systemMessage after 3 seconds
   setTimeout(() => {
     systemMessage.value = {};
-  }, 3000);
+  }, 1000);
 
   window.addEventListener("resize", handleWindowChange);
   compactView.value = window.innerWidth < 700 ? true : false;

@@ -97,7 +97,7 @@ const userSelected = async (userGUID) => {
     currentChatMessages.value = []; // clear messages history from previous chat
     currentFriendUserName.value = selectedUser.username;
     currentFriendFirstName.value = selectedUser.first_name;
-    currentFriendGUID.value = "";
+    currentFriendGUID.value = userGUID;
   }
 };
 

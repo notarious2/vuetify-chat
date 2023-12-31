@@ -24,7 +24,6 @@ export const useChatStore = defineStore("chat", {
       chatWindow: null,
       isBottom: true,
       totalUnreadMessagesCount: 0,
-      scrollOnMounted: "bottom",
     };
   },
 
@@ -145,6 +144,8 @@ export const useChatStore = defineStore("chat", {
       if (chatGUID === "unassigned") {
         this.currentChatGUID = "unassigned";
         messageStore.clearCurrentChatMessages();
+        // remove loading messages flag
+        messageStore.loadingMessages = false;
         return;
       }
 

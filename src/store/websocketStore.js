@@ -60,15 +60,20 @@ export const useWebsocketStore = defineStore("websocket", {
       const userStore = useUserStore();
       // Must first create a chat for unassigned chat
       if (chatStore.currentChatGUID === "unassigned") {
-        const friendGUID = chatStore.directChats[0].friend.guid;
+        // find friend guid -> cannot assume that it is the first element in array!
+        const friendGUID = chatStore.currentFriendGUID;
         const newChat = await chatStore.createDirectChat(friendGUID);
-        // update unassigned chat based on new chat data
-        chatStore.directChats[0].chat_guid = newChat.guid;
-        chatStore.directChats[0].created_at = newChat.created_at;
-        chatStore.directChats[0].updated_at = newChat.updated_at;
-        chatStore.currentChatGUID = newChat.guid;
+        // find unassigned chat from directChats and update unassigned chat based on new chat data
+        const unassignedChat = chatStore.directChats.find(chat => chat.chat_guid === 'unassigned');
+        if (unassignedChat) {
+          unassignedChat.chat_guid = newChat.guid;
+          unassignedChat.created_at = newChat.created_at;
+          unassignedChat.updated_at = newChat.updated_at;
+          chatStore.currentChatGUID = newChat.guid;
+        } else {
+          console.log('No unassigned Chat found');
+        }
       }
-
       // Must check that WebSocket connection exists and the message is not empty before calling
       await this.socket.send(
         JSON.stringify({

@@ -20,7 +20,7 @@
         <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
         <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
           variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"
-          @input="websocketStore.handleUserTyping" :readonly="inputLocked"></v-textarea>
+          @input="websocketStore.handleUserTyping" :readonly="inputLocked || loadingMessages"></v-textarea>
 
         <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'gray' : 'teal'"
           size="x-large" class="ml-0" style="font-size: 30px; transform: rotate(-5deg);">
@@ -67,7 +67,7 @@ const { currentChatGUID, inputLocked, friendTyping } = storeToRefs(chatStore);
 const { socket } = storeToRefs(websocketStore);
 const { compactView } = storeToRefs(mainStore);
 const { currentUser } = storeToRefs(userStore);
-const { currentChatMessages } = storeToRefs(messageStore);
+const { currentChatMessages, loadingMessages } = storeToRefs(messageStore);
 
 
 // Chat box setup, Messages and Chat Functions
