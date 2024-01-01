@@ -106,8 +106,8 @@ const { handleSubmit, handleReset } = useForm({
     },
 
     profileImage(value) {
-      if (value?.[0]?.size > (2 * 1024 * 1024)) {
-        return "Avatar size should be less than 2 MB!";
+      if (value?.[0]?.size > (20 * 1024 * 1024)) {
+        return "Image size should be less than 20 MBs!";
       }
       return true;
     },
