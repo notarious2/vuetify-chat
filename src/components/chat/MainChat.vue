@@ -3,7 +3,7 @@
   <v-card v-show="!loadingMessages" class="rounded-0">
     <!-- for compact view 600 - 60 (header) - 90 (send button)
     for large view 700 - 60 (header) - 90 (send button) -->
-    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }">
+    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '390px' } : { 'height': '550px' }">
       <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
         <div v-show="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
           {{ formatDate(message.created_at) }}

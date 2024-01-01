@@ -9,7 +9,7 @@
     </div>
 
     <!-- SEND BUTTON COMPONENT START -->
-    <v-card class="rounded-0 rounded-be-lg" height="90px">
+    <v-card class="rounded-0 rounded-be-lg">
       <v-row align="center" justify="center" no-gutters>
 
         <v-icon class="ml-2" :class="compactView ? 'mr-2' : ''" size="x-large" color="teal"
@@ -27,7 +27,7 @@
         </v-btn>
       </v-row>
 
-      <v-row v-show="friendTyping" class="mb-1 mt-0 ml-5 text-teal-darken-3">typing
+      <v-row v-show="friendTyping" class="mb-1 mt-0 ml-5 text-teal-darken-3"> <strong>{{currentFriendFirstName}}</strong>&nbsp;is typing
         <ThreeDots class="ml-n3" />
       </v-row>
       <v-row v-show="!friendTyping" class="mb-1 mt-0 ml-5" style="user-select: none;">&nbsp;</v-row>
@@ -63,7 +63,7 @@ const mainStore = useMainStore();
 const messageStore = useMessageStore();
 const userStore = useUserStore();
 
-const { currentChatGUID, inputLocked, friendTyping } = storeToRefs(chatStore);
+const { currentChatGUID, inputLocked, friendTyping, currentFriendFirstName } = storeToRefs(chatStore);
 const { socket } = storeToRefs(websocketStore);
 const { compactView } = storeToRefs(mainStore);
 const { currentUser } = storeToRefs(userStore);
