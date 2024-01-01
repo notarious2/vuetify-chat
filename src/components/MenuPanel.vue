@@ -89,8 +89,8 @@ const toggleGroup = () => {
 
 
 const logout = async () => {
-  await userStore.logout();
   router.push("/")
+  await userStore.logout();
 }
 
 

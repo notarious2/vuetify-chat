@@ -56,8 +56,8 @@ const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.
 const userImageError = ref(false);
 
 const logoutAndRedirect = async () => {
-  await userStore.logout()
   router.push("/")
+  userStore.logout()
 };
 
 

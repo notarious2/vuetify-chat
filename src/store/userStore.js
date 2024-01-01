@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import axios from "@/api/axios";
-import { resetAllPiniaStores } from "@/store/index";
 import { useWebsocketStore } from "@/store/websocketStore";
 
 export const useUserStore = defineStore("user", {
@@ -123,9 +122,9 @@ export const useUserStore = defineStore("user", {
     async logout() {
       const websocketStore = useWebsocketStore();
       try {
+        this.isLoggedIn = false;
         await axios.get("/logout/");
         await websocketStore.disconnectWebsocket("logout");
-        resetAllPiniaStores();
       } catch (error) {
         console.error("Error during log out:", error);
         throw error;
