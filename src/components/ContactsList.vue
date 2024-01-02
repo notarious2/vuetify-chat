@@ -1,9 +1,9 @@
 <template>
   <!-- style="overflow: auto; color: inherit" class="rounded-0" -->
-  <div id="contactList" class="bg-teal-lighten-5">
+  <div id="contactList" class="bg-items">
     <v-text-field variant="solo" class="mx-3 py-2 search-input" rounded prepend-inner-icon="mdi-magnify" clearable
       v-model="searchContact" hide-details></v-text-field>
-    <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-teal-lighten-5"
+    <v-list v-for="user in filteredUsers()" :key="user.guid" class="bg-items"
       style="cursor: pointer; user-select: none;" >
       <v-list-item v-ripple="false" class="list-item mx-3 rounded-lg" @click="userSelected(user.guid)">
         <v-list-item-title class="d-flex align-center">
@@ -129,7 +129,7 @@ onMounted(async () => {
 <style scoped>
 
 .list-item:hover {
-  background-color: #b6e8e3;
+  background-color: rgb(var(--v-theme-select));
 }
 
 .search-input :deep() .v-field__input {
@@ -147,12 +147,13 @@ onMounted(async () => {
 }
 
 #contactList::-webkit-scrollbar-track {
-  background: #b2e6e1;
+  background-color: rgb(var(--v-theme-track));
   /* Color of the track (the area behind the thumb) */
+
 }
 
 #contactList::-webkit-scrollbar-thumb {
-  background-color: teal;
+  background-color: rgb(var(--v-theme-primary));
   /* Color of the thumb (the draggable part) */
   border-radius: 6px;
   /* Roundness of the thumb */

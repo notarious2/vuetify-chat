@@ -4,7 +4,7 @@
         <v-card-title class="text-center" style="white-space: initial; font-family: Courgette">
             Loading Messages ...
         </v-card-title>
-        <v-progress-circular indeterminate color="teal" size="50" width="5  " class="mx-auto mt-3"></v-progress-circular>
+        <v-progress-circular indeterminate color="primary" size="50" width="5  " class="mx-auto mt-3"></v-progress-circular>
     </v-card>
 </template>
 

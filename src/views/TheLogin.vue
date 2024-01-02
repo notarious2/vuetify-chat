@@ -47,11 +47,17 @@ import { ref } from "vue";
 import { useField, useForm } from "vee-validate";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/userStore";
+import { useTheme } from 'vuetify'
+import { storeToRefs } from "pinia";
 
 
 const userStore = useUserStore();
 const router = useRouter();
 const loginError = ref(null);
+const theme = useTheme();
+
+
+const { currentTheme } = storeToRefs(userStore);
 
 
 const { handleSubmit, handleReset } = useForm({
@@ -77,10 +83,17 @@ const submit = handleSubmit(async (userData) => {
     handleReset();
     await userStore.login(userData);
 
+    // set the theme
+    theme.global.name.value = currentTheme.value;
+
+
+    // set theme
+
     setTimeout(() => {
       router.push("/chat/"), 50;
     });
   } catch (error) {
+    console.log("ERROR", error);
     if (error.message === "Network Error") {
       loginError.value = "Network error";
     } else if (error.response?.data?.detail) {

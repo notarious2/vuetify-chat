@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-teal-lighten-5" id="chatList">
-    <v-list class="bg-teal-lighten-5" v-for="directChat in directChats">
+  <div id="chatList" class="bg-items">
+    <v-list class="bg-items" v-for="directChat in directChats">
       <v-list-item v-ripple="false" class="px-2" @click="chatStore.loadChat(directChat)">
-        <v-list-item-title class="d-flex align-center py-2 rounded-lg"
-          :class="{ 'bg-teal-lighten-1': currentChatGUID === directChat.chat_guid }">
+        <v-list-item-title class="list-item d-flex align-center py-2 rounded-lg"
+          :class="{ 'bg-select': currentChatGUID === directChat.chat_guid }">
           <!-- profile-image - globally defined class (in App.vue) -->
           <!-- v-img and v-avatar are lagging when rounding -->
           <div style="width: 45px;" class="ml-1">
@@ -20,7 +20,7 @@
           </div>
           <StatusCircle :friendStatus="friendStatuses[directChat.friend.guid]" />
           <p>{{ directChat.friend.first_name }}</p>
-          <p v-if="directChat.new_messages_count" class="ml-10 bg-teal-lighten-4 font-weight-regular rounded-circle px-2">
+          <p v-if="directChat.new_messages_count" class="ml-10 bg-panel font-weight-regular rounded-circle px-2">
             {{ directChat.new_messages_count }}
           </p>
           <p class="ml-auto mr-2 font-weight-bold">
@@ -66,18 +66,26 @@ const handleImageError = (friend) => {
   /* Width of the entire scrollbar */
 }
 
+
 #chatList::-webkit-scrollbar-track {
-  background: #b2e6e1;
+  background-color: rgb(var(--v-theme-track));
   /* Color of the track (the area behind the thumb) */
 
 }
 
 #chatList::-webkit-scrollbar-thumb {
-  background-color: teal;
+  background-color: rgb(var(--v-theme-primary));
   /* Color of the thumb (the draggable part) */
   border-radius: 6px;
   /* Roundness of the thumb */
 }
 
+.list-item:hover {
+  background-color: rgb(var(--v-theme-select));
+  border-radius: 6px;
+}
+/* .v-list-item:hover{
+  opacity: 0;
+} */
 
 </style>

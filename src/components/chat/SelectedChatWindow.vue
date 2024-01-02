@@ -12,17 +12,17 @@
     <v-card class="rounded-0 rounded-be-lg">
       <v-row align="center" justify="center" no-gutters>
 
-        <v-icon class="ml-2" :class="compactView ? 'mr-2' : ''" size="x-large" color="teal"
+        <v-icon class="ml-2" :class="compactView ? 'mr-2' : ''" size="x-large" color="icons"
           style="transform: rotate(10deg)">mdi-paperclip</v-icon>
-        <v-icon v-if="!compactView" class="ml-2 mr-2" size="x-large" color="teal-lighten-2"
+        <v-icon v-if="!compactView" class="ml-2 mr-2" size="x-large" color="icons"
           :class="{ activeEmoji: showEmoji }" @click="toggleEmoji">mdi-emoticon-happy-outline</v-icon>
         <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
         <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
         <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
           variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"
-          @input="websocketStore.handleUserTyping" :disabled="inputLocked || loadingMessages"></v-textarea>
+          @input="websocketStore.handleUserTyping" :readonly="inputLocked || loadingMessages"></v-textarea>
 
-        <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'gray' : 'teal'"
+        <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'blue-grey-lighten-2' : 'send'"
           size="x-large" class="ml-0" style="font-size: 30px; transform: rotate(-5deg);">
         </v-btn>
       </v-row>
@@ -126,6 +126,7 @@ const sendMessage = async () => {
       nextTick(() => {
         chatStore.scrollToBottom("smooth");
       })
+
 
 
   }

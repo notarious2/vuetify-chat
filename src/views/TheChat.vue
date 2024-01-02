@@ -2,7 +2,7 @@
   <v-container style="max-width: 1000px" :class="compactView ? 'pa-0' : ''">
     <v-row no-gutters>
       <!-- LEFT PANEL START -->
-      <v-col class="bg-teal-lighten-5 rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
+      <v-col class="bg-items rounded-s-lg fill-height" :cols="compactView ? 12 : 4">
         <MenuPanel v-show="!compactView" />
 
         <!-- wait for asynchronous component to load -->
@@ -22,7 +22,7 @@
 
         <!-- these two appear irrespective of view -->
 
-        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 540px" />
+        <SelectedChatWindow v-if="compactView && isChat && chatSelected" style="height: 600px" />
         <GroupsList v-if="!compactView && isGroup" style="height: 640px" />
         <EmptyGroupWindow v-if="compactView && isGroup" style="height: 540px" />
       </v-col>
@@ -36,9 +36,9 @@
       <v-col v-if="!compactView" class="ma-0 pa-0">
 
         <SelectedChatWindow v-if="isChat && chatSelected" />
-        <EmptyChatWindow v-else-if="isChat && !chatSelected" v-once />
-        <EmptySearchWindow v-else-if="isSearch" v-once />
-        <EmptyGroupWindow v-else-if="isGroup" v-once class="rounded-e-lg" />
+        <EmptyChatWindow v-else-if="isChat && !chatSelected" />
+        <EmptySearchWindow v-else-if="isSearch" />
+        <EmptyGroupWindow v-else-if="isGroup" class="rounded-e-lg" />
       </v-col>
       <!-- RIGHT PANEL END -->
     </v-row>
@@ -65,6 +65,9 @@ import {
   defineAsyncComponent,
 } from "vue";
 import { storeToRefs } from "pinia";
+import { useTheme } from 'vuetify'
+
+const theme = useTheme();
 
 const ContactsList = defineAsyncComponent(() =>
   import("@/components/ContactsList.vue")
@@ -99,7 +102,8 @@ const userStore = useUserStore();
 const { chatSelected } = storeToRefs(chatStore);
 const { systemMessage } = storeToRefs(messageStore);
 const { isSearch, isChat, isGroup, compactView } = storeToRefs(mainStore);
-const { currentUser } = storeToRefs(userStore);
+const { currentUser, currentTheme } = storeToRefs(userStore);
+
 
 const activeTab = ref(true);
 
@@ -115,6 +119,8 @@ document.addEventListener("visibilitychange", () => {
 compactView.value = window.innerWidth < 700 ? true : false;
 
 onMounted(async () => {
+  theme.global.name.value = currentTheme.value;
+
   await chatStore.getDirectChats(currentUser.value.userGUID);
   // connect to websocket only if connection does not exist
   if (!websocketStore.socketExists) {

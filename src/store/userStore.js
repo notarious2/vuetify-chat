@@ -9,6 +9,7 @@ export const useUserStore = defineStore("user", {
       isLoggedIn: false,
       users: [],
       friendStatuses: {},
+      currentTheme: 'midnight',
     };
   },
 
@@ -29,6 +30,12 @@ export const useUserStore = defineStore("user", {
         });
 
         let userInfo = response.data;
+
+        // set theme from settings
+        if (userInfo.settings.theme) {
+          this.currentTheme =  userInfo.settings.theme
+        }
+
         this.currentUser = {
           userGUID: userInfo.user_guid,
           email: userInfo.email,
@@ -38,6 +45,9 @@ export const useUserStore = defineStore("user", {
           userImage: userInfo.user_image,
         };
         this.isLoggedIn = true;
+
+        return this.currentUser
+
       } catch (error) {
         console.log("Error during Login", error);
         throw error;
@@ -107,6 +117,11 @@ export const useUserStore = defineStore("user", {
         console.log("Error while authenticating with Google", error);
         throw error;
       }
+    },
+    async setUserTheme(theme) {
+      const response = await axios.post("/user/settings/theme/", {theme: theme})
+      this.currentTheme = theme
+      console.log("Set theme response", response);
     },
 
     async getUsers() {

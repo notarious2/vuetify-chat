@@ -1,5 +1,5 @@
 <template>
-  <v-card :class="compactView ? 'rounded-t-0' : 'rounded-ts-lg'" class="bg-teal-lighten-4 rounded-0"
+  <v-card :class="compactView ? 'rounded-t-0' : 'rounded-ts-lg'" color="panel" class="rounded-0"
     style="height: 60px;">
     <div class="mt-5 mb-3 d-flex justify-space-around">
       <v-menu :close-on-content-click="false" @click:outside="clickedOutside">
@@ -8,7 +8,7 @@
             :color="settingsColor">mdi-tune
           </v-icon>
         </template>
-        <v-list bg-color="teal-darken-2" width="180px" class="ml-2">
+        <v-list bg-color="submenu" width="180px" class="ml-2">
           <!-- <v-list-item class="settings-items" append-icon="mdi-close">
           </v-list-item> -->
           <v-list-item class="settings-items" title="Settings">
@@ -16,16 +16,16 @@
           <v-list-item class="settings-items" title="Logout" @click="logout">
           </v-list-item>
           <v-list-item class="mb-n2">
-            <v-switch v-model="colorMode" true-value="Teal" false-value="Dark" :label="`${colorMode}`" inset
-              color="teal-lighten-2"></v-switch>
+            <v-switch v-model="currentTheme" true-value="teal" false-value="midnight" :label="currentTheme==='teal'? 'Teal' : 'Midnight'" inset
+              color="teal-lighten-2" @change="switchTheme"></v-switch>
           </v-list-item>
         </v-list>
       </v-menu>
-      <v-icon size="large" class="flex-grow-1" id="icon-search" color="teal-lighten-3" :class="{ searchTab: isSearch }"
+      <v-icon size="large" class="flex-grow-1" id="icon-search" color="icons" :class="{ searchTab: isSearch }"
         @click="toggleSearch">mdi-compass
       </v-icon>
       <div class="d-flex flex-grow-1" style="position: relative;">
-        <v-icon id="icon-chats" :class="{ chatsTab: isChat }" class="flex-grow-1" size="large" color="teal-lighten-3"
+        <v-icon id="icon-chats" :class="{ chatsTab: isChat }" class="flex-grow-1" size="large" color="icons"
           @click="toggleChat">mdi-chat
         </v-icon>
         <p v-if="totalUnreadMessagesCount" class="px-1 bg-pink-lighten-3 rounded-lg"
@@ -34,7 +34,7 @@
       </div>
 
       <v-icon size="large" class="flex-grow-1" id="icon-groups" :class="{ groupsTab: isGroup }" @click="toggleGroup"
-        color="teal-lighten-3">mdi-account-group
+        color="icons">mdi-account-group
       </v-icon>
 
     </div>
@@ -51,7 +51,9 @@ import { useMainStore } from "@/store/mainStore";
 import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
+import { useTheme } from 'vuetify'
 
+const theme = useTheme();
 
 const router = useRouter();
 
@@ -63,8 +65,9 @@ const userStore = useUserStore();
 
 const { isSearch, isChat, isGroup, compactView } = storeToRefs(mainStore);
 const { isBottom, totalUnreadMessagesCount } = storeToRefs(chatStore);
+const { currentTheme } = storeToRefs(userStore);
 
-const colorMode = ref("Teal")
+// const colorMode = ref("Teal")
 
 const toggleSearch = () => {
   isSearch.value = true;
@@ -91,18 +94,27 @@ const toggleGroup = () => {
 const logout = async () => {
   router.push("/")
   await userStore.logout();
+  // reset theme to default 'teal'
+  theme.global.name.value = 'teal';
 }
 
 
-const settingsColor = ref("teal-lighten-3")
+const settingsColor = ref("icons")
 
 const settingsClicked = () => {
-  settingsColor.value = (settingsColor.value === "teal-lighten-3") ? "#009688" : "teal-lighten-3";
+  settingsColor.value = (settingsColor.value === "icons") ? "primary" : "icons";
 };
 
 const clickedOutside = () => {
   settingsColor.value = "teal-lighten-3"
 };
+
+const switchTheme = async () => {
+  theme.global.name.value = currentTheme.value
+  await userStore.setUserTheme(currentTheme.value);
+};
+
+
 
 </script>
 
@@ -111,26 +123,26 @@ const clickedOutside = () => {
 #icon-chats:hover,
 #icon-groups:hover,
 #icon-settings:hover {
-  color: #009688 !important;
+  color: rgb(var(--v-theme-primary)) !important;
 }
 
 .searchTab {
-  color: #009688 !important;
+  color: rgb(var(--v-theme-primary)) !important;
   animation: rotate 0.5s;
 }
 
 .chatsTab {
-  color: #009688 !important;
+  color: rgb(var(--v-theme-primary)) !important;
   animation: beat 0.5s;
 }
 
 .groupsTab {
-  color: #009688 !important;
+  color: rgb(var(--v-theme-primary)) !important;
   animation: swing 0.5s;
 }
 
 .settings-items:hover {
-  color: #a1d7d2;
+  color: rgb(var(--v-theme-select));
   cursor: pointer;
 }
 

@@ -1,17 +1,17 @@
 <template>
-  <MessagesLoading v-if="loadingMessages" :style="compactView ? { 'height': '410px' } : { 'height': '550px' }" />
+  <MessagesLoading v-if="loadingMessages" :style="compactView ? { 'height': '450px' } : { 'height': '550px' }" />
   <v-card v-show="!loadingMessages" class="rounded-0">
     <!-- for compact view 600 - 60 (header) - 90 (send button)
     for large view 700 - 60 (header) - 90 (send button) -->
-    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '390px' } : { 'height': '550px' }">
+    <div id="container" ref="chatWindow" :style="compactView ? { 'height': '450px' } : { 'height': '550px' }">
       <div v-for="(message, index) in currentChatMessages" :key="message.message_guid">
         <div v-show="showDateBreak(index)" class="text-center text-black my-2 font-weight-medium">
           {{ formatDate(message.created_at) }}
-          <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="teal" thickness="2px"></v-divider>
+          <v-divider class="mt-2 mx-auto border-opacity-75" width="200px" color="primary" thickness="2px"></v-divider>
         </div>
 
-        <div v-show="earliestUnreadMessageIndex === index" class="bg-teal-lighten-5 text-center py-2">
-          <p class="text-teal font-weight-medium">Unread messages</p>
+        <div v-show="earliestUnreadMessageIndex === index" class="bg-items text-center py-2">
+          <p class="text-primary font-weight-medium">Unread messages</p>
         </div>
         <SpeakerBubble v-if="message.user_guid === currentUser.userGUID" class="ml-auto mr-2">
           <v-list-item class="py-2 my-3 text-right">
@@ -45,11 +45,11 @@
     <!-- BOTTOM BUTTON FOR SCROLLING / DISPLAYING UNREAD MESSAGES COUNT -->
     <div style="position: absolute;" :style="compactView ? {top: '85%', right: '7%'} : {top: '88%', right: '5%'}">
       <p v-if="!isBottom && chatStore.getUnreadMessagesforChat(currentChatGUID)"
-        style="text-align: center; color: teal; font-size: 12px; font-weight: bolder;">
+        style="text-align: center; color: rgb(var(--v-theme-scroll)); font-size: 12px; font-weight: bolder;">
         {{ chatStore.getUnreadMessagesforChat(currentChatGUID) }}</p>
       <v-btn v-show="!isBottom" icon class="rounded-circle" @click="chatStore.scrollToBottom('smooth')"
         style="width: 35px; height: 35px;">
-        <v-icon size="x-large" color="teal">mdi-chevron-down</v-icon>
+        <v-icon size="x-large" color="scroll">mdi-chevron-down</v-icon>
       </v-btn>
     </div>
 
@@ -170,13 +170,13 @@ onMounted(() => {
 }
 
 #container::-webkit-scrollbar-track {
-  background: #b2e6e1;
+  background-color: rgb(var(--v-theme-track));
   /* Color of the track (the area behind the thumb) */
 
 }
 
 #container::-webkit-scrollbar-thumb {
-  background-color: teal;
+  background-color: rgb(var(--v-theme-scroll));
   /* Color of the thumb (the draggable part) */
   border-radius: 6px;
   /* Roundness of the thumb */

@@ -1,5 +1,5 @@
 <template>
-    <v-col class="d-flex bg-teal-lighten-3" style="height: 700px">
+    <v-col class="d-flex bg-icons" style="height: 700px">
         <div class="my-auto mx-auto">
             <img :src="imageURL" style="height: 100px; margin-left: 15%;"  />
 

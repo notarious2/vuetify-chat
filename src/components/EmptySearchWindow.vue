@@ -1,5 +1,5 @@
 <template>
-    <v-col class="d-flex rounded-0 rounded-e-lg bg-teal-lighten-3" style="height: 700px">
+    <v-col class="d-flex rounded-0 rounded-e-lg bg-icons" style="height: 700px">
         <div class="my-auto mx-auto">
             <!-- MOVED SVG INTO A SEPARATE TEMPLATE DUE TO PERFORMANC ISSUES -->
             <!-- RELATED TO LOADING SVG IN IMG -->
