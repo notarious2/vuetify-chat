@@ -18,8 +18,8 @@
           :class="{ activeEmoji: showEmoji }" @click="toggleEmoji">mdi-emoticon-happy-outline</v-icon>
         <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
         <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-        <v-textarea ref="textInput" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
-          variant="solo" @keydown.enter.exact.prevent @keyup.enter.exact.prevent="sendMessage"
+        <v-textarea ref="textInput" @keydown.enter="sendMessage" hide-details label="Type your text" rows="1" v-model="messageToSend" auto-grow
+          variant="solo"
           @input="websocketStore.handleUserTyping" :readonly="inputLocked || loadingMessages"></v-textarea>
 
         <v-btn @click="sendMessage" icon="mdi-send" variant="plain" :color="messageToSend === '' ? 'blue-grey-lighten-2' : 'send'"
