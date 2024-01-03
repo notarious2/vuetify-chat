@@ -56,8 +56,8 @@ export const useWebsocketStore = defineStore("websocket", {
                 "success",
                 "Reconnecting to websocket"
               );
-              this.reconnectAttempted = true;
               this.connectWebsocket(); // Reconnect
+              this.reconnectAttempted = true;
             }, 1000);
           } else {
             // nullify socket variable
