@@ -67,7 +67,7 @@ const theme = useTheme();
 
 const logoutAndRedirect = async () => {
   router.push("/")
-  userStore.logout()
+  await userStore.logout()
   // reset theme to default 'teal'
   theme.global.name.value = 'teal';
 };

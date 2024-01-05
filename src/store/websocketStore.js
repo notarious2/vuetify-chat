@@ -155,15 +155,23 @@ export const useWebsocketStore = defineStore("websocket", {
 
         // append new message to the open chat if new message belongs to current chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
+          
           // Change data in temporary message
           // assumes can hold only 1 temporary chat
           // hence, replaces the first element
           if (isMessageFromCurrentUser) {
-            messageStore.currentChatMessages[0].is_sending = false;
-            messageStore.currentChatMessages[0].message_guid =
-              receivedMessage.message_guid;
-            messageStore.currentChatMessages[0].created_at =
-              receivedMessage.created_at;
+            // if own message has message.guid => message sent by current WS connection
+            // TODO: should we check if first message being retrieved belongs to the current user?
+            if (!messageStore.currentChatMessages[0].message_guid) {
+              messageStore.currentChatMessages[0].is_sending = false;
+              messageStore.currentChatMessages[0].message_guid =
+                receivedMessage.message_guid;
+              messageStore.currentChatMessages[0].created_at =
+                receivedMessage.created_at;
+            } else {
+              // it is own message sent from other WS connection => append whole message
+              messageStore.currentChatMessages.unshift(receivedMessage)
+            }
           } else {
             messageStore.currentChatMessages.unshift(receivedMessage);
           }
