@@ -68,6 +68,8 @@ const { handleSubmit, handleReset } = useForm({
         return "Field cannot be blank"
       } else if (value?.length < 2) {
         return "Field needs to be at least 2 characters";
+      } else if (/\s/.test(value)) {
+        return "Field cannot contain spaces";
       }
       return true;
     },
@@ -85,9 +87,6 @@ const submit = handleSubmit(async (userData) => {
 
     // set the theme
     theme.global.name.value = currentTheme.value;
-
-
-    // set theme
 
     setTimeout(() => {
       router.push("/chat/"), 50;
