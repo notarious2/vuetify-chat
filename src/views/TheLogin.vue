@@ -49,6 +49,7 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/store/userStore";
 import { useTheme } from 'vuetify'
 import { storeToRefs } from "pinia";
+import { event } from "vue-gtag";
 
 
 const userStore = useUserStore();
@@ -87,6 +88,8 @@ const submit = handleSubmit(async (userData) => {
 
     // set the theme
     theme.global.name.value = currentTheme.value;
+    
+    loginGA();
 
     setTimeout(() => {
       router.push("/chat/"), 50;
@@ -121,6 +124,14 @@ const toggleShow = () => {
     passwordType.value = "password";
     passwordIcon.value = "mdi-eye"
   }
+}
+
+const loginGA = () => {
+  event("user-logged-in", {
+    event_category: "analytics",
+    event_label: "User Logged In",
+    value: 1,
+  });
 }
 
 </script>
