@@ -1,7 +1,7 @@
 <template>
   <div id="chatList" class="bg-items">
     <v-list class="bg-items" v-for="directChat in directChats">
-      <v-list-item v-ripple="false" class="px-2" @click="chatStore.loadChat(directChat)">
+      <v-list-item v-ripple="false" class="px-2" @click="selectChat(directChat)">
         <v-list-item-title class="list-item d-flex align-center py-2 rounded-lg"
           :class="{ 'bg-select': currentChatGUID === directChat.chat_guid }">
           <!-- profile-image - globally defined class (in App.vue) -->
@@ -39,6 +39,8 @@ import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 
 import StatusCircle from "@/components/StatusCircle.vue";
+import { onMounted } from "vue";
+import { event } from "vue-gtag";
 
 const chatStore = useChatStore();
 const userStore = useUserStore();
@@ -46,12 +48,45 @@ const defaultPhotoURL = new URL("@/assets/photo-default.png", import.meta.url).h
 const notAvailablePhotoURL = new URL("@/assets/photo-not-available.png", import.meta.url).href;
 
 
-const { currentChatGUID, directChats } = storeToRefs(chatStore);
+const { currentChatGUID, directChats, chatSelected, currentFriendFirstName } = storeToRefs(chatStore);
 const { friendStatuses } = storeToRefs(userStore);
 
 const handleImageError = (friend) => {
   friend.imageError = true;
 };
+
+const chatSelectedGA = async () => {
+  event("chats-selected", {
+    event_category: "analytics",
+    event_label: "Chats Selected",
+    value: 1,
+  });
+}
+
+
+const selectChat = async (directChat) => {
+  await chatStore.loadChat(directChat); 
+  await updateWindowTitle(directChat.friend);
+  await chatSelectedGA();
+}
+
+const changeTitle = async (newTitle) => {
+  window.document.title = newTitle;
+};
+
+const updateWindowTitle = async (friend) => {
+  if (friend.first_name) {
+    window.document.title = `Chat: ${friend.first_name}`
+  } 
+}
+
+onMounted (async () => {
+  if (chatSelected.value) {
+    await changeTitle(`Chat: ${currentFriendFirstName.value}`);  
+  } else {
+    await changeTitle("Ponder Pal: Direct Chats");
+  }
+});
 
 </script>
 

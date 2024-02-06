@@ -29,6 +29,7 @@ import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/userStore";
+import { event } from "vue-gtag";
 
 import StatusCircle from "@/components/StatusCircle.vue";
 
@@ -121,8 +122,23 @@ const handleImageError = (user) => {
   user.imageError = true;
 };
 
+
+const contactsSelectedGA = async () => {
+  event("contacts-selected", {
+    event_category: "analytics",
+    event_label: "Contacts Selected",
+    value: 1,
+  });
+}
+
+const changeTitle = async (newTitle) => {
+  window.document.title = newTitle;
+};
+
 onMounted(async () => {
   await userStore.getUsers();
+  await changeTitle("Ponder Pal: Contacts");
+  await contactsSelectedGA();
 });
 </script>
 

@@ -69,6 +69,7 @@ const goBack = () => {
   currentFriendUserName.value = "";
   currentFriendFirstName.value = "";
   currentFriendGUID.value = "";
+  window.document.title = "Ponder Pal: Direct Chats"
 
 
 }

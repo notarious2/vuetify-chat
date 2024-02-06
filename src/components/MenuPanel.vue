@@ -52,6 +52,7 @@ import { useChatStore } from "@/store/chatStore";
 import { useMessageStore } from "@/store/messageStore";
 import { useUserStore } from "@/store/userStore";
 import { useTheme } from 'vuetify'
+import { event } from "vue-gtag";
 
 const theme = useTheme();
 
@@ -101,8 +102,17 @@ const logout = async () => {
 
 const settingsColor = ref("icons")
 
-const settingsClicked = () => {
+const settingsSelectedGA = async () => {
+  event("settings-selected", {
+    event_category: "analytics",
+    event_label: "Settings Selected",
+    value: 1,
+  });
+}
+
+const settingsClicked = async () => {
   settingsColor.value = (settingsColor.value === "icons") ? "primary" : "icons";
+  await settingsSelectedGA();
 };
 
 const clickedOutside = () => {

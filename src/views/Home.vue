@@ -10,6 +10,12 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
+
+
+onMounted( async () => {
+  window.document.title = "Welcome to Ponder Pal"
+})
 
 </script>
 

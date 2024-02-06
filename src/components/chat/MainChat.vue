@@ -83,7 +83,7 @@ const { compactView } = storeToRefs(mainStore);
 
 
 const { currentUser } = storeToRefs(userStore);
-const { currentChatGUID, isBottom, inputLocked } = storeToRefs(chatStore);
+const { currentChatGUID, isBottom } = storeToRefs(chatStore);
 const { currentChatMessages, moreMessagesToLoad, earliestUnreadMessageIndex, loadingMessages } = storeToRefs(messageStore);
 
 import {
@@ -134,7 +134,6 @@ const loadMoreMessages = async () => {
     throw error;
   }
 };
-
 
 
 onMounted(() => {
