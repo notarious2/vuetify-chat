@@ -39,6 +39,7 @@ export const useWebsocketStore = defineStore("websocket", {
           this.handleStatusMessage(receivedMessage);
           this.handleMessageRead(receivedMessage);
           this.handleNewChatCreated(receivedMessage);
+          this.handleChatDeletedNotification(receivedMessage);
         });
 
         this.socket.addEventListener("close", (event) => {
@@ -117,6 +118,14 @@ export const useWebsocketStore = defineStore("websocket", {
         })
       );
     },
+    async sendChatDeleted(chatGUID) {
+      await this.socket.send(
+        JSON.stringify({
+          type: "chat_deleted",
+          chat_guid: chatGUID,
+        })
+      );
+    },
 
     handleNewMessage(receivedMessage) {
       const chatStore = useChatStore();
@@ -155,7 +164,7 @@ export const useWebsocketStore = defineStore("websocket", {
 
         // append new message to the open chat if new message belongs to current chat
         if (receivedMessage.chat_guid === chatStore.currentChatGUID) {
-          
+
           // Change data in temporary message
           // assumes can hold only 1 temporary chat
           // hence, replaces the first element
@@ -246,6 +255,27 @@ export const useWebsocketStore = defineStore("websocket", {
           receivedMessage.last_read_message_created_at
         );
       }
+    },
+
+    async handleChatDeletedNotification(receivedMessage) {
+      // function is used to notify active websocket users in the chat
+      // that the chat has been deleted
+      if (receivedMessage.type === "chat_deleted") {
+        const chatStore = useChatStore();
+        const messageStore = useMessageStore();
+
+        await chatStore.deleteDirectChatByGUID(receivedMessage.chat_guid)
+        // re-calculate total unread messages count
+        chatStore.calculateTotalUnreadMessagesCount();
+        // display Chat was deleted message
+        messageStore.displaySystemMessage(
+          "info",
+          `Chat has been deleted by ${receivedMessage.user_name}`,
+          3000
+        );
+        await chatStore.disselectChat(receivedMessage.chat_guid);
+      }
+
     },
 
     async handleNewChatCreated(receivedMessage) {

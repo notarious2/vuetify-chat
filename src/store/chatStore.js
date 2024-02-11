@@ -60,6 +60,25 @@ export const useChatStore = defineStore("chat", {
       }
     },
 
+    async deleteDirectChatByGUID(chatGUID) {
+      this.directChats = this.directChats.filter(chat => chat.chat_guid !== chatGUID);
+    },
+
+    async disselectChat(chatGUID) {
+      // disselects particular chat if it is currently selected
+      if (this.chatSelected && this.currentChatGUID === chatGUID) {
+        this.currentChatGUID = "";
+        this.currentFriendUserName = "";
+        this.currentFriendFirstName = "",
+        this.currentFriendGUID = "";
+        this.currentFriendImage = "";
+        this.currentFriendImageError = false;
+        this.friendStatus = "offline";
+        this.chatSelected =  false;
+      }
+
+    },
+
     async getDirectChats(userGUID) {
       try {
         const response = await axios.get("/chats/direct/");
@@ -95,7 +114,7 @@ export const useChatStore = defineStore("chat", {
       try {
         const response = await axios.delete(`/chats/direct/${chatGUID}/`);
         // reconstruct directChats not including deleted chat
-        this.directChats = this.directChats.filter(chat => chat.chat_guid !== chatGUID);
+        await this.deleteDirectChatByGUID(chatGUID);
 
         return response.status === 204
       } catch (error) {

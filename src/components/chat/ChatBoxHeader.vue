@@ -43,6 +43,7 @@ import { storeToRefs } from "pinia";
 import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
 import { useMainStore } from "@/store/mainStore";
+import { useWebsocketStore } from "@/store/websocketStore";
 
 import { ref } from "vue";
 
@@ -51,6 +52,8 @@ import StatusCircle from "@/components/StatusCircle.vue";
 const chatStore = useChatStore();
 const userStore = useUserStore();
 const mainStore = useMainStore();
+const websocketStore = useWebsocketStore();
+
 
 const { compactView } = storeToRefs(mainStore);
 const { friendStatuses, currentTheme } = storeToRefs(userStore);
@@ -72,6 +75,7 @@ const goBack = () => {
   window.document.title = "Ponder Pal: Direct Chats"
 
 
+
 }
 
 const handleImageError = () => {
@@ -82,7 +86,7 @@ const deleteChat = async (chatGUID) => {
   const chatDeleted = await chatStore.deleteDirectChat(chatGUID)
   if (chatDeleted) {
     goBack();
-
+    await websocketStore.sendChatDeleted(chatGUID)
   }
 };
 

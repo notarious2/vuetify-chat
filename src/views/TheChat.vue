@@ -42,17 +42,17 @@
       </v-col>
       <!-- RIGHT PANEL END -->
     </v-row>
-    <v-alert v-if="Object.keys(systemMessage).length > 0" height="70px" :color="systemMessage.type === 'error'
-      ? 'pink-accent-2'
-      : systemMessage.type === 'system'
-        ? 'blue-grey-lighten-2'
-        : 'indigo-lighten-2'
-      " style="position: absolute; bottom: 60%" :style="compactView ? 'right: 10%;' : 'right: 30%;'" closable
-      theme="dark" :icon="systemMessage.type === 'success'
-        ? 'mdi-power-plug'
-        : 'mdi-power-plug-off'
-        " class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl">
-      {{ systemMessage.content }}</v-alert>
+    <v-alert v-if="Object.keys(systemMessage).length > 0"
+           height="70px"
+           :color="alertColor"
+           style="position: absolute; bottom: 60%"
+           :style="compactView ? 'right: 10%;' : 'right: 30%;'"
+           closable
+           theme="dark"
+           :icon="alertIcon"
+           class="mt-3 text-center text-h6 font-weight-bold mx-auto rounded-xl">
+    {{ systemMessage.content }}
+  </v-alert>
   </v-container>
 </template>
 
@@ -63,10 +63,35 @@ import {
   onUnmounted,
   onUpdated,
   defineAsyncComponent,
+  computed,
 } from "vue";
 import { storeToRefs } from "pinia";
 import { useTheme } from 'vuetify'
 
+const alertColor = computed(() => {
+  switch (systemMessage.value.type) {
+    case 'error':
+      return 'pink-accent-2';
+    case 'success':
+      return 'green-accent-1';
+    case 'info':
+      return 'orange-lighten-4'
+    default:
+      return 'indigo-lighten-2';
+  }
+});
+const alertIcon = computed(() => {
+  switch (systemMessage.value.type) {
+    case 'success':
+      return 'mdi-power-plug';
+    case 'error':
+      return 'mdi-power-plug-off';
+    case 'info':
+      return 'mdi-information-variant';
+    default:
+      return ''; // handle other cases as needed
+  }
+});
 const theme = useTheme();
 
 const ContactsList = defineAsyncComponent(() =>
@@ -106,6 +131,9 @@ const { currentUser, currentTheme } = storeToRefs(userStore);
 
 
 const activeTab = ref(true);
+
+
+
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
