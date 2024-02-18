@@ -14,6 +14,7 @@ Live Demo: https://www.ponderpal.chat
 
 ## Features
 - Real-time messaging with Websockets
+- Google oauth2 authentication
 - Track unread messages
 - Monitor friends' statuses
 - See if friend is typing
