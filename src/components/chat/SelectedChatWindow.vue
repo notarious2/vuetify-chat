@@ -40,7 +40,8 @@
           @click="toggleEmoji">mdi-emoticon-happy-outline</v-icon>
         <!-- @keydown.enter.exact.prevent -> Prevents next line on clicking ENTER -->
         <!-- We should be able to add a new line by pressing SHIFT+ENTER -->
-        <v-textarea ref="textInput" @keydown.enter="sendMessage" hide-details label="Type your text" rows="1"
+        <!-- @keydown.enter -->
+        <v-textarea ref="textInput" @keydown.enter.prevent="sendMessage" hide-details label="Type your text" rows="1"
           v-model="messageToSend" auto-grow variant="solo" @input="websocketStore.handleUserTyping"
           :readonly="inputLocked || loadingMessages"></v-textarea>
 
