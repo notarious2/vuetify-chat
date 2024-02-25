@@ -100,7 +100,6 @@ export const useChatStore = defineStore("chat", {
             created_at: chat["created_at"],
             updated_at: chat["updated_at"],
             friend: friendInfo,
-            has_new_messages: chat["has_new_messages"],
             new_messages_count: chat["new_messages_count"],
           });
         });

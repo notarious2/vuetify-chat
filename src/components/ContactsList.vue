@@ -86,7 +86,6 @@ const userSelected = async (userGUID) => {
         user_image: selectedUser.user_image,
       },
       created_at: null,
-      has_new_messages: false,
       new_messages_count: 0,
       updated_at: null,
     });

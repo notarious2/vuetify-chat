@@ -31,7 +31,7 @@ axiosInstance.interceptors.response.use(
           console.log("TRYING ORIGINAL REQUEST", originalRequest.url === "/refresh/");
           await axiosInstance.post('/refresh/', { withCredentials: true });
         }
-        // return axios.request(originalRequest);
+        return axios.request(originalRequest);
 
       } catch (refreshError) {
 
