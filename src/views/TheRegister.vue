@@ -24,6 +24,7 @@
 
       <v-file-input v-model="profileImage.value.value" :error-messages="profileImage.errorMessage.value"
         bg-color="teal-lighten-5" clearable show-size :prepend-icon="null" prepend-inner-icon="mdi-camera"
+        @click:clear="profileImage.handleReset()"
         accept="image/*" text-align: center label="Profile image [Optional]" class="mb-1"></v-file-input>
 
       <v-hover v-slot:default="{ isHovering, props }">
@@ -63,6 +64,9 @@ import { useRouter } from "vue-router";
 const userStore = useUserStore();
 const router = useRouter();
 const registrationError = ref(null);
+
+const supportedImageFormats = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+
 
 // Shared validation function for firstName, lastName, and username
 function validateName(value) {
@@ -111,6 +115,9 @@ const { handleSubmit, handleReset } = useForm({
       if (value?.[0]?.size > (20 * 1024 * 1024)) {
         return "Image size should be less than 20 MBs!";
       }
+      if (value && !supportedImageFormats.includes(value?.[0]?.type)) {
+        return "Image format is not supported!";
+      }
       return true;
     },
   },
@@ -121,7 +128,6 @@ const username = useField("username");
 const email = useField("email");
 const password = useField("password");
 const profileImage = useField("profileImage");
-
 
 const passwordIcon = ref("mdi-eye");
 const showPassword = ref(false);
