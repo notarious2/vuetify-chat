@@ -238,10 +238,17 @@ export const useChatStore = defineStore("chat", {
     },
 
     addNewChat(newChat) {
+      if (this.directChatContainsChat(newChat.chat_guid)) {
+        return
+      }
       this.directChats.push(newChat)
       // new chat is added with a single message
       this.totalUnreadMessagesCount++
     },
+
+    directChatContainsChat(chatGUID) {
+      return this.directChats.some(obj => obj.chat_guid === chatGUID);
+  },
 
     timeoutMeTyping() {
       this.meTypingTimer = setTimeout(() => {
